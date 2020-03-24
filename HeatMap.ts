@@ -1,9 +1,8 @@
-// import { Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh } from "babylonjs";
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Meshes/meshBuilder";
 import { Color3, Vector3 } from "@babylonjs/core/Maths/math";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData, matrixMax } from "./babyplots";
 
@@ -21,7 +20,7 @@ export class HeatMap extends Plot {
                 const coord = rowCoords[column];
                 if (coord > 0) {
                     let height = coord / max * this._size;
-                    let box = MeshBuilder.CreateBox("box_" + row + "-" + column, {
+                    let box = BoxBuilder.CreateBox("box_" + row + "-" + column, {
                         height: height,
                         width: 1,
                         depth: 1
@@ -34,7 +33,7 @@ export class HeatMap extends Plot {
                     boxes.push(box);
                 }
                 else {
-                    let box = MeshBuilder.CreatePlane("box_" + row + "-" + column, { size: 1 }, this._scene);
+                    let box = PlaneBuilder.CreatePlane("box_" + row + "-" + column, { size: 1 }, this._scene);
                     box.position = new Vector3(row + 0.5, 0, column + 0.5);
                     box.rotation.x = Math.PI / 2;
                     let mat = new StandardMaterial("box_" + row + "-" + column + "_color", this._scene);

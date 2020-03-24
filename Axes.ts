@@ -1,11 +1,10 @@
-// import { LinesMesh, Mesh, Scene, MeshBuilder, Vector3, Color3, DynamicTexture, StandardMaterial, ArcRotateCamera, Axis } from "babylonjs";
+
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Meshes/meshBuilder";
+import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { Vector3, Axis, Color3} from "@babylonjs/core/Maths/math";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { AxisData } from "./babyplots";
@@ -61,7 +60,7 @@ export class Axes {
         // create X axis
         if (this.axisData.showAxes[0]) {
             // axis
-            let axisX = MeshBuilder.CreateLines("axisX", {
+            let axisX = LinesBuilder.CreateLines("axisX", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmax, ymin, zmin)
@@ -90,7 +89,7 @@ export class Axes {
                 if (heatmap) {
                     tickPos = tickPos - 0.5;
                 }
-                let tick = MeshBuilder.CreateLines("xTicks", {
+                let tick = LinesBuilder.CreateLines("xTicks", {
                     points: [
                         new Vector3(tickPos, ymin, zmin + 0.05 * xmax),
                         new Vector3(tickPos, ymin, zmin),
@@ -107,7 +106,7 @@ export class Axes {
                 tickChar.position = new Vector3(tickPos, ymin - 0.1 * ymax, zmin);
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[0][0]) {
-                    let tickLine = MeshBuilder.CreateLines("xTickLines", {
+                    let tickLine = LinesBuilder.CreateLines("xTickLines", {
                         points: [
                             new Vector3(tickPos, ymax, zmin),
                             new Vector3(tickPos, ymin, zmin)
@@ -117,7 +116,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[0][1]) {
-                    let tickLine = MeshBuilder.CreateLines("xTickLines", {
+                    let tickLine = LinesBuilder.CreateLines("xTickLines", {
                         points: [
                             new Vector3(tickPos, ymin, zmax),
                             new Vector3(tickPos, ymin, zmin)
@@ -131,7 +130,7 @@ export class Axes {
         // create Y axis
         if (this.axisData.showAxes[1]) {
             // axis
-            let axisY = MeshBuilder.CreateLines("axisY", {
+            let axisY = LinesBuilder.CreateLines("axisY", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmin, ymax, zmin)
@@ -153,7 +152,7 @@ export class Axes {
             }
             for (let i = 0; i < yTicks.length; i++) {
                 let tickPos = yTicks[i];
-                let tick = MeshBuilder.CreateLines("yTicks", {
+                let tick = LinesBuilder.CreateLines("yTicks", {
                     points: [
                         new Vector3(xmin, tickPos, zmin + 0.05 * zmax),
                         new Vector3(xmin, tickPos, zmin),
@@ -168,7 +167,7 @@ export class Axes {
                 this._tickLabels.push(tickChar);
                 // tick lines
                 if (this.axisData.showTickLines[1][0]) {
-                    let tickLine = MeshBuilder.CreateLines("yTicksLines", {
+                    let tickLine = LinesBuilder.CreateLines("yTicksLines", {
                         points: [
                             new Vector3(xmax, tickPos, zmin),
                             new Vector3(xmin, tickPos, zmin)
@@ -178,7 +177,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[1][1]) {
-                    let tickLine = MeshBuilder.CreateLines("yTickLines", {
+                    let tickLine = LinesBuilder.CreateLines("yTickLines", {
                         points: [
                             new Vector3(xmin, tickPos, zmax),
                             new Vector3(xmin, tickPos, zmin)
@@ -192,7 +191,7 @@ export class Axes {
         // create Z axis
         if (this.axisData.showAxes[2]) {
             // axis
-            let axisZ = MeshBuilder.CreateLines("axisZ", {
+            let axisZ = LinesBuilder.CreateLines("axisZ", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmin, ymin, zmax)
@@ -221,7 +220,7 @@ export class Axes {
                 if (heatmap) {
                     tickPos = tickPos - 0.5;
                 }
-                let tick = MeshBuilder.CreateLines("zTicks", {
+                let tick = LinesBuilder.CreateLines("zTicks", {
                     points: [
                         new Vector3(xmin + 0.05 * xmax, ymin, tickPos),
                         new Vector3(xmin, ymin, tickPos),
@@ -239,7 +238,7 @@ export class Axes {
                 this._tickLabels.push(tickChar);
                 // tick lines
                 if (this.axisData.showTickLines[2][0]) {
-                    let tickLine = MeshBuilder.CreateLines("zTickLines", {
+                    let tickLine = LinesBuilder.CreateLines("zTickLines", {
                         points: [
                             new Vector3(xmax, ymin, tickPos),
                             new Vector3(xmin, ymin, tickPos)
@@ -249,7 +248,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[2][1]) {
-                    let tickLine = MeshBuilder.CreateLines("zTickLines", {
+                    let tickLine = LinesBuilder.CreateLines("zTickLines", {
                         points: [
                             new Vector3(xmin, ymax, tickPos),
                             new Vector3(xmin, ymin, tickPos)

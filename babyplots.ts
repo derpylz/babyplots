@@ -1,13 +1,10 @@
-// import { Scene, ArcRotateCamera, Mesh, Engine, HemisphericLight, Vector3, Color4, Color3, BoxBuilder, AnaglyphArcRotateCamera } from "babylonjs";
 import { Scene } from "@babylonjs/core/scene";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Meshes/meshBuilder";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-// import { AdvancedDynamicTexture, Grid, TextBlock, Control, Rectangle } from "babylonjs-gui";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
 import chroma from "chroma-js";

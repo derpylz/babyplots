@@ -1,12 +1,9 @@
-// import { Mesh, Vector3, Axis, MeshBuilder, PointerDragBehavior, Scene, ArcRotateCamera } from "babylonjs";
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Meshes/meshBuilder";
 import { Vector3, Axis} from "@babylonjs/core/Maths/math";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
-// import { Rectangle, TextBlock, AdvancedDynamicTexture } from "babylonjs-gui";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
 
@@ -117,7 +114,7 @@ export class LabelManager {
     addLabel(text: string, position?: number[], moveCallback?: (position: Vector3) => any): number {
         this._addLabelTextInput.value = "";
         let labelIdx = this._labels.length;
-        let plane = MeshBuilder.CreatePlane('label_' + labelIdx, {
+        let plane = PlaneBuilder.CreatePlane('label_' + labelIdx, {
             width: 5,
             height: 5
         }, this._scene);

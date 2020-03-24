@@ -1,6 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Meshes/meshBuilder";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 export interface AxisData {

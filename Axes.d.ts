@@ -1,6 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import "@babylonjs/core/Meshes/meshBuilder";
 import { AxisData } from "./babyplots";
 export declare class Axes {
     private _axes;
