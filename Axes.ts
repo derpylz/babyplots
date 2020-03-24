@@ -1,4 +1,13 @@
-import { LinesMesh, Mesh, Scene, MeshBuilder, Vector3, Color3, DynamicTexture, StandardMaterial, ArcRotateCamera, Axis } from "babylonjs";
+// import { LinesMesh, Mesh, Scene, MeshBuilder, Vector3, Color3, DynamicTexture, StandardMaterial, ArcRotateCamera, Axis } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
+import { Vector3, Axis, Color3} from "@babylonjs/core/Maths/math";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { AxisData } from "./babyplots";
 
 /**

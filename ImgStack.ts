@@ -1,4 +1,10 @@
-import { Scene, Mesh, VertexData, StandardMaterial, Color3 } from "babylonjs";
+// import { Scene, Mesh, VertexData, StandardMaterial, Color3 } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { Color3 } from "@babylonjs/core/Maths/math";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData } from "./babyplots";
 
 export class ImgStack extends Plot {

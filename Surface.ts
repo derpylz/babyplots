@@ -1,4 +1,9 @@
-import { Scene, Mesh, VertexData, StandardMaterial } from "babylonjs";
+// import { Scene, Mesh, VertexData, StandardMaterial } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData, matrixMax } from "./babyplots";
 import chroma from "chroma-js";
 

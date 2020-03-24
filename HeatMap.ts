@@ -1,4 +1,10 @@
-import { Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh } from "babylonjs";
+// import { Scene, MeshBuilder, Vector3, StandardMaterial, Color3, Mesh } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { Color3, Vector3 } from "@babylonjs/core/Maths/math";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData, matrixMax } from "./babyplots";
 
 export class HeatMap extends Plot {

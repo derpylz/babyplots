@@ -1,4 +1,13 @@
-import { SolidParticleSystem, Vector3, Scene, Mesh, Color4, VertexData, StandardMaterial, Color3, FloatArray, PickingInfo } from "babylonjs";
+// import { SolidParticleSystem, Vector3, Scene, Mesh, Color4, VertexData, StandardMaterial, Color3, FloatArray, PickingInfo } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
+import { SolidParticleSystem } from "@babylonjs/core/Particles/solidParticleSystem";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { FloatArray } from "@babylonjs/core/types";
+import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { Plot, LegendData } from "./babyplots";
 
 export class PointCloud extends Plot {

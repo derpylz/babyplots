@@ -1,5 +1,8 @@
-import { Scene, ArcRotateCamera, Mesh } from "babylonjs";
-import { AdvancedDynamicTexture } from "babylonjs-gui";
+import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 export interface AxisData {
     showAxes: boolean[];
     static: boolean;
@@ -127,9 +130,6 @@ export declare class Plots {
         rownames: any;
     }): Plots;
     private _updateLegend;
-    makeAnaglyph(): Plots;
-    private _setupAnaglyph;
-    removeAnaglyph(): Plots;
     doRender(): Plots;
     resize(width: number, height: number): void;
 }

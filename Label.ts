@@ -1,5 +1,14 @@
-import { Mesh, Vector3, Axis, MeshBuilder, PointerDragBehavior, Scene, ArcRotateCamera } from "babylonjs";
-import { Rectangle, TextBlock, AdvancedDynamicTexture } from "babylonjs-gui";
+// import { Mesh, Vector3, Axis, MeshBuilder, PointerDragBehavior, Scene, ArcRotateCamera } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { Vector3, Axis} from "@babylonjs/core/Maths/math";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
+// import { Rectangle, TextBlock, AdvancedDynamicTexture } from "babylonjs-gui";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
 
 export class LabelManager {
     private _canvas: HTMLCanvasElement;

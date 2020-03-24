@@ -1,4 +1,5 @@
-import { Scene } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import "@babylonjs/core/Meshes/meshBuilder";
 import { Plot, LegendData } from "./babyplots";
 export declare class PointCloud extends Plot {
     private _SPS;

@@ -1,5 +1,15 @@
-import { Scene, ArcRotateCamera, Mesh, Engine, HemisphericLight, Vector3, Color4, Color3, BoxBuilder, AnaglyphArcRotateCamera } from "babylonjs";
-import { AdvancedDynamicTexture, Grid, TextBlock, Control, Rectangle } from "babylonjs-gui";
+// import { Scene, ArcRotateCamera, Mesh, Engine, HemisphericLight, Vector3, Color4, Color3, BoxBuilder, AnaglyphArcRotateCamera } from "babylonjs";
+import { Scene } from "@babylonjs/core/scene";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Meshes/meshBuilder";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
+import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+// import { AdvancedDynamicTexture, Grid, TextBlock, Control, Rectangle } from "babylonjs-gui";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
 import chroma from "chroma-js";
 
 import { LabelManager } from "./Label";
@@ -839,43 +849,6 @@ export class Plots {
             }
             this._legend = advancedTexture;
         }
-    }
-
-    /**
-     * Enable anaglyph (red, cyan) representation
-     */
-    makeAnaglyph(): Plots {
-        if (!this._isAnaglyph) {
-            this._setupAnaglyph();
-        }
-        this._isAnaglyph = true;
-        return this;
-    }
-
-    /**
-     * Creates new anaglyph camera and sets it as active
-     */
-    private _setupAnaglyph(): void {
-        this.camera.dispose();
-        this.camera = new AnaglyphArcRotateCamera("Camera", 0, 0, 10, Vector3.Zero(), 0.033, this.scene);
-        this.camera.attachControl(this.canvas, true);
-        this.camera.wheelPrecision = 50;
-        this.scene.activeCamera = this.camera;
-    }
-
-    /**
-     * Disable anaglyph representation
-     */
-    removeAnaglyph(): Plots {
-        if (this._isAnaglyph) {
-            this.camera.dispose();
-            this.camera = new ArcRotateCamera("Camera", 0, 0, 10, Vector3.Zero(), this.scene);
-            this.camera.attachControl(this.canvas, true);
-            this.camera.wheelPrecision = 50;
-            this.scene.activeCamera = this.camera;
-        }
-        this._isAnaglyph = false;
-        return this;
     }
 
     /**
