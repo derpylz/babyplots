@@ -1,0 +1,23 @@
+{
+    "files": [
+        "./babyplots.ts",
+    ],
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "lib": [
+            "DOM",
+            "es6"
+        ],
+        "outDir": "build",
+        "sourceMap": true,
+        "removeComments": true,
+        "declaration": true,
+        "strict": false,
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "noResolve": false,
+        "preserveConstEnums": true
+    }
+}

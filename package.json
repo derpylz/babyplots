@@ -2,10 +2,11 @@
   "name": "babyplots",
   "version": "1.0.0",
   "description": "Easy interactive 3d plots.",
-  "main": "babyplots.js",
+  "main": "build/babyplots.js",
   "scripts": {
     "test": "webpack --mode development",
-    "build": "webpack --mode production"
+    "dist": "webpack --mode production",
+    "build": "tsc --build tsconfig_build.json"
   },
   "author": "Nils Trost",
   "license": "Apache-2.0",
