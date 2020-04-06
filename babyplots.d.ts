@@ -57,17 +57,6 @@ export declare class Plots {
     private _hl2;
     protected _legend: AdvancedDynamicTexture;
     protected _showLegend: boolean;
-    private _axisLabels;
-    private _showSelectCube;
-    private _isTimeSeries;
-    private _setTimeSeries;
-    private _playingTimeSeries;
-    private _timeSeriesIndex;
-    private _counter;
-    private _timeSeriesSpeed;
-    private _mouseOverCheck;
-    private _mouseOverCallback;
-    private _isAnaglyph;
     private _hasAnim;
     private _axes;
     private _downloadObj;
@@ -130,5 +119,7 @@ export declare class Plots {
     }): Plots;
     private _updateLegend;
     doRender(): Plots;
-    resize(width: number, height: number): void;
+    resize(width?: number, height?: number): Plots;
+    thumbnail(size: number, saveCallback: (data: string) => void): void;
+    dispose(): void;
 }

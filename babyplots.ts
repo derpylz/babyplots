@@ -7,6 +7,7 @@ import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
+import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import chroma from "chroma-js";
 
 import { LabelManager } from "./Label";
@@ -79,6 +80,7 @@ import { ImgStack } from "./ImgStack";
 import { PointCloud } from "./PointCloud";
 import { Surface } from "./Surface";
 import { HeatMap } from "./HeatMap";
+import { FileTools } from "@babylonjs/core/Misc/fileTools";
 
 declare global {
     interface Array<T> {
@@ -129,17 +131,6 @@ export class Plots {
     private _hl2: HemisphericLight;
     protected _legend: AdvancedDynamicTexture;
     protected _showLegend: boolean = true;
-    private _axisLabels: Mesh[] = [];
-    private _showSelectCube: boolean = false;
-    private _isTimeSeries: boolean = false;
-    private _setTimeSeries: boolean = false;
-    private _playingTimeSeries: boolean = false;
-    private _timeSeriesIndex: number = 0;
-    private _counter: number = 0;
-    private _timeSeriesSpeed: number = 1;
-    private _mouseOverCheck: boolean = false;
-    private _mouseOverCallback = function (_selection: number) { return false; };
-    private _isAnaglyph: boolean = false;
     private _hasAnim: boolean = false;
     private _axes: Axes;
     private _downloadObj: {} = {};
@@ -166,7 +157,7 @@ export class Plots {
         // setup enginge and scene
         this._backgroundColor = backgroundColor;
         this.canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
-        this._engine = new Engine(this.canvas, true);
+        this._engine = new Engine(this.canvas, true, {preserveDrawingBuffer: true, stencil: true});
         this.scene = new Scene(this._engine);
 
         // camera
@@ -858,16 +849,29 @@ export class Plots {
         return this;
     }
 
-    resize(width: number, height: number) {
-        if (this.R) {
-            let pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
-            this.canvas.width = width - 2 * pad;
-            this.canvas.height = height - 2 * pad;
-        } else {
-            this.canvas.width = width;
-            this.canvas.height = height;
+    resize(width?: number, height?: number): Plots {
+        if (width !== undefined && height !== undefined) {
+            if (this.R) {
+                let pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
+                this.canvas.width = width - 2 * pad;
+                this.canvas.height = height - 2 * pad;
+            } else {
+                this.canvas.width = width;
+                this.canvas.height = height;
+            }
         }
         this._updateLegend();
         this._engine.resize();
+        return this
     }
+
+    thumbnail(size: number, saveCallback: (data: string) => void): void {
+        ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
+    }
+
+    dispose(): void {
+        this.scene.dispose();
+        this._engine.dispose();
+    }
+    
 }
