@@ -158,6 +158,7 @@ var Plots = (function () {
             this.addPlot(plotData["coordinates"], plotData["plotType"], plotData["colorBy"], plotData["colorVar"], {
                 size: plotData["size"],
                 colorScale: plotData["colorScale"],
+                colorScaleInverted: plotData["colorScaleInverted"],
                 showLegend: plotData["showLegend"],
                 fontSize: plotData["fontSize"],
                 fontColor: plotData["fontColor"],
@@ -353,6 +354,7 @@ var Plots = (function () {
         if (options === void 0) { options = {
             size: 1,
             colorScale: "Oranges",
+            colorScaleInverted: false,
             showLegend: true,
             fontSize: 11,
             fontColor: "black",
@@ -378,6 +380,7 @@ var Plots = (function () {
             colorVar: colorVar,
             size: options.size,
             colorScale: options.colorScale,
+            colorScaleInverted: options.colorScaleInverted,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
             fontColor: options.fontColor,
@@ -413,7 +416,12 @@ var Plots = (function () {
                 var nColors = uniqueGroups.length;
                 var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
                 if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
-                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch').colors(nColors);
+                    if (options.colorScaleInverted) {
+                        colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                    }
+                    else {
+                        colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch').colors(nColors);
+                    }
                 }
                 else {
                     options.colorScale = "Paired";
@@ -437,7 +445,12 @@ var Plots = (function () {
                 var max_1 = colorVar.max();
                 var colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer.Oranges).mode('lch');
                 if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
-                    colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch');
+                    if (options.colorScaleInverted) {
+                        colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                    }
+                    else {
+                        colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch');
+                    }
                 }
                 else {
                     options.colorScale = "Oranges";

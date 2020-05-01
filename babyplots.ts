@@ -246,6 +246,7 @@ export class Plots {
                 {
                     size: plotData["size"],
                     colorScale: plotData["colorScale"],
+                    colorScaleInverted: plotData["colorScaleInverted"],
                     showLegend: plotData["showLegend"],
                     fontSize: plotData["fontSize"],
                     fontColor: plotData["fontColor"],
@@ -491,6 +492,7 @@ export class Plots {
         options = {
             size: 1,
             colorScale: "Oranges",
+            colorScaleInverted: false,
             showLegend: true,
             fontSize: 11,
             fontColor: "black",
@@ -518,6 +520,7 @@ export class Plots {
             colorVar: colorVar,
             size: options.size,
             colorScale: options.colorScale,
+            colorScaleInverted: options.colorScaleInverted,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
             fontColor: options.fontColor,
@@ -558,7 +561,11 @@ export class Plots {
                 let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);
                 // check if user selected color scale is a valid chromajs color brewer name
                 if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                    colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                    if (options.colorScaleInverted) {
+                        colors = chroma.scale(chroma.brewer[options.colorScale]).domain([1,0]).mode('lch').colors(nColors);
+                    } else {
+                        colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                    }
                 } else {
                     // set colorScale variable to default for legend if user selected is not valid
                     options.colorScale = "Paired";
@@ -587,7 +594,11 @@ export class Plots {
                 let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
                 // check if user selected color scale is a valid chromajs color brewer name
                 if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                    colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                    if (options.colorScaleInverted) {
+                        colorfunc = chroma.scale(chroma.brewer[options.colorScale]).domain([1,0]).mode('lch');
+                    } else {
+                        colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                    }
                 } else {
                     // set colorScale variable to default for legend if user selected is not valid
                     options.colorScale = "Oranges";

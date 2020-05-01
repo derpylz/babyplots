@@ -106,6 +106,7 @@ export declare class Plots {
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {
         size: number;
         colorScale: string;
+        colorScaleInverted: boolean;
         showLegend: boolean;
         fontSize: number;
         fontColor: string;
