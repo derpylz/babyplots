@@ -1,5 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { SphereBuilder } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { SolidParticleSystem } from "@babylonjs/core/Particles/solidParticleSystem";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
@@ -92,7 +93,7 @@ export class PointCloud extends Plot {
             this.mesh = customMesh;
         }
         else {
-            let cell = Mesh.CreateSphere("sphere", 2, this._size * 0.1, this._scene);
+            let cell = SphereBuilder.CreateSphere("sphere", { segments: 2, diameter: this._size * 0.1}, this._scene);
             // let cell = MeshBuilder.CreateDisc("disc", {tessellation: 6, radius: this._size}, this._scene);
             // particle system
             let SPS = new SolidParticleSystem('SPS', this._scene, {

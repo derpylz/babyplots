@@ -125,6 +125,45 @@ export function getUniqueVals(source: string[]): string[] {
     return result;
 }
 
+export const PLOTTYPES = {
+    'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
+    'surface': ['coordinates', 'colorBy', 'colorVar'],
+    'heatMap': ['coordinates', 'colorBy', 'colorVar'],
+    'imgStack': ['values', 'indices', 'attributes']
+}
+
+/**
+ * Takes a reasonable guess if a plot can be created from the provided object
+ * @param plotData Object containing data to be checked for valid plot information
+ */
+export function isValidPlot(plotData: {}): boolean {
+    if (plotData["plotType"]) {
+        let pltType = plotData["plotType"]
+        if (PLOTTYPES.hasOwnProperty(pltType)) {
+            for (let i = 0; i < PLOTTYPES[pltType].length; i++) {
+                const prop = PLOTTYPES[pltType][i];
+                if (plotData[prop] === undefined) {
+                    console.log('missing ' + prop);
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            console.log('unrecognized plot type')
+            return false;
+        }
+    } else {
+        for (let i = 0; i < PLOTTYPES['imgStack'].length; i++) {
+            const prop = PLOTTYPES['imgStack'][i];
+            if (plotData[prop] === undefined) {
+                console.log('missing ' + prop);
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 export class Plots {
     private _engine: Engine;
     private _hl1: HemisphericLight;
@@ -157,7 +196,7 @@ export class Plots {
         // setup enginge and scene
         this._backgroundColor = backgroundColor;
         this.canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
-        this._engine = new Engine(this.canvas, true, {preserveDrawingBuffer: true, stencil: true});
+        this._engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new Scene(this._engine);
 
         // camera
@@ -873,5 +912,5 @@ export class Plots {
         this.scene.dispose();
         this._engine.dispose();
     }
-    
+
 }

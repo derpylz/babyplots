@@ -51,6 +51,13 @@ declare global {
     }
 }
 export declare function getUniqueVals(source: string[]): string[];
+export declare const PLOTTYPES: {
+    pointCloud: string[];
+    surface: string[];
+    heatMap: string[];
+    imgStack: string[];
+};
+export declare function isValidPlot(plotData: {}): boolean;
 export declare class Plots {
     private _engine;
     private _hl1;

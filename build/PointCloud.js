@@ -14,6 +14,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
+var sphereBuilder_1 = require("@babylonjs/core/Meshes/Builders/sphereBuilder");
 var math_1 = require("@babylonjs/core/Maths/math");
 var solidParticleSystem_1 = require("@babylonjs/core/Particles/solidParticleSystem");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
@@ -95,7 +96,7 @@ var PointCloud = (function (_super) {
             this.mesh = customMesh;
         }
         else {
-            var cell = mesh_1.Mesh.CreateSphere("sphere", 2, this._size * 0.1, this._scene);
+            var cell = sphereBuilder_1.SphereBuilder.CreateSphere("sphere", { segments: 2, diameter: this._size * 0.1 }, this._scene);
             var SPS = new solidParticleSystem_1.SolidParticleSystem('SPS', this._scene, {
                 updatable: true,
                 isPickable: true

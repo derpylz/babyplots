@@ -11,6 +11,7 @@ var math_1 = require("@babylonjs/core/Maths/math");
 var boxBuilder_1 = require("@babylonjs/core/Meshes/Builders/boxBuilder");
 var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture");
 var controls_1 = require("@babylonjs/gui/2D/controls");
+var screenshotTools_1 = require("@babylonjs/core/Misc/screenshotTools");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var Label_1 = require("./Label");
 var Axes_1 = require("./Axes");
@@ -74,21 +75,46 @@ function getUniqueVals(source) {
     return result;
 }
 exports.getUniqueVals = getUniqueVals;
+exports.PLOTTYPES = {
+    'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
+    'surface': ['coordinates', 'colorBy', 'colorVar'],
+    'heatMap': ['coordinates', 'colorBy', 'colorVar'],
+    'imgStack': ['values', 'indices', 'attributes']
+};
+function isValidPlot(plotData) {
+    if (plotData["plotType"]) {
+        var pltType = plotData["plotType"];
+        if (exports.PLOTTYPES.hasOwnProperty(pltType)) {
+            for (var i = 0; i < exports.PLOTTYPES[pltType].length; i++) {
+                var prop = exports.PLOTTYPES[pltType][i];
+                if (plotData[prop] === undefined) {
+                    console.log('missing ' + prop);
+                    return false;
+                }
+            }
+            return true;
+        }
+        else {
+            console.log('unrecognized plot type');
+            return false;
+        }
+    }
+    else {
+        for (var i = 0; i < exports.PLOTTYPES['imgStack'].length; i++) {
+            var prop = exports.PLOTTYPES['imgStack'][i];
+            if (plotData[prop] === undefined) {
+                console.log('missing ' + prop);
+                return false;
+            }
+        }
+        return true;
+    }
+}
+exports.isValidPlot = isValidPlot;
 var Plots = (function () {
     function Plots(canvasElement, backgroundColor) {
         if (backgroundColor === void 0) { backgroundColor = "#ffffffff"; }
         this._showLegend = true;
-        this._axisLabels = [];
-        this._showSelectCube = false;
-        this._isTimeSeries = false;
-        this._setTimeSeries = false;
-        this._playingTimeSeries = false;
-        this._timeSeriesIndex = 0;
-        this._counter = 0;
-        this._timeSeriesSpeed = 1;
-        this._mouseOverCheck = false;
-        this._mouseOverCallback = function (_selection) { return false; };
-        this._isAnaglyph = false;
         this._hasAnim = false;
         this._downloadObj = {};
         this.plots = [];
@@ -99,7 +125,7 @@ var Plots = (function () {
         this.R = false;
         this._backgroundColor = backgroundColor;
         this.canvas = document.getElementById(canvasElement);
-        this._engine = new engine_1.Engine(this.canvas, true);
+        this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new scene_1.Scene(this._engine);
         this.camera = new arcRotateCamera_1.ArcRotateCamera("Camera", 0, 0, 10, math_1.Vector3.Zero(), this.scene);
         this.camera.attachControl(this.canvas, true);
@@ -682,17 +708,27 @@ var Plots = (function () {
         return this;
     };
     Plots.prototype.resize = function (width, height) {
-        if (this.R) {
-            var pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
-            this.canvas.width = width - 2 * pad;
-            this.canvas.height = height - 2 * pad;
-        }
-        else {
-            this.canvas.width = width;
-            this.canvas.height = height;
+        if (width !== undefined && height !== undefined) {
+            if (this.R) {
+                var pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
+                this.canvas.width = width - 2 * pad;
+                this.canvas.height = height - 2 * pad;
+            }
+            else {
+                this.canvas.width = width;
+                this.canvas.height = height;
+            }
         }
         this._updateLegend();
         this._engine.resize();
+        return this;
+    };
+    Plots.prototype.thumbnail = function (size, saveCallback) {
+        screenshotTools_1.ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
+    };
+    Plots.prototype.dispose = function () {
+        this.scene.dispose();
+        this._engine.dispose();
     };
     return Plots;
 }());
