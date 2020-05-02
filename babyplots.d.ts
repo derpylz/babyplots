@@ -24,6 +24,7 @@ export interface LegendData {
     discrete: boolean;
     breaks: string[];
     colorScale: string;
+    inverted: boolean;
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;

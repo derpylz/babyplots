@@ -337,7 +337,8 @@ var Plots = (function () {
             showLegend: false,
             discrete: false,
             breaks: [],
-            colorScale: ""
+            colorScale: "",
+            inverted: false
         };
         legendData.fontSize = options.fontSize;
         legendData.fontColor = options.fontColor;
@@ -437,7 +438,8 @@ var Plots = (function () {
                     showLegend: options.showLegend,
                     discrete: true,
                     breaks: uniqueGroups,
-                    colorScale: options.colorScale
+                    colorScale: options.colorScale,
+                    inverted: false
                 };
                 break;
             case "values":
@@ -461,7 +463,8 @@ var Plots = (function () {
                     showLegend: options.showLegend,
                     discrete: false,
                     breaks: [min_1.toString(), max_1.toString()],
-                    colorScale: options.colorScale
+                    colorScale: options.colorScale,
+                    inverted: options.colorScaleInverted
                 };
                 break;
             case "direct":
@@ -477,7 +480,8 @@ var Plots = (function () {
                     showLegend: false,
                     discrete: false,
                     breaks: [],
-                    colorScale: ""
+                    colorScale: "",
+                    inverted: false
                 };
                 break;
         }
@@ -623,7 +627,12 @@ var Plots = (function () {
                 for (var i = 0; i < nBreaks; i++) {
                     scaleGrid.addRowDefinition(1 / nBreaks);
                     var legendColor_1 = new controls_1.Rectangle();
-                    legendColor_1.background = colors[colors.length - i - 1];
+                    if (legendData.inverted) {
+                        legendColor_1.background = colors[i];
+                    }
+                    else {
+                        legendColor_1.background = colors[colors.length - i - 1];
+                    }
                     legendColor_1.thickness = 0;
                     legendColor_1.width = 0.5;
                     legendColor_1.height = 1;

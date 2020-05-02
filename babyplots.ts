@@ -45,6 +45,7 @@ export interface LegendData {
     discrete: boolean;
     breaks: string[];
     colorScale: string;
+    inverted: boolean;
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;
@@ -469,7 +470,8 @@ export class Plots {
             showLegend: false,
             discrete: false,
             breaks: [],
-            colorScale: ""
+            colorScale: "",
+            inverted: false
         }
         legendData.fontSize = options.fontSize;
         legendData.fontColor = options.fontColor;
@@ -583,7 +585,8 @@ export class Plots {
                     showLegend: options.showLegend,
                     discrete: true,
                     breaks: uniqueGroups,
-                    colorScale: options.colorScale
+                    colorScale: options.colorScale,
+                    inverted: false
                 }
                 break;
             case "values":
@@ -612,7 +615,8 @@ export class Plots {
                     showLegend: options.showLegend,
                     discrete: false,
                     breaks: [min.toString(), max.toString()],
-                    colorScale: options.colorScale
+                    colorScale: options.colorScale,
+                    inverted: options.colorScaleInverted
                 }
                 break;
             case "direct":
@@ -630,7 +634,8 @@ export class Plots {
                     showLegend: false,
                     discrete: false,
                     breaks: [],
-                    colorScale: ""
+                    colorScale: "",
+                    inverted: false
                 }
                 break;
         }
@@ -765,7 +770,7 @@ export class Plots {
                 grid.addControl(legendTitle, 0, 1);
             }
 
-            // for continuous measures display viridis color bar and max and min values.
+            // for continuous measures display color bar and max and min values.
             if (!legendData.discrete) {
 
                 let innerGrid = new Grid();
@@ -786,13 +791,17 @@ export class Plots {
                     nBreaks = 100;
                     labelSpace = 0.15
                 }
-                // viridis color bar
+                // color bar
                 let colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
                 let scaleGrid = new Grid();
                 for (let i = 0; i < nBreaks; i++) {
                     scaleGrid.addRowDefinition(1 / nBreaks);
                     let legendColor = new Rectangle();
-                    legendColor.background = colors[colors.length - i - 1];
+                    if (legendData.inverted) {
+                        legendColor.background = colors[i];
+                    } else {
+                        legendColor.background = colors[colors.length - i - 1];
+                    }
                     legendColor.thickness = 0;
                     legendColor.width = 0.5;
                     legendColor.height = 1;
