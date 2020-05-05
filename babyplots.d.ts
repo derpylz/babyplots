@@ -18,6 +18,13 @@ export interface AxisData {
     colnames: string[];
     rownames: string[];
 }
+export declare const buttonSVGs: {
+    logo: string;
+    toJson: string;
+    labels: string;
+    publish: string;
+};
+export declare const styleText: string;
 export declare function matrixMax(matrix: number[][]): number;
 export interface LegendData {
     showLegend: boolean;
