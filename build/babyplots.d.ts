@@ -89,7 +89,7 @@ export declare class Plots {
     R: boolean;
     constructor(canvasElement: string, backgroundColor?: string);
     fromJSON(plotData: {}): void;
-    createButtons(): void;
+    createButtons(whichBtns?: string[]): void;
     private _downloadJson;
     private _prepRender;
     private _afterRender;

@@ -50,9 +50,9 @@ export const styleText = [
     ".bbp.label-control > label { font-size: 11pt; }",
     ".bbp.label-control > .edit-container { overflow: auto; }",
     ".bbp.label-control > .edit-container > .label-form { margin-top: 5px; padding-top: 20px; border-top: solid thin #ccc; }",
-    ".bbp.label-control > .edit-container > .label-form > input { width: 80%; }",
-    ".bbp.label-control > .edit-container > .label-form > button { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
-    ".bbp.label-control > .edit-container > .label-form > button:hover { background-color: #ddd; }",
+    ".bbp.label-control .label-form > input { width: 100%; box-sizing: border-box; }",
+    ".bbp.label-control .label-form > button { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
+    ".bbp.label-control .label-form > button:hover { background-color: #ddd; }",
 ].join(" ");
 
 export function matrixMax(matrix: number[][]): number {
@@ -322,7 +322,7 @@ export class Plots {
         }
     }
 
-    createButtons(): void {
+    createButtons(whichBtns = ["json", "label", "publish"]): void {
         // create css style
         let styleElem = document.createElement("style");
         styleElem.appendChild(document.createTextNode(styleText));
@@ -330,16 +330,20 @@ export class Plots {
         // create ui elements
         let buttonBar = document.createElement("div");
         buttonBar.className = "bbp button-bar"
-        let jsonBtn = document.createElement("div");
-        jsonBtn.className = "button"
-        jsonBtn.onclick = this._downloadJson.bind(this);
-        jsonBtn.innerHTML = buttonSVGs.toJson;
-        buttonBar.appendChild(jsonBtn);
-        let labelBtn = document.createElement("div");
-        labelBtn.className = "button"
-        labelBtn.onclick = this._labelManager.toggleLabelControl.bind(this._labelManager);
-        labelBtn.innerHTML = buttonSVGs.labels;
-        buttonBar.appendChild(labelBtn);
+        if (whichBtns.indexOf("json") !== -1) {
+            let jsonBtn = document.createElement("div");
+            jsonBtn.className = "button"
+            jsonBtn.onclick = this._downloadJson.bind(this);
+            jsonBtn.innerHTML = buttonSVGs.toJson;
+            buttonBar.appendChild(jsonBtn);
+        }
+        if (whichBtns.indexOf("label") !== -1) {
+            let labelBtn = document.createElement("div");
+            labelBtn.className = "button"
+            labelBtn.onclick = this._labelManager.toggleLabelControl.bind(this._labelManager);
+            labelBtn.innerHTML = buttonSVGs.labels;
+            buttonBar.appendChild(labelBtn);
+        }
         buttonBar.style.top = this.canvas.clientTop + 5 + "px";
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);

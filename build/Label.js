@@ -22,7 +22,7 @@ var LabelManager = (function () {
     }
     LabelManager.prototype._createLabelForms = function () {
         var labelBox = document.createElement("div");
-        labelBox.className = "label-control";
+        labelBox.className = "bbp label-control";
         labelBox.style.display = "none";
         labelBox.style.top = this._canvas.clientTop + 40 + "px";
         labelBox.style.left = this._canvas.clientTop + 5 + "px";
