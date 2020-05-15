@@ -188,6 +188,7 @@ var Plots = (function () {
             this.addPlot(plotData["coordinates"], plotData["plotType"], plotData["colorBy"], plotData["colorVar"], {
                 size: plotData["size"],
                 colorScale: plotData["colorScale"],
+                customColorScale: plotData["customColorScale"],
                 colorScaleInverted: plotData["colorScaleInverted"],
                 showLegend: plotData["showLegend"],
                 fontSize: plotData["fontSize"],
@@ -399,6 +400,7 @@ var Plots = (function () {
         if (options === void 0) { options = {
             size: 1,
             colorScale: "Oranges",
+            customColorScale: [],
             colorScaleInverted: false,
             showLegend: true,
             fontSize: 11,
@@ -425,6 +427,7 @@ var Plots = (function () {
             colorVar: colorVar,
             size: options.size,
             colorScale: options.colorScale,
+            customColorScale: options.customColorScale,
             colorScaleInverted: options.colorScaleInverted,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
@@ -467,16 +470,31 @@ var Plots = (function () {
                 var uniqueGroups = getUniqueVals(groups);
                 var nColors = uniqueGroups.length;
                 var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
-                if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
-                    if (options.colorScaleInverted) {
-                        colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma_js_1.default.scale(options.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
+                        }
+                        else {
+                            colors = chroma_js_1.default.scale(options.customColorScale).mode('lch').colors(nColors);
+                        }
                     }
                     else {
-                        colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        options.colorScale = "Paired";
                     }
                 }
                 else {
-                    options.colorScale = "Paired";
+                    if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                        }
+                        else {
+                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        }
+                    }
+                    else {
+                        options.colorScale = "Paired";
+                    }
                 }
                 for (var i = 0; i < nColors; i++) {
                     colors[i] += "ff";
@@ -490,6 +508,7 @@ var Plots = (function () {
                     discrete: true,
                     breaks: uniqueGroups,
                     colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
                     inverted: false
                 };
                 break;
@@ -497,16 +516,31 @@ var Plots = (function () {
                 var min_1 = colorVar.min();
                 var max_1 = colorVar.max();
                 var colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer.Oranges).mode('lch');
-                if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
-                    if (options.colorScaleInverted) {
-                        colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colorfunc_1 = chroma_js_1.default.scale(options.customColorScale).domain([1, 0]).mode('lch');
+                        }
+                        else {
+                            colorfunc_1 = chroma_js_1.default.scale(options.customColorScale).mode('lch');
+                        }
                     }
                     else {
-                        colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch');
+                        options.colorScale = "Oranges";
                     }
                 }
                 else {
-                    options.colorScale = "Oranges";
+                    if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                        }
+                        else {
+                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch');
+                        }
+                    }
+                    else {
+                        options.colorScale = "Oranges";
+                    }
                 }
                 var norm = colorVar.slice().map(function (v) { return (v - min_1) / (max_1 - min_1); });
                 coordColors = norm.map(function (v) { return colorfunc_1(v).alpha(1).hex("rgba"); });
@@ -515,6 +549,7 @@ var Plots = (function () {
                     discrete: false,
                     breaks: [min_1.toString(), max_1.toString()],
                     colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
                     inverted: options.colorScaleInverted
                 };
                 break;
@@ -532,6 +567,7 @@ var Plots = (function () {
                     discrete: false,
                     breaks: [],
                     colorScale: "",
+                    customColorScale: options.customColorScale,
                     inverted: false
                 };
                 break;
@@ -673,7 +709,13 @@ var Plots = (function () {
                     nBreaks = 100;
                     labelSpace = 0.15;
                 }
-                var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+                var colors = void 0;
+                if (legendData.colorScale === "custom") {
+                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
+                }
+                else {
+                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+                }
                 var scaleGrid = new controls_1.Grid();
                 for (var i = 0; i < nBreaks; i++) {
                     scaleGrid.addRowDefinition(1 / nBreaks);
@@ -738,7 +780,13 @@ var Plots = (function () {
                     }
                 }
                 grid.addControl(innerGrid, 1, 1);
-                var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
+                var colors = void 0;
+                if (legendData.colorScale === "custom") {
+                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(n);
+                }
+                else {
+                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
+                }
                 for (var i = 0; i < n; i++) {
                     var legendColor = new controls_1.Rectangle();
                     legendColor.background = colors[i];

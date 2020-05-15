@@ -33,6 +33,7 @@ export interface LegendData {
     breaks: string[];
     colorScale: string;
     inverted: boolean;
+    customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;
@@ -117,6 +118,7 @@ export declare class Plots {
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {
         size: number;
         colorScale: string;
+        customColorScale: any[];
         colorScaleInverted: boolean;
         showLegend: boolean;
         fontSize: number;

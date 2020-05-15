@@ -68,6 +68,7 @@ export interface LegendData {
     breaks: string[];
     colorScale: string;
     inverted: boolean;
+    customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;
@@ -281,6 +282,7 @@ export class Plots {
                 {
                     size: plotData["size"],
                     colorScale: plotData["colorScale"],
+                    customColorScale: plotData["customColorScale"],
                     colorScaleInverted: plotData["colorScaleInverted"],
                     showLegend: plotData["showLegend"],
                     fontSize: plotData["fontSize"],
@@ -542,6 +544,7 @@ export class Plots {
         options = {
             size: 1,
             colorScale: "Oranges",
+            customColorScale: [],
             colorScaleInverted: false,
             showLegend: true,
             fontSize: 11,
@@ -570,6 +573,7 @@ export class Plots {
             colorVar: colorVar,
             size: options.size,
             colorScale: options.colorScale,
+            customColorScale: options.customColorScale,
             colorScaleInverted: options.colorScaleInverted,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
@@ -616,16 +620,30 @@ export class Plots {
                 let nColors = uniqueGroups.length;
                 // Paired is default color scale for discrete variable coloring
                 let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);
-                // check if user selected color scale is a valid chromajs color brewer name
-                if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                    if (options.colorScaleInverted) {
-                        colors = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                // check if color scale should be custom
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
+                        } else {
+                            colors = chroma.scale(options.customColorScale).mode('lch').colors(nColors);
+                        }
                     } else {
-                        colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        // set colorScale variable to default for legend if custom color scale is invalid
+                        options.colorScale = "Paired";
                     }
                 } else {
-                    // set colorScale variable to default for legend if user selected is not valid
-                    options.colorScale = "Paired";
+                    // check if user selected color scale is a valid chromajs color brewer name
+                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                        } else {
+                            colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if user selected is not valid
+                        options.colorScale = "Paired";
+                    }
                 }
                 for (let i = 0; i < nColors; i++) {
                     colors[i] += "ff";
@@ -641,6 +659,7 @@ export class Plots {
                     discrete: true,
                     breaks: uniqueGroups,
                     colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
                     inverted: false
                 }
                 break;
@@ -650,16 +669,31 @@ export class Plots {
                 let max = colorVar.max();
                 // Oranges is default color scale for continuous variable coloring
                 let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
-                // check if user selected color scale is a valid chromajs color brewer name
-                if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                    if (options.colorScaleInverted) {
-                        colorfunc = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                // check if color scale should be custom
+                if (options.colorScale === "custom") {
+                    // check if custom color scale is valid
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colorfunc = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch');
+                        } else {
+                            colorfunc = chroma.scale(options.customColorScale).mode('lch');
+                        }
                     } else {
-                        colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                        // set colorScale variable to default for legend if custom color scale is invalid
+                        options.colorScale = "Oranges";
                     }
                 } else {
-                    // set colorScale variable to default for legend if user selected is not valid
-                    options.colorScale = "Oranges";
+                    // check if user selected color scale is a valid chromajs color brewer name
+                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                        } else {
+                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if user selected is not valid
+                        options.colorScale = "Oranges";
+                    }
                 }
                 // normalize the values to 0-1 range
                 let norm = (colorVar as number[]).slice().map(v => (v - min) / (max - min));
@@ -671,6 +705,7 @@ export class Plots {
                     discrete: false,
                     breaks: [min.toString(), max.toString()],
                     colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
                     inverted: options.colorScaleInverted
                 }
                 break;
@@ -690,6 +725,7 @@ export class Plots {
                     discrete: false,
                     breaks: [],
                     colorScale: "",
+                    customColorScale: options.customColorScale,
                     inverted: false
                 }
                 break;
@@ -847,7 +883,12 @@ export class Plots {
                     labelSpace = 0.15
                 }
                 // color bar
-                let colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+                let colors: string[];
+                if (legendData.colorScale === "custom") {
+                    colors = chroma.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
+                } else {
+                    colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+                }
                 let scaleGrid = new Grid();
                 for (let i = 0; i < nBreaks; i++) {
                     scaleGrid.addRowDefinition(1 / nBreaks);
@@ -914,7 +955,12 @@ export class Plots {
                 }
                 grid.addControl(innerGrid, 1, 1);
 
-                let colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(n);
+                let colors: string[];
+                if (legendData.colorScale === "custom") {
+                    colors = chroma.scale(legendData.customColorScale).mode('lch').colors(n);
+                } else {
+                    colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(n);
+                }
 
                 // add color box and legend text
                 for (let i = 0; i < n; i++) {
