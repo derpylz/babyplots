@@ -617,6 +617,7 @@ export class Plots {
                 // color plot by discrete categories
                 let groups = colorVar as string[];
                 let uniqueGroups = getUniqueVals(groups);
+                uniqueGroups = uniqueGroups.sort();
                 let nColors = uniqueGroups.length;
                 // Paired is default color scale for discrete variable coloring
                 let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);

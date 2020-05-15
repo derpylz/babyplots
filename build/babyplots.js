@@ -468,6 +468,7 @@ var Plots = (function () {
             case "categories":
                 var groups = colorVar;
                 var uniqueGroups = getUniqueVals(groups);
+                uniqueGroups = uniqueGroups.sort();
                 var nColors = uniqueGroups.length;
                 var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
                 if (options.colorScale === "custom") {
