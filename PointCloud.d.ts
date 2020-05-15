@@ -13,6 +13,7 @@ export declare class PointCloud extends Plot {
     private _foldDelay;
     constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, folded?: boolean, foldedEmbedding?: number[][], foldAnimDelay?: number, foldAnimDuration?: number);
     private _createPointCloud;
+    resetAnimation(): void;
     update(): boolean;
     private _pointPicker;
     updateSize(): void;

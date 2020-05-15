@@ -23,6 +23,7 @@ export declare const buttonSVGs: {
     toJson: string;
     labels: string;
     publish: string;
+    replay: string;
 };
 export declare const styleText: string;
 export declare function matrixMax(matrix: number[][]): number;
@@ -51,6 +52,7 @@ export declare abstract class Plot {
     constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData);
     updateSize(): void;
     update(): boolean;
+    resetAnimation(): void;
 }
 declare global {
     interface Array<T> {
@@ -91,6 +93,7 @@ export declare class Plots {
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
     private _downloadJson;
+    private _resetAnimation;
     private _prepRender;
     private _afterRender;
     private _cameraFitPlot;

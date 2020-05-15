@@ -93,7 +93,7 @@ export class PointCloud extends Plot {
             this.mesh = customMesh;
         }
         else {
-            let cell = SphereBuilder.CreateSphere("sphere", { segments: 2, diameter: this._size * 0.1}, this._scene);
+            let cell = SphereBuilder.CreateSphere("sphere", { segments: 2, diameter: this._size * 0.1 }, this._scene);
             // let cell = MeshBuilder.CreateDisc("disc", {tessellation: 6, radius: this._size}, this._scene);
             // particle system
             let SPS = new SolidParticleSystem('SPS', this._scene, {
@@ -140,6 +140,29 @@ export class PointCloud extends Plot {
             }
         });
     }
+
+    resetAnimation(): void {
+        this._folded = true;
+        if (this._SPS) {
+            for (let i = 0; i < this._SPS.particles.length; i++) {
+                this._SPS.particles[i].position = new Vector3(this._foldedEmbedding[i][0], this._foldedEmbedding[i][2], this._foldedEmbedding[i][1]);
+            }
+            this._SPS.setParticles();
+        } else {
+            let positionFunction = function (positions: FloatArray) {
+                let numberOfVertices = positions.length / 3;
+                for (let i = 0; i < numberOfVertices; i++) {
+                    positions[i * 3] = this._foldedEmbedding[i][0];
+                    positions[i * 3 + 1] = this._foldedEmbedding[i][2];
+                    positions[i * 3 + 2] = this._foldedEmbedding[i][1];
+                }
+            }
+            this.mesh.updateMeshPositions(positionFunction.bind(this), true);
+        }
+        this.mesh.refreshBoundingInfo();
+        this._foldCounter = 0;
+    }
+
     update(): boolean {
         if (this._SPS && this._folded) {
             if (this._foldCounter < this._foldDelay) {
@@ -174,8 +197,7 @@ export class PointCloud extends Plot {
                         positions[i * 3 + 1] = posVector.y;
                         positions[i * 3 + 2] = posVector.z;
                     }
-                    ;
-                };
+                }
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this._foldCounter += 1;
             }
@@ -188,8 +210,7 @@ export class PointCloud extends Plot {
                         positions[i * 3 + 1] = this._coords[i][2];
                         positions[i * 3 + 2] = this._coords[i][1];
                     }
-                    ;
-                };
+                }
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this.mesh.refreshBoundingInfo();
             }

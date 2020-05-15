@@ -135,6 +135,28 @@ var PointCloud = (function (_super) {
             }
         });
     };
+    PointCloud.prototype.resetAnimation = function () {
+        this._folded = true;
+        if (this._SPS) {
+            for (var i = 0; i < this._SPS.particles.length; i++) {
+                this._SPS.particles[i].position = new math_1.Vector3(this._foldedEmbedding[i][0], this._foldedEmbedding[i][2], this._foldedEmbedding[i][1]);
+            }
+            this._SPS.setParticles();
+        }
+        else {
+            var positionFunction = function (positions) {
+                var numberOfVertices = positions.length / 3;
+                for (var i = 0; i < numberOfVertices; i++) {
+                    positions[i * 3] = this._foldedEmbedding[i][0];
+                    positions[i * 3 + 1] = this._foldedEmbedding[i][2];
+                    positions[i * 3 + 2] = this._foldedEmbedding[i][1];
+                }
+            };
+            this.mesh.updateMeshPositions(positionFunction.bind(this), true);
+        }
+        this.mesh.refreshBoundingInfo();
+        this._foldCounter = 0;
+    };
     PointCloud.prototype.update = function () {
         if (this._SPS && this._folded) {
             if (this._foldCounter < this._foldDelay) {
@@ -169,7 +191,6 @@ var PointCloud = (function (_super) {
                         positions[i * 3 + 1] = posVector.y;
                         positions[i * 3 + 2] = posVector.z;
                     }
-                    ;
                 };
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this._foldCounter += 1;
@@ -183,7 +204,6 @@ var PointCloud = (function (_super) {
                         positions[i * 3 + 1] = this._coords[i][2];
                         positions[i * 3 + 2] = this._coords[i][1];
                     }
-                    ;
                 };
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this.mesh.refreshBoundingInfo();
