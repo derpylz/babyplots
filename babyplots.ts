@@ -284,6 +284,7 @@ export class Plots {
                     colorScale: plotData["colorScale"],
                     customColorScale: plotData["customColorScale"],
                     colorScaleInverted: plotData["colorScaleInverted"],
+                    sortedCategories: plotData["sortedCategories"],
                     showLegend: plotData["showLegend"],
                     fontSize: plotData["fontSize"],
                     fontColor: plotData["fontColor"],
@@ -546,6 +547,7 @@ export class Plots {
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
+            sortedCategories: [],
             showLegend: true,
             fontSize: 11,
             fontColor: "black",
@@ -575,6 +577,7 @@ export class Plots {
             colorScale: options.colorScale,
             customColorScale: options.customColorScale,
             colorScaleInverted: options.colorScaleInverted,
+            sortedCategories: options.sortedCategories,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
             fontColor: options.fontColor,
@@ -617,7 +620,18 @@ export class Plots {
                 // color plot by discrete categories
                 let groups = colorVar as string[];
                 let uniqueGroups = getUniqueVals(groups);
-                uniqueGroups = uniqueGroups.sort();
+                // sortedCategories can contain an array of category names to order the groups for coloring.
+                // sortedCategories must be of same length as unique groups in colorVar.
+                // if no custom ordering is performed through sortedCategories, groups will be sorted alphabetically.
+                uniqueGroups.sort();
+                if (options.sortedCategories) {
+                    if (uniqueGroups.length === options.sortedCategories.length) {
+                        // sortedCategories must contain the same category names as those present in colorVar.
+                        if (JSON.stringify(uniqueGroups) === JSON.stringify(options.sortedCategories.slice(0).sort())) {
+                            uniqueGroups = options.sortedCategories;
+                        }
+                    }
+                }
                 let nColors = uniqueGroups.length;
                 // Paired is default color scale for discrete variable coloring
                 let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);

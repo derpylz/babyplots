@@ -120,6 +120,7 @@ export declare class Plots {
         colorScale: string;
         customColorScale: any[];
         colorScaleInverted: boolean;
+        sortedCategories: any[];
         showLegend: boolean;
         fontSize: number;
         fontColor: string;

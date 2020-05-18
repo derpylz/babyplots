@@ -190,6 +190,7 @@ var Plots = (function () {
                 colorScale: plotData["colorScale"],
                 customColorScale: plotData["customColorScale"],
                 colorScaleInverted: plotData["colorScaleInverted"],
+                sortedCategories: plotData["sortedCategories"],
                 showLegend: plotData["showLegend"],
                 fontSize: plotData["fontSize"],
                 fontColor: plotData["fontColor"],
@@ -402,6 +403,7 @@ var Plots = (function () {
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
+            sortedCategories: [],
             showLegend: true,
             fontSize: 11,
             fontColor: "black",
@@ -429,6 +431,7 @@ var Plots = (function () {
             colorScale: options.colorScale,
             customColorScale: options.customColorScale,
             colorScaleInverted: options.colorScaleInverted,
+            sortedCategories: options.sortedCategories,
             showLegend: options.showLegend,
             fontSize: options.fontSize,
             fontColor: options.fontColor,
@@ -469,6 +472,13 @@ var Plots = (function () {
                 var groups = colorVar;
                 var uniqueGroups = getUniqueVals(groups);
                 uniqueGroups = uniqueGroups.sort();
+                if (options.sortedCategories) {
+                    if (uniqueGroups.length === options.sortedCategories.length) {
+                        if (JSON.stringify(uniqueGroups.sort()) === JSON.stringify(options.sortedCategories.sort())) {
+                            uniqueGroups = options.sortedCategories;
+                        }
+                    }
+                }
                 var nColors = uniqueGroups.length;
                 var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
                 if (options.colorScale === "custom") {
