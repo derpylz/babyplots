@@ -100,45 +100,8 @@ export declare class Plots {
     private _cameraFitPlot;
     addImgStack(values: number[], indices: number[], attributes: {
         dim: number[];
-    }, options?: {
-        size: number;
-        colorScale: any;
-        showLegend: boolean;
-        fontSize: number;
-        fontColor: string;
-        legendTitle: any;
-        legendTitleFontSize: number;
-        showAxes: boolean[];
-        axisLabels: string[];
-        axisColors: string[];
-        tickBreaks: number[];
-        showTickLines: boolean[][];
-        tickLineColors: string[][];
-    }): this;
-    addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {
-        size: number;
-        colorScale: string;
-        customColorScale: any[];
-        colorScaleInverted: boolean;
-        sortedCategories: any[];
-        showLegend: boolean;
-        fontSize: number;
-        fontColor: string;
-        legendTitle: any;
-        legendTitleFontSize: number;
-        showAxes: boolean[];
-        axisLabels: string[];
-        axisColors: string[];
-        tickBreaks: number[];
-        showTickLines: boolean[][];
-        tickLineColors: string[][];
-        folded: boolean;
-        foldedEmbedding: any;
-        foldAnimDelay: any;
-        foldAnimDuration: any;
-        colnames: any;
-        rownames: any;
-    }): Plots;
+    }, options: {}): this;
+    addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     private _updateLegend;
     doRender(): Plots;
     resize(width?: number, height?: number): Plots;

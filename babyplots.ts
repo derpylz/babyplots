@@ -353,7 +353,6 @@ export class Plots {
             labelBtn.innerHTML = buttonSVGs.labels;
             this._buttonBar.appendChild(labelBtn);
         }
-        // this._createLabelForms();
     }
 
     private _downloadJson() {
@@ -479,7 +478,10 @@ export class Plots {
         values: number[],
         indices: number[],
         attributes: { dim: number[] },
-        options = {
+        options: {}
+    ) {
+        // default options
+        let opts = {
             size: 1,
             colorScale: null,
             showLegend: true,
@@ -494,24 +496,26 @@ export class Plots {
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]]
         }
-    ) {
+        // apply user options
+        Object.assign(opts, options);
+        // prepare object for download as json button
         this._downloadObj = {
             values: values,
             indices: indices,
             attributes: attributes,
-            size: options.size,
-            colorScale: options.colorScale,
-            showLegend: options.showLegend,
-            fontSize: options.fontSize,
-            fontColor: options.fontColor,
-            legendTitle: options.legendTitle,
-            legendTitleFontSize: options.legendTitleFontSize,
-            showAxes: options.showAxes,
-            axisLabels: options.axisLabels,
-            axisColors: options.axisColors,
-            tickBreaks: options.tickBreaks,
-            showTickLines: options.showTickLines,
-            tickLineColors: options.tickLineColors,
+            size: opts.size,
+            colorScale: opts.colorScale,
+            showLegend: opts.showLegend,
+            fontSize: opts.fontSize,
+            fontColor: opts.fontColor,
+            legendTitle: opts.legendTitle,
+            legendTitleFontSize: opts.legendTitleFontSize,
+            showAxes: opts.showAxes,
+            axisLabels: opts.axisLabels,
+            axisColors: opts.axisColors,
+            tickBreaks: opts.tickBreaks,
+            showTickLines: opts.showTickLines,
+            tickLineColors: opts.tickLineColors,
             turntable: this.turntable,
             rotationRate: this.rotationRate,
             labels: [],
@@ -524,12 +528,12 @@ export class Plots {
             colorScale: "",
             inverted: false
         }
-        legendData.fontSize = options.fontSize;
-        legendData.fontColor = options.fontColor;
-        legendData.legendTitle = options.legendTitle;
-        legendData.legendTitleFontSize = options.legendTitleFontSize;
+        legendData.fontSize = opts.fontSize;
+        legendData.fontColor = opts.fontColor;
+        legendData.legendTitle = opts.legendTitle;
+        legendData.legendTitleFontSize = opts.legendTitleFontSize;
 
-        let plot = new ImgStack(this.scene, values, indices, attributes, legendData, options.size);
+        let plot = new ImgStack(this.scene, values, indices, attributes, legendData, opts.size);
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
@@ -542,7 +546,10 @@ export class Plots {
         plotType: string,
         colorBy: string,
         colorVar: string[] | number[],
-        options = {
+        options = {}
+    ): Plots {
+        // default options
+        let opts = {
             size: 1,
             colorScale: "Oranges",
             customColorScale: [],
@@ -566,37 +573,39 @@ export class Plots {
             colnames: null,
             rownames: null
         }
-    ): Plots {
+        // apply user options
+        Object.assign(opts, options);
+        console.log(opts);
         // create plot data object for download as json button
         this._downloadObj = {
             coordinates: coordinates,
             plotType: plotType,
             colorBy: colorBy,
             colorVar: colorVar,
-            size: options.size,
-            colorScale: options.colorScale,
-            customColorScale: options.customColorScale,
-            colorScaleInverted: options.colorScaleInverted,
-            sortedCategories: options.sortedCategories,
-            showLegend: options.showLegend,
-            fontSize: options.fontSize,
-            fontColor: options.fontColor,
-            legendTitle: options.legendTitle,
-            legendTitleFontSize: options.legendTitleFontSize,
-            showAxes: options.showAxes,
-            axisLabels: options.axisLabels,
-            axisColors: options.axisColors,
-            tickBreaks: options.tickBreaks,
-            showTickLines: options.showTickLines,
-            tickLineColors: options.tickLineColors,
-            folded: options.folded,
-            foldedEmbedding: options.foldedEmbedding,
-            foldAnimDelay: options.foldAnimDelay,
-            foldAnimDuration: options.foldAnimDuration,
+            size: opts.size,
+            colorScale: opts.colorScale,
+            customColorScale: opts.customColorScale,
+            colorScaleInverted: opts.colorScaleInverted,
+            sortedCategories: opts.sortedCategories,
+            showLegend: opts.showLegend,
+            fontSize: opts.fontSize,
+            fontColor: opts.fontColor,
+            legendTitle: opts.legendTitle,
+            legendTitleFontSize: opts.legendTitleFontSize,
+            showAxes: opts.showAxes,
+            axisLabels: opts.axisLabels,
+            axisColors: opts.axisColors,
+            tickBreaks: opts.tickBreaks,
+            showTickLines: opts.showTickLines,
+            tickLineColors: opts.tickLineColors,
+            folded: opts.folded,
+            foldedEmbedding: opts.foldedEmbedding,
+            foldAnimDelay: opts.foldAnimDelay,
+            foldAnimDuration: opts.foldAnimDuration,
             turntable: this.turntable,
             rotationRate: this.rotationRate,
-            colnames: options.colnames,
-            rownames: options.rownames,
+            colnames: opts.colnames,
+            rownames: opts.rownames,
             labels: [],
             backgroundColor: this._backgroundColor
         }
@@ -606,8 +615,8 @@ export class Plots {
         let rangeX: number[];
         let rangeY: number[];
         let rangeZ: number[];
-        this._hasAnim = options.folded;
-        if (options.folded) {
+        this._hasAnim = opts.folded;
+        if (opts.folded) {
             let replayBtn = document.createElement("div");
             replayBtn.className = "button"
             replayBtn.innerHTML = buttonSVGs.replay;
@@ -624,11 +633,11 @@ export class Plots {
                 // sortedCategories must be of same length as unique groups in colorVar.
                 // if no custom ordering is performed through sortedCategories, groups will be sorted alphabetically.
                 uniqueGroups.sort();
-                if (options.sortedCategories) {
-                    if (uniqueGroups.length === options.sortedCategories.length) {
+                if (opts.sortedCategories) {
+                    if (uniqueGroups.length === opts.sortedCategories.length) {
                         // sortedCategories must contain the same category names as those present in colorVar.
-                        if (JSON.stringify(uniqueGroups) === JSON.stringify(options.sortedCategories.slice(0).sort())) {
-                            uniqueGroups = options.sortedCategories;
+                        if (JSON.stringify(uniqueGroups) === JSON.stringify(opts.sortedCategories.slice(0).sort())) {
+                            uniqueGroups = opts.sortedCategories;
                         }
                     }
                 }
@@ -636,28 +645,28 @@ export class Plots {
                 // Paired is default color scale for discrete variable coloring
                 let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);
                 // check if color scale should be custom
-                if (options.colorScale === "custom") {
-                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
-                        if (options.colorScaleInverted) {
-                            colors = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
+                if (opts.colorScale === "custom") {
+                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
+                        if (opts.colorScaleInverted) {
+                            colors = chroma.scale(opts.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
                         } else {
-                            colors = chroma.scale(options.customColorScale).mode('lch').colors(nColors);
+                            colors = chroma.scale(opts.customColorScale).mode('lch').colors(nColors);
                         }
                     } else {
                         // set colorScale variable to default for legend if custom color scale is invalid
-                        options.colorScale = "Paired";
+                        opts.colorScale = "Paired";
                     }
                 } else {
                     // check if user selected color scale is a valid chromajs color brewer name
-                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                        if (options.colorScaleInverted) {
-                            colors = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                    if (opts.colorScale && chroma.brewer.hasOwnProperty(opts.colorScale)) {
+                        if (opts.colorScaleInverted) {
+                            colors = chroma.scale(chroma.brewer[opts.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
                         } else {
-                            colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                            colors = chroma.scale(chroma.brewer[opts.colorScale]).mode('lch').colors(nColors);
                         }
                     } else {
                         // set colorScale variable to default for legend if user selected is not valid
-                        options.colorScale = "Paired";
+                        opts.colorScale = "Paired";
                     }
                 }
                 for (let i = 0; i < nColors; i++) {
@@ -670,11 +679,11 @@ export class Plots {
                 }
                 // prepare object for legend drawing
                 legendData = {
-                    showLegend: options.showLegend,
+                    showLegend: opts.showLegend,
                     discrete: true,
                     breaks: uniqueGroups,
-                    colorScale: options.colorScale,
-                    customColorScale: options.customColorScale,
+                    colorScale: opts.colorScale,
+                    customColorScale: opts.customColorScale,
                     inverted: false
                 }
                 break;
@@ -685,29 +694,29 @@ export class Plots {
                 // Oranges is default color scale for continuous variable coloring
                 let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
                 // check if color scale should be custom
-                if (options.colorScale === "custom") {
+                if (opts.colorScale === "custom") {
                     // check if custom color scale is valid
-                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
-                        if (options.colorScaleInverted) {
-                            colorfunc = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch');
+                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
+                        if (opts.colorScaleInverted) {
+                            colorfunc = chroma.scale(opts.customColorScale).domain([1, 0]).mode('lch');
                         } else {
-                            colorfunc = chroma.scale(options.customColorScale).mode('lch');
+                            colorfunc = chroma.scale(opts.customColorScale).mode('lch');
                         }
                     } else {
                         // set colorScale variable to default for legend if custom color scale is invalid
-                        options.colorScale = "Oranges";
+                        opts.colorScale = "Oranges";
                     }
                 } else {
                     // check if user selected color scale is a valid chromajs color brewer name
-                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
-                        if (options.colorScaleInverted) {
-                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                    if (opts.colorScale && chroma.brewer.hasOwnProperty(opts.colorScale)) {
+                        if (opts.colorScaleInverted) {
+                            colorfunc = chroma.scale(chroma.brewer[opts.colorScale]).domain([1, 0]).mode('lch');
                         } else {
-                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                            colorfunc = chroma.scale(chroma.brewer[opts.colorScale]).mode('lch');
                         }
                     } else {
                         // set colorScale variable to default for legend if user selected is not valid
-                        options.colorScale = "Oranges";
+                        opts.colorScale = "Oranges";
                     }
                 }
                 // normalize the values to 0-1 range
@@ -716,12 +725,12 @@ export class Plots {
                 coordColors = norm.map(v => colorfunc(v).alpha(1).hex("rgba"));
                 // prepare object for legend drawing
                 legendData = {
-                    showLegend: options.showLegend,
+                    showLegend: opts.showLegend,
                     discrete: false,
                     breaks: [min.toString(), max.toString()],
-                    colorScale: options.colorScale,
-                    customColorScale: options.customColorScale,
-                    inverted: options.colorScaleInverted
+                    colorScale: opts.colorScale,
+                    customColorScale: opts.customColorScale,
+                    inverted: opts.colorScaleInverted
                 }
                 break;
             case "direct":
@@ -740,22 +749,22 @@ export class Plots {
                     discrete: false,
                     breaks: [],
                     colorScale: "",
-                    customColorScale: options.customColorScale,
+                    customColorScale: opts.customColorScale,
                     inverted: false
                 }
                 break;
         }
         // add remaining properties to legend object
-        legendData.fontSize = options.fontSize;
-        legendData.fontColor = options.fontColor;
-        legendData.legendTitle = options.legendTitle;
-        legendData.legendTitleFontSize = options.legendTitleFontSize;
+        legendData.fontSize = opts.fontSize;
+        legendData.fontColor = opts.fontColor;
+        legendData.legendTitle = opts.legendTitle;
+        legendData.legendTitleFontSize = opts.legendTitleFontSize;
 
         let plot: Plot;
         let scale: number[];
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud(this.scene, coordinates, coordColors, options.size, legendData, options.folded, options.foldedEmbedding, options.foldAnimDelay, options.foldAnimDuration);
+                plot = new PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration);
                 let boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -772,24 +781,24 @@ export class Plots {
                 scale = [1, 1, 1]
                 break;
             case "surface":
-                plot = new Surface(this.scene, coordinates, coordColors, options.size, legendData);
+                plot = new Surface(this.scene, coordinates, coordColors, opts.size, legendData);
                 rangeX = [0, coordinates.length];
                 rangeZ = [0, coordinates[0].length]
-                rangeY = [0, options.size];
+                rangeY = [0, opts.size];
                 scale = [
                     1,
-                    matrixMax(coordinates) / options.size,
+                    matrixMax(coordinates) / opts.size,
                     1
                 ]
                 break
             case "heatMap":
-                plot = new HeatMap(this.scene, coordinates, coordColors, options.size, legendData);
+                plot = new HeatMap(this.scene, coordinates, coordColors, opts.size, legendData);
                 rangeX = [0, coordinates.length];
                 rangeZ = [0, coordinates[0].length]
-                rangeY = [0, options.size];
+                rangeY = [0, opts.size];
                 scale = [
                     1,
-                    matrixMax(coordinates) / options.size,
+                    matrixMax(coordinates) / opts.size,
                     1
                 ]
                 break
@@ -798,20 +807,20 @@ export class Plots {
         this.plots.push(plot);
         this._updateLegend();
         let axisData: AxisData = {
-            showAxes: options.showAxes,
+            showAxes: opts.showAxes,
             static: true,
-            axisLabels: options.axisLabels,
+            axisLabels: opts.axisLabels,
             range: [rangeX, rangeY, rangeZ],
-            color: options.axisColors,
+            color: opts.axisColors,
             scale: scale,
-            tickBreaks: options.tickBreaks,
-            showTickLines: options.showTickLines,
-            tickLineColor: options.tickLineColors,
+            tickBreaks: opts.tickBreaks,
+            showTickLines: opts.showTickLines,
+            tickLineColor: opts.tickLineColors,
             showPlanes: [false, false, false],
             planeColor: ["#cccccc88", "#cccccc88", "#cccccc88"],
             plotType: plotType,
-            colnames: options.colnames,
-            rownames: options.rownames
+            colnames: opts.colnames,
+            rownames: opts.rownames
         }
         this._axes = new Axes(axisData, this.scene, plotType == "heatMap");
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
