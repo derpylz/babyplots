@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.LabelManager = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
 var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var pointerDragBehavior_1 = require("@babylonjs/core/Behaviors/Meshes/pointerDragBehavior");

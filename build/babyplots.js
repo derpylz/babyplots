@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.Plot = exports.matrixMax = exports.styleText = exports.buttonSVGs = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -56,10 +57,6 @@ var Plot = (function () {
     return Plot;
 }());
 exports.Plot = Plot;
-var ImgStack_1 = require("./ImgStack");
-var PointCloud_1 = require("./PointCloud");
-var Surface_1 = require("./Surface");
-var HeatMap_1 = require("./HeatMap");
 Array.prototype.min = function () {
     if (this.length > 65536) {
         var r_1 = this[0];
@@ -96,6 +93,10 @@ function getUniqueVals(source) {
     return result;
 }
 exports.getUniqueVals = getUniqueVals;
+var ImgStack_1 = require("./ImgStack");
+var PointCloud_1 = require("./PointCloud");
+var Surface_1 = require("./Surface");
+var HeatMap_1 = require("./HeatMap");
 exports.PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
@@ -224,7 +225,8 @@ var Plots = (function () {
                 axisColors: plotData["axisColors"],
                 tickBreaks: plotData["tickBreaks"],
                 showTickLines: plotData["showTickLines"],
-                tickLineColors: plotData["tickLineColors"]
+                tickLineColors: plotData["tickLineColors"],
+                intensityMode: plotData["intensityMode"]
             });
         }
         if (plotData["labels"]) {
@@ -355,7 +357,8 @@ var Plots = (function () {
             axisColors: ["#666666", "#666666", "#666666"],
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
-            tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]]
+            tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
+            intensityMode: "alpha"
         };
         Object.assign(opts, options);
         this._downloadObj = {
@@ -378,7 +381,8 @@ var Plots = (function () {
             turntable: this.turntable,
             rotationRate: this.rotationRate,
             labels: [],
-            backgroundColor: this._backgroundColor
+            backgroundColor: this._backgroundColor,
+            intensityMode: opts.intensityMode
         };
         var legendData = {
             showLegend: false,
@@ -391,7 +395,7 @@ var Plots = (function () {
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
-        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size);
+        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode);
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);

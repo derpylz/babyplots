@@ -101,10 +101,6 @@ export abstract class Plot {
     resetAnimation(): void { }
 }
 
-import { ImgStack } from "./ImgStack";
-import { PointCloud } from "./PointCloud";
-import { Surface } from "./Surface";
-import { HeatMap } from "./HeatMap";
 
 declare global {
     interface Array<T> {
@@ -148,6 +144,11 @@ export function getUniqueVals(source: string[]): string[] {
 
     return result;
 }
+
+import { ImgStack } from "./ImgStack";
+import { PointCloud } from "./PointCloud";
+import { Surface } from "./Surface";
+import { HeatMap } from "./HeatMap";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -322,7 +323,8 @@ export class Plots {
                     axisColors: plotData["axisColors"],
                     tickBreaks: plotData["tickBreaks"],
                     showTickLines: plotData["showTickLines"],
-                    tickLineColors: plotData["tickLineColors"]
+                    tickLineColors: plotData["tickLineColors"],
+                    intensityMode: plotData["intensityMode"]
                 }
             )
         }
@@ -494,7 +496,8 @@ export class Plots {
             axisColors: ["#666666", "#666666", "#666666"],
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
-            tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]]
+            tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
+            intensityMode: "alpha"
         }
         // apply user options
         Object.assign(opts, options);
@@ -519,7 +522,8 @@ export class Plots {
             turntable: this.turntable,
             rotationRate: this.rotationRate,
             labels: [],
-            backgroundColor: this._backgroundColor
+            backgroundColor: this._backgroundColor,
+            intensityMode: opts.intensityMode
         }
         let legendData: LegendData = {
             showLegend: false,
@@ -533,7 +537,7 @@ export class Plots {
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
 
-        let plot = new ImgStack(this.scene, values, indices, attributes, legendData, opts.size);
+        let plot = new ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode);
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);

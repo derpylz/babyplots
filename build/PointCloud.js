@@ -13,6 +13,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PointCloud = void 0;
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var sphereBuilder_1 = require("@babylonjs/core/Meshes/Builders/sphereBuilder");
 var math_1 = require("@babylonjs/core/Maths/math");

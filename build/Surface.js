@@ -16,6 +16,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Surface = void 0;
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");

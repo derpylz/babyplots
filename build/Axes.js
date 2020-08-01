@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Axes = void 0;
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
 var math_1 = require("@babylonjs/core/Maths/math");

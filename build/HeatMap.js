@@ -13,6 +13,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.HeatMap = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
 var boxBuilder_1 = require("@babylonjs/core/Meshes/Builders/boxBuilder");
 var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
