@@ -9,6 +9,7 @@ import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture
 import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import chroma from "chroma-js";
+import download from "downloadjs";
 
 import { LabelManager } from "./Label";
 
@@ -55,6 +56,8 @@ export const styleText = [
     ".bbp.label-control .label-form > input { width: 100%; box-sizing: border-box; }",
     ".bbp.label-control .label-form > button { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
     ".bbp.label-control .label-form > button:hover { background-color: #ddd; }",
+    ".bbp.overlay { position: absolute; z-index: 3; overflow: hidden; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background-color: #fff5; display: flex; justify-content: center; align-items: center;}",
+    ".bbp.overlay > h5.loading-message { color: #000; font-family: Verdana, sans-serif;}",
 ].join(" ");
 
 export function matrixMax(matrix: number[][]): number {
@@ -472,7 +475,7 @@ export class Plots {
                     format: "gif",
                     framerate: 30,
                     verbose: false,
-                    display: true,
+                    display: false,
                     quality: 50,
                     workersPath: worker
                 });
@@ -485,6 +488,15 @@ export class Plots {
                 } else {
                     this.turntable = true;
                 }
+                let loadingOverlay = document.createElement("div");
+                loadingOverlay.className = "bbp overlay";
+                loadingOverlay.id = "GIFloadingOverlay"
+                let loadingText = document.createElement("h5");
+                loadingText.className = ".loading-message";
+                loadingText.innerText = "Recording GIF...";
+                loadingText.id = "GIFloadingText"
+                loadingOverlay.appendChild(loadingText);
+                this.canvas.parentNode.appendChild(loadingOverlay);
             }
             // recording in progress:
             if (this._turned < 2 * Math.PI) {
@@ -495,7 +507,13 @@ export class Plots {
                 // after capturing 360°, stop capturing and save gif
                 this._recording = false;
                 this._capturer.stop();
-                this._capturer.save();
+                let loadingText = document.getElementById("GIFloadingText");
+                loadingText.innerText = "Saving GIF...";
+                this._capturer.save(function (blob) {
+                    download(blob, "babyplots.gif", 'image/gif');
+                    document.getElementById("GIFloadingText").remove();
+                    document.getElementById("GIFloadingOverlay").remove();
+                });
                 this._turned = 0;
                 this.rotationRate = 0.01;
                 this._hl2.diffuse = new Color3(0.8, 0.8, 0.8);
