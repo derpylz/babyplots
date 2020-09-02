@@ -24,6 +24,7 @@ export declare const buttonSVGs: {
     labels: string;
     publish: string;
     replay: string;
+    record: string;
 };
 export declare const styleText: string;
 export declare function matrixMax(matrix: number[][]): number;
@@ -81,6 +82,10 @@ export declare class Plots {
     private _buttonBar;
     private _labelManager;
     private _backgroundColor;
+    private _recording;
+    private _turned;
+    private _capturer;
+    private _wasTurning;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -95,6 +100,7 @@ export declare class Plots {
     createButtons(whichBtns?: string[]): void;
     private _downloadJson;
     private _resetAnimation;
+    private _startRecording;
     private _prepRender;
     private _afterRender;
     private _cameraFitPlot;

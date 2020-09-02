@@ -1,5 +1,5 @@
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
     entry: './babyplots.ts',
@@ -25,8 +25,9 @@ module.exports = {
         }]
     },
     optimization: {
+        minimize: true,
         minimizer: [
-            new UglifyJsPlugin(),
+            new TerserPlugin(),
         ]
     }
 }

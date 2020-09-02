@@ -11,19 +11,21 @@
   "author": "Nils Trost",
   "license": "Apache-2.0",
   "dependencies": {
+    "@types/ccapture.js": "^1.1.0",
     "@types/chroma-js": "^2.0.0",
     "babylonjs": "^4.1.0",
     "babylonjs-gui": "^4.1.0",
     "babylonjs-loaders": "^4.1.0",
     "babylonjs-post-process": "^4.1.0",
+    "ccapture.js": "^1.1.0",
     "chroma-js": "^2.1.0"
   },
   "devDependencies": {
     "@babylonjs/core": "^4.1.0",
     "@babylonjs/gui": "^4.1.0",
-    "ts-loader": "^6.2.1",
-    "typescript": "^3.9.7",
-    "uglifyjs-webpack-plugin": "^2.2.0",
+    "terser-webpack-plugin": "^4.1.0",
+    "ts-loader": "^8.0.3",
+    "typescript": "^4.0.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
