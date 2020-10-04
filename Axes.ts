@@ -45,49 +45,59 @@ export class Axes {
     }
     private _createAxes(heatmap: boolean = false): void {
         if (heatmap) {
+            // Tick breaks for heat map on x and z coordinates have to match columns and rows
             this.axisData.tickBreaks[0] = 1;
             this.axisData.tickBreaks[2] = 1;
         }
-        let xtickBreaks = this.axisData.tickBreaks[0] / this.axisData.scale[0];
-        let ytickBreaks = this.axisData.tickBreaks[1] / this.axisData.scale[1];
-        let ztickBreaks = this.axisData.tickBreaks[2] / this.axisData.scale[2];
+        // Apply scaling factor to tick break interval to get distance between ticks
+        let xtickBreaks = this.axisData.tickBreaks[0] * this.axisData.scale[0];
+        let ytickBreaks = this.axisData.tickBreaks[1] * this.axisData.scale[1];
+        let ztickBreaks = this.axisData.tickBreaks[2] * this.axisData.scale[2];
+        // Find minima and maxima of the axes as a multiple of the tick interval distance
         let xmin = Math.floor(this.axisData.range[0][0] / xtickBreaks) * xtickBreaks;
         let ymin = Math.floor(this.axisData.range[1][0] / ytickBreaks) * ytickBreaks;
         let zmin = Math.floor(this.axisData.range[2][0] / ztickBreaks) * ztickBreaks;
         let xmax = Math.ceil(this.axisData.range[0][1] / xtickBreaks) * xtickBreaks;
         let ymax = Math.ceil(this.axisData.range[1][1] / ytickBreaks) * ytickBreaks;
         let zmax = Math.ceil(this.axisData.range[2][1] / ztickBreaks) * ztickBreaks;
-        // create X axis
+        // Create X axis
         if (this.axisData.showAxes[0]) {
-            // axis
+            // Create axis line
             let axisX = LinesBuilder.CreateLines("axisX", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmax, ymin, zmin)
                 ]
             }, this._scene);
+            // Apply axis color
             axisX.color = Color3.FromHexString(this.axisData.color[0]);
             this._axes.push(axisX);
-            // label
+            // Create axis label
             let xChar = this._makeTextPlane(this.axisData.axisLabels[0], 1, this.axisData.color[0]);
+            // Place label near end of the axis
             xChar.position = new Vector3(xmax / 2, ymin - 0.5 * ymax, zmin);
             this._axisLabels.push(xChar);
-            // x ticks and tick lines
+            // Create ticks and tick lines
             let xTicks = [];
+            // Find x coordinates for ticks
+            // Negative ticks
             for (let i = 0; i < -Math.ceil(this.axisData.range[0][0] / xtickBreaks); i++) {
                 xTicks.push(-(i + 1) * xtickBreaks);
             }
+            // Positive ticks
             for (let i = 0; i <= Math.ceil(this.axisData.range[0][1] / xtickBreaks); i++) {
                 xTicks.push(i * xtickBreaks);
             }
+            // Usually ticks start with 0, heat map starts with 1
             let startTick = 0;
             if (heatmap) {
                 startTick = 1;
             }
+            // Create all ticks
             for (let i = startTick; i < xTicks.length; i++) {
                 let tickPos = xTicks[i];
                 if (heatmap) {
-                    tickPos = tickPos - 0.5;
+                    tickPos = tickPos - 0.5 * this.axisData.scale[0];
                 }
                 let tick = LinesBuilder.CreateLines("xTicks", {
                     points: [
@@ -98,9 +108,12 @@ export class Axes {
                 }, this._scene);
                 tick.color = Color3.FromHexString(this.axisData.color[0]);
                 this._ticks.push(tick);
-                let tickLabel = this._roundTicks(tickPos * this.axisData.scale[0]).toString();
+                let tickLabel = this._roundTicks(tickPos / this.axisData.scale[0]).toString();
                 if (heatmap) {
                     tickLabel = this.axisData.colnames[i - 1];
+                }
+                if (tickLabel === undefined) {
+                    continue;
                 }
                 let tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[0]);
                 tickChar.position = new Vector3(tickPos, ymin - 0.1 * ymax, zmin);
@@ -161,7 +174,7 @@ export class Axes {
                 }, this._scene);
                 tick.color = Color3.FromHexString(this.axisData.color[1]);
                 this._ticks.push(tick);
-                let tickLabel = this._roundTicks(tickPos * this.axisData.scale[1]);
+                let tickLabel = this._roundTicks(tickPos / this.axisData.scale[1]);
                 let tickChar = this._makeTextPlane(tickLabel.toString(), 0.6, this.axisData.color[1]);
                 tickChar.position = new Vector3(xmin, tickPos, zmin - 0.05 * ymax);
                 this._tickLabels.push(tickChar);
@@ -218,7 +231,7 @@ export class Axes {
             for (let i = startTick; i < zTicks.length; i++) {
                 let tickPos = zTicks[i];
                 if (heatmap) {
-                    tickPos = tickPos - 0.5;
+                    tickPos = tickPos - 0.5 * this.axisData.scale[2];
                 }
                 let tick = LinesBuilder.CreateLines("zTicks", {
                     points: [
@@ -229,9 +242,12 @@ export class Axes {
                 }, this._scene);
                 tick.color = Color3.FromHexString(this.axisData.color[2]);
                 this._ticks.push(tick);
-                let tickLabel = this._roundTicks(tickPos * this.axisData.scale[2]).toString();
+                let tickLabel = this._roundTicks(tickPos / this.axisData.scale[2]).toString();
                 if (heatmap) {
                     tickLabel = this.axisData.rownames[i - 1];
+                }
+                if (tickLabel === undefined) {
+                    continue;
                 }
                 let tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[2]);
                 tickChar.position = new Vector3(xmin, ymin - 0.1 * ymax, tickPos);

@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Babylonjs + webpack + typescript</title>
+    <title>Babyplot Test</title>
+    <script src="dist/examples/surface.js"></script>
+    <script src="dist/examples/heatMap.js"></script>
+    <script src="dist/examples/pointCloud.js"></script>
+    <script src="dist/examples/imagestack.js"></script>
+    <script src="dist/babyplots.js"></script>
     <style>
       html,
       body {
@@ -16,14 +21,18 @@
       }
 
       #renderCanvas {
-        width: 100%;
-        height: 100%;
+        width: 50%;
+        height: 50%;
         touch-action: none;
       }
     </style>
   </head>
   <body>
     <canvas id="renderCanvas"></canvas>
-    <script src="dist/babyplots.js"></script>
+    <script>
+      var vis = new Baby.Plots("renderCanvas");
+      vis.fromJSON(heatMapData);
+      vis.doRender();
+    </script>
   </body>
 </html>

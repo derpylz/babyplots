@@ -7,8 +7,12 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData, matrixMax } from "./babyplots";
 
 export class HeatMap extends Plot {
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData) {
+    scaleColumn: number;
+    scaleRow: number;
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, scaleColumn: number, scaleRow: number, legendData: LegendData) {
         super(scene, coordinates, colorVar, size, legendData);
+        this.scaleColumn = scaleColumn;
+        this.scaleRow = scaleRow;
         this._createHeatMap();
     }
     private _createHeatMap(): void {
@@ -22,10 +26,14 @@ export class HeatMap extends Plot {
                     let height = coord / max * this._size;
                     let box = BoxBuilder.CreateBox("box_" + row + "-" + column, {
                         height: height,
-                        width: 1,
-                        depth: 1
+                        width: this.scaleColumn,
+                        depth: this.scaleRow
                     }, this._scene);
-                    box.position = new Vector3(row + 0.5, height / 2, column + 0.5);
+                    box.position = new Vector3(
+                        row * this.scaleColumn + 0.5 * this.scaleColumn,
+                        height / 2,
+                        column * this.scaleRow + 0.5 * this.scaleRow
+                    );
                     let mat = new StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;
                     mat.diffuseColor = Color3.FromHexString(this._coordColors[column + row * rowCoords.length].substring(0, 7));
@@ -33,8 +41,12 @@ export class HeatMap extends Plot {
                     boxes.push(box);
                 }
                 else {
-                    let box = PlaneBuilder.CreatePlane("box_" + row + "-" + column, { size: 1 }, this._scene);
-                    box.position = new Vector3(row + 0.5, 0, column + 0.5);
+                    let box = PlaneBuilder.CreatePlane("box_" + row + "-" + column, { width: this.scaleColumn, height: this.scaleRow }, this._scene);
+                    box.position = new Vector3(
+                        row * this.scaleColumn + 0.5 * this.scaleColumn,
+                        0,
+                        column * this.scaleRow + 0.5 * this.scaleRow
+                    );
                     box.rotation.x = Math.PI / 2;
                     let mat = new StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;

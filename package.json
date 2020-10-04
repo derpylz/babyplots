@@ -14,6 +14,7 @@
     "@types/ccapture.js": "^1.1.0",
     "@types/chroma-js": "^2.0.0",
     "@types/downloadjs": "^1.4.2",
+    "@types/pako": "^1.0.1",
     "babylonjs": "^4.1.0",
     "babylonjs-gui": "^4.1.0",
     "babylonjs-loaders": "^4.1.0",

@@ -283,6 +283,7 @@ export class Plots {
             this.scene.clearColor = Color4.FromHexString(this._backgroundColor);
         }
         if (plotData["coordinates"] && plotData["plotType"] && plotData["colorBy"]) {
+            console.log(plotData);
             this.addPlot(
                 plotData["coordinates"],
                 plotData["plotType"],
@@ -290,6 +291,8 @@ export class Plots {
                 plotData["colorVar"],
                 {
                     size: plotData["size"],
+                    scaleColumn: plotData["scaleColumn"],
+                    scaleRow: plotData["scaleRow"],
                     colorScale: plotData["colorScale"],
                     customColorScale: plotData["customColorScale"],
                     colorScaleInverted: plotData["colorScaleInverted"],
@@ -633,6 +636,8 @@ export class Plots {
         // default options
         let opts = {
             size: 1,
+            scaleColumn: 1,
+            scaleRow: 1,
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
@@ -665,6 +670,8 @@ export class Plots {
             colorBy: colorBy,
             colorVar: colorVar,
             size: opts.size,
+            scaleColumn: opts.scaleColumn,
+            scaleRow: opts.scaleRow,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
             colorScaleInverted: opts.colorScaleInverted,
@@ -863,25 +870,25 @@ export class Plots {
                 scale = [1, 1, 1]
                 break;
             case "surface":
-                plot = new Surface(this.scene, coordinates, coordColors, opts.size, legendData);
-                rangeX = [0, coordinates.length];
-                rangeZ = [0, coordinates[0].length]
+                plot = new Surface(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
+                rangeX = [0, coordinates.length * opts.scaleColumn];
+                rangeZ = [0, coordinates[0].length * opts.scaleRow];
                 rangeY = [0, opts.size];
                 scale = [
-                    1,
-                    matrixMax(coordinates) / opts.size,
-                    1
+                    opts.scaleColumn,
+                    opts.size / matrixMax(coordinates),
+                    opts.scaleRow
                 ]
                 break
             case "heatMap":
-                plot = new HeatMap(this.scene, coordinates, coordColors, opts.size, legendData);
-                rangeX = [0, coordinates.length];
-                rangeZ = [0, coordinates[0].length]
+                plot = new HeatMap(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
+                rangeX = [0, coordinates.length * opts.scaleColumn];
+                rangeZ = [0, coordinates[0].length * opts.scaleRow];
                 rangeY = [0, opts.size];
                 scale = [
-                    1,
-                    matrixMax(coordinates) / opts.size,
-                    1
+                    opts.scaleColumn,
+                    opts.size / matrixMax(coordinates),
+                    opts.scaleRow
                 ]
                 break
         }

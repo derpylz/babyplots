@@ -7,8 +7,12 @@ import chroma from "chroma-js";
 
 
 export class Surface extends Plot {
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData) {
+    scaleColumn: number;
+    scaleRow: number;
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, scaleColumn: number, scaleRow: number, legendData: LegendData) {
         super(scene, coordinates, colorVar, size, legendData);
+        this.scaleColumn = scaleColumn;
+        this.scaleRow = scaleRow;
         this._createSurface();
     }
     private _createSurface(): void {
@@ -20,9 +24,16 @@ export class Surface extends Plot {
             const rowCoords = this._coords[row];
             for (let column = 0; column < rowCoords.length; column++) {
                 const coord = rowCoords[column];
-                positions.push(column, coord / max * this._size, row);
+                positions.push(column * this.scaleRow, coord / max * this._size, row * this.scaleColumn);
                 if (row < this._coords.length - 1 && column < rowCoords.length - 1) {
-                    indices.push(column + row * rowCoords.length, rowCoords.length + row * rowCoords.length + column, column + row * rowCoords.length + 1, column + row * rowCoords.length + 1, rowCoords.length + row * rowCoords.length + column, rowCoords.length + row * rowCoords.length + column + 1);
+                    indices.push(
+                        column + row * rowCoords.length,
+                        rowCoords.length + row * rowCoords.length + column,
+                        column + row * rowCoords.length + 1,
+                        column + row * rowCoords.length + 1,
+                        rowCoords.length + row * rowCoords.length + column,
+                        rowCoords.length + row * rowCoords.length + column + 1
+                    );
                 }
             }
         }
