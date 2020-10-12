@@ -980,20 +980,23 @@ export class Plots {
                 let innerGrid = new Grid();
                 innerGrid.addColumnDefinition(0.2);
                 innerGrid.addColumnDefinition(0.8);
-                innerGrid.addRowDefinition(1);
                 grid.addControl(innerGrid, 1, 1);
-
-                let nBreaks = 265;
-                let labelSpace = 0.05;
+                
+                let nBreaks = 115;
+                let labelSpace = 0.15;
                 if (this.canvas.height < 70) {
                     nBreaks = 10;
                     labelSpace = 0.45;
+                    innerGrid.addRowDefinition(1);
                 } else if (this.canvas.height < 130) {
                     nBreaks = 50;
                     labelSpace = 0.3;
-                } else if (this.canvas.height < 350) {
-                    nBreaks = 100;
-                    labelSpace = 0.15
+                    innerGrid.addRowDefinition(1);
+                } else {
+                    let padding = (this.canvas.height - 115) / 2
+                    innerGrid.addRowDefinition(padding, true);
+                    innerGrid.addRowDefinition(115, true);
+                    innerGrid.addRowDefinition(padding, true);
                 }
                 // color bar
                 let colors: string[];
@@ -1016,25 +1019,31 @@ export class Plots {
                     legendColor.height = 1;
                     scaleGrid.addControl(legendColor, i, 0);
                 }
-                innerGrid.addControl(scaleGrid, 0, 0);
-
+                
                 // label text
                 let labelGrid = new Grid();
                 labelGrid.addColumnDefinition(1);
                 labelGrid.addRowDefinition(labelSpace);
                 labelGrid.addRowDefinition(1 - labelSpace * 2);
                 labelGrid.addRowDefinition(labelSpace);
-                innerGrid.addControl(labelGrid, 0, 1);
+                
+                if (this.canvas.height < 130) {
+                    innerGrid.addControl(scaleGrid, 0, 0);
+                    innerGrid.addControl(labelGrid, 0, 1);
+                } else {
+                    innerGrid.addControl(scaleGrid, 1, 0);
+                    innerGrid.addControl(labelGrid, 1, 1);
+                }
 
                 let minText = new TextBlock();
-                minText.text = parseFloat(legendData.breaks[0]).toFixed(4).toString();
+                minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
                 minText.color = legendData.fontColor;
                 minText.fontSize = legendData.fontSize + "px";
                 minText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
                 labelGrid.addControl(minText, 2, 0);
 
                 let maxText = new TextBlock();
-                maxText.text = parseFloat(legendData.breaks[1]).toFixed(4).toString();
+                maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
                 maxText.color = legendData.fontColor;
                 maxText.fontSize = legendData.fontSize + "px";
                 maxText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;

@@ -38,9 +38,9 @@ var Axes = (function () {
             this.axisData.tickBreaks[0] = 1;
             this.axisData.tickBreaks[2] = 1;
         }
-        var xtickBreaks = this.axisData.tickBreaks[0] / this.axisData.scale[0];
-        var ytickBreaks = this.axisData.tickBreaks[1] / this.axisData.scale[1];
-        var ztickBreaks = this.axisData.tickBreaks[2] / this.axisData.scale[2];
+        var xtickBreaks = this.axisData.tickBreaks[0] * this.axisData.scale[0];
+        var ytickBreaks = this.axisData.tickBreaks[1] * this.axisData.scale[1];
+        var ztickBreaks = this.axisData.tickBreaks[2] * this.axisData.scale[2];
         var xmin = Math.floor(this.axisData.range[0][0] / xtickBreaks) * xtickBreaks;
         var ymin = Math.floor(this.axisData.range[1][0] / ytickBreaks) * ytickBreaks;
         var zmin = Math.floor(this.axisData.range[2][0] / ztickBreaks) * ztickBreaks;
@@ -73,7 +73,7 @@ var Axes = (function () {
             for (var i = startTick; i < xTicks.length; i++) {
                 var tickPos = xTicks[i];
                 if (heatmap) {
-                    tickPos = tickPos - 0.5;
+                    tickPos = tickPos - 0.5 * this.axisData.scale[0];
                 }
                 var tick = linesBuilder_1.LinesBuilder.CreateLines("xTicks", {
                     points: [
@@ -84,9 +84,12 @@ var Axes = (function () {
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[0]);
                 this._ticks.push(tick);
-                var tickLabel = this._roundTicks(tickPos * this.axisData.scale[0]).toString();
+                var tickLabel = this._roundTicks(tickPos / this.axisData.scale[0]).toString();
                 if (heatmap) {
                     tickLabel = this.axisData.colnames[i - 1];
+                }
+                if (tickLabel === undefined) {
+                    continue;
                 }
                 var tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[0]);
                 tickChar.position = new math_1.Vector3(tickPos, ymin - 0.1 * ymax, zmin);
@@ -143,7 +146,7 @@ var Axes = (function () {
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[1]);
                 this._ticks.push(tick);
-                var tickLabel = this._roundTicks(tickPos * this.axisData.scale[1]);
+                var tickLabel = this._roundTicks(tickPos / this.axisData.scale[1]);
                 var tickChar = this._makeTextPlane(tickLabel.toString(), 0.6, this.axisData.color[1]);
                 tickChar.position = new math_1.Vector3(xmin, tickPos, zmin - 0.05 * ymax);
                 this._tickLabels.push(tickChar);
@@ -195,7 +198,7 @@ var Axes = (function () {
             for (var i = startTick; i < zTicks.length; i++) {
                 var tickPos = zTicks[i];
                 if (heatmap) {
-                    tickPos = tickPos - 0.5;
+                    tickPos = tickPos - 0.5 * this.axisData.scale[2];
                 }
                 var tick = linesBuilder_1.LinesBuilder.CreateLines("zTicks", {
                     points: [
@@ -206,9 +209,12 @@ var Axes = (function () {
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[2]);
                 this._ticks.push(tick);
-                var tickLabel = this._roundTicks(tickPos * this.axisData.scale[2]).toString();
+                var tickLabel = this._roundTicks(tickPos / this.axisData.scale[2]).toString();
                 if (heatmap) {
                     tickLabel = this.axisData.rownames[i - 1];
+                }
+                if (tickLabel === undefined) {
+                    continue;
                 }
                 var tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[2]);
                 tickChar.position = new math_1.Vector3(xmin, ymin - 0.1 * ymax, tickPos);

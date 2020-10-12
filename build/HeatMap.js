@@ -21,8 +21,10 @@ var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
 var HeatMap = (function (_super) {
     __extends(HeatMap, _super);
-    function HeatMap(scene, coordinates, colorVar, size, legendData) {
+    function HeatMap(scene, coordinates, colorVar, size, scaleColumn, scaleRow, legendData) {
         var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
+        _this.scaleColumn = scaleColumn;
+        _this.scaleRow = scaleRow;
         _this._createHeatMap();
         return _this;
     }
@@ -37,10 +39,10 @@ var HeatMap = (function (_super) {
                     var height = coord / max * this._size;
                     var box = boxBuilder_1.BoxBuilder.CreateBox("box_" + row + "-" + column, {
                         height: height,
-                        width: 1,
-                        depth: 1
+                        width: this.scaleColumn,
+                        depth: this.scaleRow
                     }, this._scene);
-                    box.position = new math_1.Vector3(row + 0.5, height / 2, column + 0.5);
+                    box.position = new math_1.Vector3(row * this.scaleColumn + 0.5 * this.scaleColumn, height / 2, column * this.scaleRow + 0.5 * this.scaleRow);
                     var mat = new standardMaterial_1.StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;
                     mat.diffuseColor = math_1.Color3.FromHexString(this._coordColors[column + row * rowCoords.length].substring(0, 7));
@@ -48,8 +50,8 @@ var HeatMap = (function (_super) {
                     boxes.push(box);
                 }
                 else {
-                    var box = planeBuilder_1.PlaneBuilder.CreatePlane("box_" + row + "-" + column, { size: 1 }, this._scene);
-                    box.position = new math_1.Vector3(row + 0.5, 0, column + 0.5);
+                    var box = planeBuilder_1.PlaneBuilder.CreatePlane("box_" + row + "-" + column, { width: this.scaleColumn, height: this.scaleRow }, this._scene);
+                    box.position = new math_1.Vector3(row * this.scaleColumn + 0.5 * this.scaleColumn, 0, column * this.scaleRow + 0.5 * this.scaleRow);
                     box.rotation.x = Math.PI / 2;
                     var mat = new standardMaterial_1.StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;

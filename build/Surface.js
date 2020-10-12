@@ -24,8 +24,10 @@ var babyplots_1 = require("./babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var Surface = (function (_super) {
     __extends(Surface, _super);
-    function Surface(scene, coordinates, colorVar, size, legendData) {
+    function Surface(scene, coordinates, colorVar, size, scaleColumn, scaleRow, legendData) {
         var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
+        _this.scaleColumn = scaleColumn;
+        _this.scaleRow = scaleRow;
         _this._createSurface();
         return _this;
     }
@@ -38,7 +40,7 @@ var Surface = (function (_super) {
             var rowCoords = this._coords[row];
             for (var column = 0; column < rowCoords.length; column++) {
                 var coord = rowCoords[column];
-                positions.push(column, coord / max * this._size, row);
+                positions.push(column * this.scaleRow, coord / max * this._size, row * this.scaleColumn);
                 if (row < this._coords.length - 1 && column < rowCoords.length - 1) {
                     indices.push(column + row * rowCoords.length, rowCoords.length + row * rowCoords.length + column, column + row * rowCoords.length + 1, column + row * rowCoords.length + 1, rowCoords.length + row * rowCoords.length + column, rowCoords.length + row * rowCoords.length + column + 1);
                 }

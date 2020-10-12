@@ -31,8 +31,11 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas");
-      vis.fromJSON(heatMapData);
+      vis.fromJSON(surfaceData);
       vis.doRender();
+      window.onresize = function () {
+        vis.resize();
+      }
     </script>
   </body>
 </html>
