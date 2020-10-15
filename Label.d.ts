@@ -1,6 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { Vector3 } from "@babylonjs/core/Maths/math";
 export declare class LabelManager {
     private _canvas;
     private _scene;
@@ -21,8 +20,12 @@ export declare class LabelManager {
     update(): void;
     toggleLabelControl(): void;
     private _addLabelBtnClick;
-    addLabel(text: string, position?: number[], moveCallback?: (position: Vector3) => any): number;
+    addLabel(text: string, position?: number[]): number;
+    private makeDraggable;
+    addLabels(labelList: [[number, number, number, string]]): void;
     private _editLabelText;
     private _removeLabel;
     exportLabels(): any[];
+    fixLabels(): void;
+    unfixLabels(): void;
 }

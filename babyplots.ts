@@ -342,10 +342,17 @@ export class Plots {
         if (plotData["labels"]) {
             this._labelManager.fixed = true;
             let labelData = plotData["labels"];
-            for (let i = 0; i < labelData.length; i++) {
-                const label = labelData[i];
-                if (label["text"] && label["position"]) {
-                    this._labelManager.addLabel(label["text"], label["position"]);
+            if (labelData.length > 0) {
+                if (Array.isArray(labelData[0])) {
+                    this._labelManager.addLabels(labelData);
+                } else {
+                    // legacy label saving
+                    for (let i = 0; i < labelData.length; i++) {
+                        const label = labelData[i];
+                        if (label["text"] && label["position"]) {
+                            this._labelManager.addLabel(label["text"], label["position"]);
+                        }
+                    }
                 }
             }
         }
@@ -1154,6 +1161,15 @@ export class Plots {
     dispose(): void {
         this.scene.dispose();
         this._engine.dispose();
+    }
+
+    /**
+     * Add labels from a list of labels.
+     * 
+     * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
+     */
+    addLabels(labelList: [[number, number, number, string]]): void {
+        this._labelManager.addLabels(labelList);
     }
 
 }

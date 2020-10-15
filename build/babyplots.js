@@ -242,10 +242,17 @@ var Plots = (function () {
         if (plotData["labels"]) {
             this._labelManager.fixed = true;
             var labelData = plotData["labels"];
-            for (var i = 0; i < labelData.length; i++) {
-                var label = labelData[i];
-                if (label["text"] && label["position"]) {
-                    this._labelManager.addLabel(label["text"], label["position"]);
+            if (labelData.length > 0) {
+                if (Array.isArray(labelData[0])) {
+                    this._labelManager.addLabels(labelData);
+                }
+                else {
+                    for (var i = 0; i < labelData.length; i++) {
+                        var label = labelData[i];
+                        if (label["text"] && label["position"]) {
+                            this._labelManager.addLabel(label["text"], label["position"]);
+                        }
+                    }
                 }
             }
         }
@@ -957,6 +964,9 @@ var Plots = (function () {
     Plots.prototype.dispose = function () {
         this.scene.dispose();
         this._engine.dispose();
+    };
+    Plots.prototype.addLabels = function (labelList) {
+        this._labelManager.addLabels(labelList);
     };
     return Plots;
 }());

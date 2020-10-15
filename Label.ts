@@ -96,8 +96,10 @@ export class LabelManager {
     toggleLabelControl() {
         if (this._labelControlBox.style.display == "none") {
             this._labelControlBox.style.display = "block";
+            this.unfixLabels();
         } else {
             this._labelControlBox.style.display = "none";
+            this.fixLabels();
         }
     }
 
@@ -111,7 +113,7 @@ export class LabelManager {
      * @param text Label title
      * @param [moveCallback] On dragging of label in 3d plot, the final position will be passed to this function
      */
-    addLabel(text: string, position?: number[], moveCallback?: (position: Vector3) => any): number {
+    addLabel(text: string, position?: number[]): number {
         this._addLabelTextInput.value = "";
         let labelIdx = this._labels.length;
         let plane = PlaneBuilder.CreatePlane('label_' + labelIdx, {
@@ -142,15 +144,7 @@ export class LabelManager {
         this._labelTexts.push(textBlock);
 
         if (!this.fixed) {
-            let labelDragBehavior = new PointerDragBehavior();
-            labelDragBehavior.onDragEndObservable.add(() => {
-                if (moveCallback) {
-                    moveCallback(plane.position);
-                } else {
-                    console.log([plane.position.x, plane.position.y, plane.position.z])
-                }
-            });
-            plane.addBehavior(labelDragBehavior);
+            this.makeDraggable(plane);
         }
 
         this._labels.push(plane);
@@ -181,6 +175,25 @@ export class LabelManager {
 
         this._showLabels = true;
         return labelIdx;
+    }
+
+    private makeDraggable(label: Mesh) {
+        let labelDragBehavior = new PointerDragBehavior();
+        label.addBehavior(labelDragBehavior);
+    }
+
+    /**
+     * Add multiple labels from a list of labels.
+     * 
+     * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
+     */
+    addLabels(labelList: [[number, number, number, string]]): void {
+        for (let i = 0; i < labelList.length; i++) {
+            const label = labelList[i];
+            let text = label[3];
+            let position = label.slice(0, 3) as number[];
+            this.addLabel(text, position);
+        }
     }
 
     private _editLabelText(ev: Event): void {
@@ -219,8 +232,25 @@ export class LabelManager {
         for (let i = 0; i < this._labelTexts.length; i++) {
             const lText = this._labelTexts[i].text;
             const lPos = this._labels[i].position;
-            labels.push({text: lText, position: [lPos.x, lPos.y, lPos.z]});
+            labels.push([lPos.x, lPos.y, lPos.z, lText]);
         }
         return labels;
     }
+
+    fixLabels() {
+        for (let i = 0; i < this._labels.length; i++) {
+            const label = this._labels[i];
+            label.removeBehavior(label.getBehaviorByName("PointerDrag"));
+        }
+        this.fixed = true;
+    }
+
+    unfixLabels() {
+        for (let i = 0; i < this._labels.length; i++) {
+            const label = this._labels[i];
+            this.makeDraggable(label);
+        }
+        this.fixed = false;
+    }
+
 }

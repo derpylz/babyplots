@@ -81,16 +81,18 @@ var LabelManager = (function () {
     LabelManager.prototype.toggleLabelControl = function () {
         if (this._labelControlBox.style.display == "none") {
             this._labelControlBox.style.display = "block";
+            this.unfixLabels();
         }
         else {
             this._labelControlBox.style.display = "none";
+            this.fixLabels();
         }
     };
     LabelManager.prototype._addLabelBtnClick = function (event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
     };
-    LabelManager.prototype.addLabel = function (text, position, moveCallback) {
+    LabelManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";
         var labelIdx = this._labels.length;
         var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label_' + labelIdx, {
@@ -117,16 +119,7 @@ var LabelManager = (function () {
         advancedTexture.addControl(textBlock);
         this._labelTexts.push(textBlock);
         if (!this.fixed) {
-            var labelDragBehavior = new pointerDragBehavior_1.PointerDragBehavior();
-            labelDragBehavior.onDragEndObservable.add(function () {
-                if (moveCallback) {
-                    moveCallback(plane.position);
-                }
-                else {
-                    console.log([plane.position.x, plane.position.y, plane.position.z]);
-                }
-            });
-            plane.addBehavior(labelDragBehavior);
+            this.makeDraggable(plane);
         }
         this._labels.push(plane);
         var labelNum = this._labels.length - 1;
@@ -153,6 +146,18 @@ var LabelManager = (function () {
         this._editLabelContainer.appendChild(editLabelForm);
         this._showLabels = true;
         return labelIdx;
+    };
+    LabelManager.prototype.makeDraggable = function (label) {
+        var labelDragBehavior = new pointerDragBehavior_1.PointerDragBehavior();
+        label.addBehavior(labelDragBehavior);
+    };
+    LabelManager.prototype.addLabels = function (labelList) {
+        for (var i = 0; i < labelList.length; i++) {
+            var label = labelList[i];
+            var text = label[3];
+            var position = label.slice(0, 3);
+            this.addLabel(text, position);
+        }
     };
     LabelManager.prototype._editLabelText = function (ev) {
         var inputElem = ev.target;
@@ -189,9 +194,23 @@ var LabelManager = (function () {
         for (var i = 0; i < this._labelTexts.length; i++) {
             var lText = this._labelTexts[i].text;
             var lPos = this._labels[i].position;
-            labels.push({ text: lText, position: [lPos.x, lPos.y, lPos.z] });
+            labels.push([lPos.x, lPos.y, lPos.z, lText]);
         }
         return labels;
+    };
+    LabelManager.prototype.fixLabels = function () {
+        for (var i = 0; i < this._labels.length; i++) {
+            var label = this._labels[i];
+            label.removeBehavior(label.getBehaviorByName("PointerDrag"));
+        }
+        this.fixed = true;
+    };
+    LabelManager.prototype.unfixLabels = function () {
+        for (var i = 0; i < this._labels.length; i++) {
+            var label = this._labels[i];
+            this.makeDraggable(label);
+        }
+        this.fixed = false;
     };
     return LabelManager;
 }());
