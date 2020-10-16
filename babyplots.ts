@@ -11,7 +11,7 @@ import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import chroma from "chroma-js";
 import download from "downloadjs";
 
-import { LabelManager } from "./Label";
+import { AnnotationManager } from "./Label";
 
 /**
  * Interface for object containing information about axis setup.
@@ -203,7 +203,7 @@ export class Plots {
     private _axes: Axes;
     private _downloadObj: {} = {};
     private _buttonBar: HTMLDivElement;
-    private _labelManager: LabelManager;
+    private _annotationManager: AnnotationManager;
     private _backgroundColor: string;
     private _recording: boolean = false;
     private _turned: number = 0;
@@ -251,7 +251,7 @@ export class Plots {
         this._hl2.diffuse = new Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new Color3(0, 0, 0);
 
-        this._labelManager = new LabelManager(this.canvas, this.scene, this.ymax, this.camera);
+        this._annotationManager = new AnnotationManager(this.canvas, this.scene, this.ymax, this.camera);
 
         this.scene.registerBeforeRender(this._prepRender.bind(this));
 
@@ -340,17 +340,17 @@ export class Plots {
             )
         }
         if (plotData["labels"]) {
-            this._labelManager.fixed = true;
+            this._annotationManager.fixedLabels = true;
             let labelData = plotData["labels"];
             if (labelData.length > 0) {
                 if (Array.isArray(labelData[0])) {
-                    this._labelManager.addLabels(labelData);
+                    this._annotationManager.addLabels(labelData);
                 } else {
                     // legacy label saving
                     for (let i = 0; i < labelData.length; i++) {
                         const label = labelData[i];
                         if (label["text"] && label["position"]) {
-                            this._labelManager.addLabel(label["text"], label["position"]);
+                            this._annotationManager.addLabel(label["text"], label["position"]);
                         }
                     }
                 }
@@ -369,7 +369,7 @@ export class Plots {
         if (whichBtns.indexOf("label") !== -1) {
             let labelBtn = document.createElement("div");
             labelBtn.className = "button";
-            labelBtn.onclick = this._labelManager.toggleLabelControl.bind(this._labelManager);
+            labelBtn.onclick = this._annotationManager.toggleLabelControl.bind(this._annotationManager);
             labelBtn.innerHTML = buttonSVGs.labels;
             this._buttonBar.appendChild(labelBtn);
         }
@@ -384,7 +384,7 @@ export class Plots {
 
     private _downloadJson() {
         let dlElement = document.createElement("a");
-        this._downloadObj["labels"] = this._labelManager.exportLabels();
+        this._downloadObj["labels"] = this._annotationManager.exportLabels();
         let dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -453,7 +453,7 @@ export class Plots {
         }
 
         // update labels
-        this._labelManager.update();
+        this._annotationManager.update();
 
         // for (let pltIdx = 0; pltIdx < this.plots.length; pltIdx++) {
         //     const plot = this.plots[pltIdx];
@@ -1169,7 +1169,7 @@ export class Plots {
      * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
      */
     addLabels(labelList: [[number, number, number, string]]): void {
-        this._labelManager.addLabels(labelList);
+        this._annotationManager.addLabels(labelList);
     }
 
 }

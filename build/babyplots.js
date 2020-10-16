@@ -168,7 +168,7 @@ var Plots = (function () {
         this._hl2 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new math_1.Color3(0, 0, 0);
-        this._labelManager = new Label_1.LabelManager(this.canvas, this.scene, this.ymax, this.camera);
+        this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
         this.scene.registerAfterRender(this._afterRender.bind(this));
         var styleElem = document.createElement("style");
@@ -240,17 +240,17 @@ var Plots = (function () {
             });
         }
         if (plotData["labels"]) {
-            this._labelManager.fixed = true;
+            this._annotationManager.fixedLabels = true;
             var labelData = plotData["labels"];
             if (labelData.length > 0) {
                 if (Array.isArray(labelData[0])) {
-                    this._labelManager.addLabels(labelData);
+                    this._annotationManager.addLabels(labelData);
                 }
                 else {
                     for (var i = 0; i < labelData.length; i++) {
                         var label = labelData[i];
                         if (label["text"] && label["position"]) {
-                            this._labelManager.addLabel(label["text"], label["position"]);
+                            this._annotationManager.addLabel(label["text"], label["position"]);
                         }
                     }
                 }
@@ -269,7 +269,7 @@ var Plots = (function () {
         if (whichBtns.indexOf("label") !== -1) {
             var labelBtn = document.createElement("div");
             labelBtn.className = "button";
-            labelBtn.onclick = this._labelManager.toggleLabelControl.bind(this._labelManager);
+            labelBtn.onclick = this._annotationManager.toggleLabelControl.bind(this._annotationManager);
             labelBtn.innerHTML = exports.buttonSVGs.labels;
             this._buttonBar.appendChild(labelBtn);
         }
@@ -283,7 +283,7 @@ var Plots = (function () {
     };
     Plots.prototype._downloadJson = function () {
         var dlElement = document.createElement("a");
-        this._downloadObj["labels"] = this._labelManager.exportLabels();
+        this._downloadObj["labels"] = this._annotationManager.exportLabels();
         var dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -341,7 +341,7 @@ var Plots = (function () {
         if (this._axes) {
             this._axes.update(this.camera);
         }
-        this._labelManager.update();
+        this._annotationManager.update();
     };
     Plots.prototype._afterRender = function () {
         if (this._recording) {
@@ -966,7 +966,7 @@ var Plots = (function () {
         this._engine.dispose();
     };
     Plots.prototype.addLabels = function (labelList) {
-        this._labelManager.addLabels(labelList);
+        this._annotationManager.addLabels(labelList);
     };
     return Plots;
 }());

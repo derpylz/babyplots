@@ -1,27 +1,103 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LabelManager = void 0;
+exports.AnnotationManager = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
 var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var pointerDragBehavior_1 = require("@babylonjs/core/Behaviors/Meshes/pointerDragBehavior");
 var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture");
 var controls_1 = require("@babylonjs/gui/2D/controls");
-var LabelManager = (function () {
-    function LabelManager(canvas, scene, ymax, camera) {
-        this._editLabelForms = [];
-        this._labels = [];
-        this._labelBackgrounds = [];
-        this._labelTexts = [];
-        this._showLabels = false;
-        this._labelSize = 100;
+var Arrow = (function () {
+    function Arrow() {
+    }
+    return Arrow;
+}());
+var Label = (function () {
+    function Label(text, position, scene, color) {
+        this.size = 100;
+        this.color = "black";
         this.fixed = false;
+        var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label', {
+            width: 5,
+            height: 5
+        }, scene);
+        if (color !== undefined) {
+            this.color = color;
+        }
+        plane.position = position;
+        var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateForMesh(plane);
+        var background = new controls_1.Rectangle();
+        background.color = "red";
+        background.alpha = 0;
+        advancedTexture.addControl(background);
+        this._background = background;
+        var textBlock = new controls_1.TextBlock();
+        textBlock.text = text;
+        textBlock.color = this.color;
+        textBlock.fontSize = this.size;
+        advancedTexture.addControl(textBlock);
+        this._text = textBlock;
+        if (!this.fixed) {
+            makeDraggable(plane);
+        }
+        this._label = plane;
+    }
+    Label.prototype.setText = function (text) {
+        this._text.text = text;
+    };
+    Label.prototype.update = function (camera, scene) {
+        var axis1 = math_1.Vector3.Cross(camera.position, math_1.Axis.Y);
+        var axis2 = math_1.Vector3.Cross(axis1, camera.position);
+        var axis3 = math_1.Vector3.Cross(axis1, axis2);
+        this._label.rotation = math_1.Vector3.RotationFromAxis(axis1, axis2, axis3);
+        if (!this.fixed) {
+            var meshUnderPointer = scene.meshUnderPointer;
+            if (this._label === meshUnderPointer) {
+                this._background.alpha = 1;
+            }
+            else {
+                this._background.alpha = 0;
+            }
+        }
+    };
+    Label.prototype.fix = function () {
+        this._label.removeBehavior(this._label.getBehaviorByName("PointerDrag"));
+        this.fixed = true;
+    };
+    Label.prototype.unfix = function () {
+        makeDraggable(this._label);
+        this.fixed = false;
+    };
+    Label.prototype.dispose = function () {
+        this._text.dispose();
+        this._background.dispose();
+        this._label.dispose();
+    };
+    Label.prototype.export = function () {
+        return [
+            this._label.position.x,
+            this._label.position.y,
+            this._label.position.z,
+            this._text.text
+        ];
+    };
+    return Label;
+}());
+var AnnotationManager = (function () {
+    function AnnotationManager(canvas, scene, ymax, camera) {
+        this._editLabelForms = [];
+        this._showLabels = false;
+        this._arrows = [];
+        this._showArrows = false;
+        this.labels = [];
+        this.fixedLabels = false;
+        this.fixedArrows = false;
         this._canvas = canvas;
         this._scene = scene;
         this._ymax = ymax;
         this._camera = camera;
         this._createLabelForms();
     }
-    LabelManager.prototype._createLabelForms = function () {
+    AnnotationManager.prototype._createLabelForms = function () {
         var labelBox = document.createElement("div");
         labelBox.className = "bbp label-control";
         labelBox.style.display = "none";
@@ -51,34 +127,17 @@ var LabelManager = (function () {
         this._labelControlBox = labelBox;
         this._canvas.parentNode.appendChild(labelBox);
     };
-    LabelManager.prototype.update = function () {
+    AnnotationManager.prototype.update = function () {
+        if (this._showArrows) {
+        }
         if (this._showLabels) {
-            var axis1 = math_1.Vector3.Cross(this._camera.position, math_1.Axis.Y);
-            var axis2 = math_1.Vector3.Cross(axis1, this._camera.position);
-            var axis3 = math_1.Vector3.Cross(axis1, axis2);
-            for (var i = 0; i < this._labels.length; i++) {
-                this._labels[i].rotation = math_1.Vector3.RotationFromAxis(axis1, axis2, axis3);
-            }
-            if (!this.fixed) {
-                var meshUnderPointer = this._scene.meshUnderPointer;
-                var labelIdx = this._labels.indexOf(meshUnderPointer);
-                if (labelIdx != -1) {
-                    for (var i = 0; i < this._labelBackgrounds.length; i++) {
-                        if (i != labelIdx) {
-                            this._labelBackgrounds[i].alpha = 0;
-                        }
-                    }
-                    this._labelBackgrounds[labelIdx].alpha = 1;
-                }
-                else {
-                    for (var i = 0; i < this._labelBackgrounds.length; i++) {
-                        this._labelBackgrounds[i].alpha = 0;
-                    }
-                }
+            for (var i = 0; i < this.labels.length; i++) {
+                var label = this.labels[i];
+                label.update(this._camera, this._scene);
             }
         }
     };
-    LabelManager.prototype.toggleLabelControl = function () {
+    AnnotationManager.prototype.toggleLabelControl = function () {
         if (this._labelControlBox.style.display == "none") {
             this._labelControlBox.style.display = "block";
             this.unfixLabels();
@@ -88,41 +147,22 @@ var LabelManager = (function () {
             this.fixLabels();
         }
     };
-    LabelManager.prototype._addLabelBtnClick = function (event) {
+    AnnotationManager.prototype._addLabelBtnClick = function (event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
     };
-    LabelManager.prototype.addLabel = function (text, position) {
+    AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";
-        var labelIdx = this._labels.length;
-        var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label_' + labelIdx, {
-            width: 5,
-            height: 5
-        }, this._scene);
+        var labelIdx = this.labels.length;
+        var pos;
         if (position) {
-            var pos = math_1.Vector3.FromArray(position);
-            plane.position = pos;
+            pos = math_1.Vector3.FromArray(position);
         }
         else {
-            plane.position.y = this._ymax + 2;
+            pos = new math_1.Vector3(0, this._ymax + 2, 0);
         }
-        var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateForMesh(plane);
-        var background = new controls_1.Rectangle();
-        background.color = "red";
-        background.alpha = 0;
-        advancedTexture.addControl(background);
-        this._labelBackgrounds.push(background);
-        var textBlock = new controls_1.TextBlock();
-        textBlock.text = text;
-        textBlock.color = "black";
-        textBlock.fontSize = this._labelSize;
-        advancedTexture.addControl(textBlock);
-        this._labelTexts.push(textBlock);
-        if (!this.fixed) {
-            this.makeDraggable(plane);
-        }
-        this._labels.push(plane);
-        var labelNum = this._labels.length - 1;
+        var newLabel = new Label(text, pos, this._scene);
+        this.labels.push(newLabel);
         var editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
         var editLabelLabel = document.createElement("label");
@@ -133,25 +173,21 @@ var LabelManager = (function () {
         editLabelInput.name = "editLabelInput";
         editLabelInput.type = "text";
         editLabelInput.value = text;
-        editLabelInput.dataset.labelnum = labelNum.toString();
+        editLabelInput.dataset.labelnum = labelIdx.toString();
         editLabelInput.onkeyup = this._editLabelText.bind(this);
         editLabelForm.appendChild(editLabelInput);
         var rmvLabelBtn = document.createElement("button");
         rmvLabelBtn.innerText = "Remove Label";
         rmvLabelBtn.onclick = this._removeLabel.bind(this);
-        rmvLabelBtn.dataset.labelnum = labelNum.toString();
+        rmvLabelBtn.dataset.labelnum = labelIdx.toString();
         editLabelForm.appendChild(rmvLabelBtn);
-        editLabelForm.dataset.labelnum = labelNum.toString();
+        editLabelForm.dataset.labelnum = labelIdx.toString();
         this._editLabelForms.push(editLabelForm);
         this._editLabelContainer.appendChild(editLabelForm);
         this._showLabels = true;
         return labelIdx;
     };
-    LabelManager.prototype.makeDraggable = function (label) {
-        var labelDragBehavior = new pointerDragBehavior_1.PointerDragBehavior();
-        label.addBehavior(labelDragBehavior);
-    };
-    LabelManager.prototype.addLabels = function (labelList) {
+    AnnotationManager.prototype.addLabels = function (labelList) {
         for (var i = 0; i < labelList.length; i++) {
             var label = labelList[i];
             var text = label[3];
@@ -159,19 +195,15 @@ var LabelManager = (function () {
             this.addLabel(text, position);
         }
     };
-    LabelManager.prototype._editLabelText = function (ev) {
+    AnnotationManager.prototype._editLabelText = function (ev) {
         var inputElem = ev.target;
-        this._labelTexts[parseInt(inputElem.dataset.labelnum)].text = inputElem.value;
+        this.labels[parseInt(inputElem.dataset.labelnum)].setText(inputElem.value);
     };
-    LabelManager.prototype._removeLabel = function (ev) {
+    AnnotationManager.prototype._removeLabel = function (ev) {
         var btn = ev.target;
         var labelNum = parseInt(btn.dataset.labelnum);
-        this._labelTexts[labelNum].dispose();
-        this._labelTexts.splice(labelNum, 1);
-        this._labelBackgrounds[labelNum].dispose();
-        this._labelBackgrounds.splice(labelNum, 1);
-        this._labels[labelNum].dispose();
-        this._labels.splice(labelNum, 1);
+        this.labels[labelNum].dispose();
+        this.labels.splice(labelNum, 1);
         var thisForm;
         this._editLabelForms.forEach(function (eLabelForm) {
             if (parseInt(eLabelForm.dataset.labelnum) == labelNum) {
@@ -189,30 +221,30 @@ var LabelManager = (function () {
         });
         thisForm.parentNode.removeChild(thisForm);
     };
-    LabelManager.prototype.exportLabels = function () {
+    AnnotationManager.prototype.exportLabels = function () {
         var labels = [];
-        for (var i = 0; i < this._labelTexts.length; i++) {
-            var lText = this._labelTexts[i].text;
-            var lPos = this._labels[i].position;
-            labels.push([lPos.x, lPos.y, lPos.z, lText]);
+        for (var i = 0; i < this.labels.length; i++) {
+            labels.push(this.labels[i].export());
         }
         return labels;
     };
-    LabelManager.prototype.fixLabels = function () {
-        for (var i = 0; i < this._labels.length; i++) {
-            var label = this._labels[i];
-            label.removeBehavior(label.getBehaviorByName("PointerDrag"));
+    AnnotationManager.prototype.fixLabels = function () {
+        for (var i = 0; i < this.labels.length; i++) {
+            this.labels[i].fix();
         }
-        this.fixed = true;
+        this.fixedLabels = true;
     };
-    LabelManager.prototype.unfixLabels = function () {
-        for (var i = 0; i < this._labels.length; i++) {
-            var label = this._labels[i];
-            this.makeDraggable(label);
+    AnnotationManager.prototype.unfixLabels = function () {
+        for (var i = 0; i < this.labels.length; i++) {
+            this.labels[i].unfix();
         }
-        this.fixed = false;
+        this.fixedLabels = false;
     };
-    return LabelManager;
+    return AnnotationManager;
 }());
-exports.LabelManager = LabelManager;
+exports.AnnotationManager = AnnotationManager;
+function makeDraggable(label) {
+    var labelDragBehavior = new pointerDragBehavior_1.PointerDragBehavior();
+    label.addBehavior(labelDragBehavior);
+}
 //# sourceMappingURL=Label.js.map

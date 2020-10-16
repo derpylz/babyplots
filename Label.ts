@@ -1,13 +1,110 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { Vector3, Axis} from "@babylonjs/core/Maths/math";
+import { Vector3, Axis } from "@babylonjs/core/Maths/math";
 import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
 
-export class LabelManager {
+class Arrow {
+    constructor() {
+
+    }
+}
+
+class Label {
+    private _label: Mesh;
+    private _background: Rectangle;
+    private _text: TextBlock;
+
+    size: number = 100;
+    color: string = "black";
+    fixed: boolean = false;
+
+    constructor(text: string, position: Vector3, scene: Scene, color?: string) {
+        let plane = PlaneBuilder.CreatePlane('label', {
+            width: 5,
+            height: 5
+        }, scene);
+
+        if (color !== undefined) {
+            this.color = color;
+        }
+
+        plane.position = position;
+
+        let advancedTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+
+        let background = new Rectangle();
+        background.color = "red";
+        background.alpha = 0
+        advancedTexture.addControl(background);
+        this._background = background;
+
+        let textBlock = new TextBlock();
+        textBlock.text = text;
+        textBlock.color = this.color;
+        textBlock.fontSize = this.size;
+        advancedTexture.addControl(textBlock);
+        this._text = textBlock;
+
+        if (!this.fixed) {
+            makeDraggable(plane);
+        }
+
+        this._label = plane;
+    }
+
+    setText(text: string) {
+        this._text.text = text;
+    }
+
+    update(camera: ArcRotateCamera, scene: Scene) {
+        // draw 3d labels in plot
+        let axis1 = Vector3.Cross(camera.position, Axis.Y);
+        let axis2 = Vector3.Cross(axis1, camera.position);
+        let axis3 = Vector3.Cross(axis1, axis2);
+        this._label.rotation = Vector3.RotationFromAxis(axis1, axis2, axis3);
+
+        if (!this.fixed) {
+            // highlighting label under mouse cursor
+            const meshUnderPointer = scene.meshUnderPointer as Mesh;
+            if (this._label === meshUnderPointer) {
+                this._background.alpha = 1;
+            } else {
+                this._background.alpha = 0;
+            }
+        }
+    }
+
+    fix() {
+        this._label.removeBehavior(this._label.getBehaviorByName("PointerDrag"));
+        this.fixed = true;
+    }
+
+    unfix() {
+        makeDraggable(this._label);
+        this.fixed = false;
+    }
+
+    dispose() {
+        this._text.dispose();
+        this._background.dispose();
+        this._label.dispose();
+    }
+
+    export(): [number, number, number, string] {
+        return [
+            this._label.position.x,
+            this._label.position.y,
+            this._label.position.z,
+            this._text.text
+        ]
+    }
+}
+
+export class AnnotationManager {
     private _canvas: HTMLCanvasElement;
     private _scene: Scene;
     private _ymax: number;
@@ -16,13 +113,13 @@ export class LabelManager {
     private _editLabelContainer: HTMLDivElement;
     private _editLabelForms: HTMLDivElement[] = [];
     private _addLabelTextInput: HTMLInputElement;
-    private _labels: Mesh[] = [];
-    private _labelBackgrounds: Rectangle[] = [];
-    private _labelTexts: TextBlock[] = [];
     private _showLabels: boolean = false;
-    private _labelSize: number = 100;
+    private _arrows: Mesh[] = [];
+    private _showArrows: boolean = false;
 
-    fixed: boolean = false;
+    labels: Label[] = [];
+    fixedLabels: boolean = false;
+    fixedArrows: boolean = false;
 
     constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera) {
         this._canvas = canvas;
@@ -64,31 +161,13 @@ export class LabelManager {
     }
 
     update() {
-        if (this._showLabels) {
-            // draw 3d labels in plot
-            let axis1 = Vector3.Cross(this._camera.position, Axis.Y);
-            let axis2 = Vector3.Cross(axis1, this._camera.position);
-            let axis3 = Vector3.Cross(axis1, axis2);
-            for (let i = 0; i < this._labels.length; i++) {
-                this._labels[i].rotation = Vector3.RotationFromAxis(axis1, axis2, axis3);
-            }
+        if (this._showArrows) {
 
-            if (!this.fixed) {
-                // highlighting label under mouse cursor
-                const meshUnderPointer = this._scene.meshUnderPointer as Mesh;
-                const labelIdx = this._labels.indexOf(meshUnderPointer)
-                if (labelIdx != -1) {
-                    for (let i = 0; i < this._labelBackgrounds.length; i++) {
-                        if (i != labelIdx) {
-                            this._labelBackgrounds[i].alpha = 0;
-                        }
-                    }
-                    this._labelBackgrounds[labelIdx].alpha = 1;
-                } else {
-                    for (let i = 0; i < this._labelBackgrounds.length; i++) {
-                        this._labelBackgrounds[i].alpha = 0;
-                    }
-                }
+        }
+        if (this._showLabels) {
+            for (let i = 0; i < this.labels.length; i++) {
+                const label = this.labels[i];
+                label.update(this._camera, this._scene);
             }
         }
     }
@@ -115,41 +194,18 @@ export class LabelManager {
      */
     addLabel(text: string, position?: number[]): number {
         this._addLabelTextInput.value = "";
-        let labelIdx = this._labels.length;
-        let plane = PlaneBuilder.CreatePlane('label_' + labelIdx, {
-            width: 5,
-            height: 5
-        }, this._scene);
+        let labelIdx = this.labels.length;
 
+        let pos: Vector3;
         if (position) {
-            let pos = Vector3.FromArray(position)
-            plane.position = pos;
+            pos = Vector3.FromArray(position)
         } else {
-            plane.position.y = this._ymax + 2;
+            pos = new Vector3(0, this._ymax + 2, 0);
         }
 
-        let advancedTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+        let newLabel = new Label(text, pos, this._scene);
 
-        let background = new Rectangle();
-        background.color = "red";
-        background.alpha = 0
-        advancedTexture.addControl(background);
-        this._labelBackgrounds.push(background);
-
-        let textBlock = new TextBlock();
-        textBlock.text = text;
-        textBlock.color = "black";
-        textBlock.fontSize = this._labelSize;
-        advancedTexture.addControl(textBlock);
-        this._labelTexts.push(textBlock);
-
-        if (!this.fixed) {
-            this.makeDraggable(plane);
-        }
-
-        this._labels.push(plane);
-
-        let labelNum = this._labels.length - 1;
+        this.labels.push(newLabel);
 
         let editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
@@ -161,25 +217,20 @@ export class LabelManager {
         editLabelInput.name = "editLabelInput";
         editLabelInput.type = "text";
         editLabelInput.value = text;
-        editLabelInput.dataset.labelnum = labelNum.toString();
+        editLabelInput.dataset.labelnum = labelIdx.toString();
         editLabelInput.onkeyup = this._editLabelText.bind(this);
         editLabelForm.appendChild(editLabelInput);
         let rmvLabelBtn = document.createElement("button");
         rmvLabelBtn.innerText = "Remove Label"
         rmvLabelBtn.onclick = this._removeLabel.bind(this);
-        rmvLabelBtn.dataset.labelnum = labelNum.toString();
+        rmvLabelBtn.dataset.labelnum = labelIdx.toString();
         editLabelForm.appendChild(rmvLabelBtn);
-        editLabelForm.dataset.labelnum = labelNum.toString();
+        editLabelForm.dataset.labelnum = labelIdx.toString();
         this._editLabelForms.push(editLabelForm);
         this._editLabelContainer.appendChild(editLabelForm);
 
         this._showLabels = true;
         return labelIdx;
-    }
-
-    private makeDraggable(label: Mesh) {
-        let labelDragBehavior = new PointerDragBehavior();
-        label.addBehavior(labelDragBehavior);
     }
 
     /**
@@ -198,18 +249,14 @@ export class LabelManager {
 
     private _editLabelText(ev: Event): void {
         let inputElem = ev.target as HTMLInputElement;
-        this._labelTexts[parseInt(inputElem.dataset.labelnum)].text = inputElem.value;
+        this.labels[parseInt(inputElem.dataset.labelnum)].setText(inputElem.value);
     }
 
     private _removeLabel(ev: Event) {
         let btn = ev.target as HTMLButtonElement;
         let labelNum = parseInt(btn.dataset.labelnum);
-        this._labelTexts[labelNum].dispose();
-        this._labelTexts.splice(labelNum, 1);
-        this._labelBackgrounds[labelNum].dispose();
-        this._labelBackgrounds.splice(labelNum, 1);
-        this._labels[labelNum].dispose();
-        this._labels.splice(labelNum, 1);
+        this.labels[labelNum].dispose();
+        this.labels.splice(labelNum, 1);
         let thisForm: HTMLDivElement;
         this._editLabelForms.forEach(eLabelForm => {
             if (parseInt(eLabelForm.dataset.labelnum) == labelNum) {
@@ -227,30 +274,30 @@ export class LabelManager {
         thisForm.parentNode.removeChild(thisForm);
     }
 
-    exportLabels() {
+    exportLabels(): any[] {
         let labels = [];
-        for (let i = 0; i < this._labelTexts.length; i++) {
-            const lText = this._labelTexts[i].text;
-            const lPos = this._labels[i].position;
-            labels.push([lPos.x, lPos.y, lPos.z, lText]);
+        for (let i = 0; i < this.labels.length; i++) {
+            labels.push(this.labels[i].export());
         }
         return labels;
     }
 
     fixLabels() {
-        for (let i = 0; i < this._labels.length; i++) {
-            const label = this._labels[i];
-            label.removeBehavior(label.getBehaviorByName("PointerDrag"));
+        for (let i = 0; i < this.labels.length; i++) {
+            this.labels[i].fix();
         }
-        this.fixed = true;
+        this.fixedLabels = true;
     }
 
     unfixLabels() {
-        for (let i = 0; i < this._labels.length; i++) {
-            const label = this._labels[i];
-            this.makeDraggable(label);
+        for (let i = 0; i < this.labels.length; i++) {
+            this.labels[i].unfix();
         }
-        this.fixed = false;
+        this.fixedLabels = false;
     }
+}
 
+function makeDraggable(label: Mesh) {
+    let labelDragBehavior = new PointerDragBehavior();
+    label.addBehavior(labelDragBehavior);
 }

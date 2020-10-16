@@ -80,7 +80,7 @@ export declare class Plots {
     private _axes;
     private _downloadObj;
     private _buttonBar;
-    private _labelManager;
+    private _annotationManager;
     private _backgroundColor;
     private _recording;
     private _turned;
