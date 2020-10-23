@@ -7,6 +7,6 @@ export declare class ImgStack extends Plot {
     private _channelCoordIntensities;
     constructor(scene: Scene, values: number[], indices: number[], attributes: {
         dim: number[];
-    }, legendData: LegendData, size: number, backgroundColor: string, intensityMode: string);
+    }, legendData: LegendData, size: number, backgroundColor: string, intensityMode: string, xScale?: number, yScale?: number, zScale?: number);
     private _createImgStack;
 }

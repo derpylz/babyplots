@@ -1,14 +1,38 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { Vector3, Axis } from "@babylonjs/core/Maths/math";
+import { Vector3, Axis, Color3 } from "@babylonjs/core/Maths/math";
 import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
+import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
+import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
+import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 
 class Arrow {
-    constructor() {
+    private _lines: LinesMesh;
+    private _tip: Mesh;
+
+    size: number = 1;
+
+    constructor(from: Vector3, to: Vector3, scene: Scene, color?: string) {
+        let lines = LinesBuilder.CreateLineSystem('ls', {
+            lines: [[from, to]],
+            updatable: true
+        }, scene);
+
+        lines.color = new Color3(0, 0, 0);
+        if (color !== undefined) {
+            lines.color = Color3.FromHexString(color);
+        }
+        this._lines = lines;
+        let tip = CylinderBuilder.CreateCylinder("tip", {
+            diameterTop: 0,
+            diameterBottom: this.size,
+            tessellation: 36
+        }, scene);
+        tip.position = to;
 
     }
 }
@@ -114,7 +138,7 @@ export class AnnotationManager {
     private _editLabelForms: HTMLDivElement[] = [];
     private _addLabelTextInput: HTMLInputElement;
     private _showLabels: boolean = false;
-    private _arrows: Mesh[] = [];
+    private _arrows: Arrow[] = [];
     private _showArrows: boolean = false;
 
     labels: Label[] = [];
@@ -185,6 +209,14 @@ export class AnnotationManager {
     private _addLabelBtnClick(event: Event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
+    }
+
+    addArrow(from: number[], to: number[]) {
+        this._arrows.push(new Arrow(
+            Vector3.FromArray(from),
+            Vector3.FromArray(to),
+            this._scene
+        ));
     }
 
     /**

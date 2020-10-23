@@ -30,8 +30,21 @@
   <body>
     <canvas id="renderCanvas"></canvas>
     <script>
-      var vis = new Baby.Plots("renderCanvas");
-      vis.fromJSON(surfaceData);
+      var vis = new Baby.Plots("renderCanvas", {xScale: 0.1, yScale: 0.01, zScale: 0.1, turntable: true});
+      // vis.fromJSON(surfaceData);
+      var surfaceCoordinates = surfaceData["coordinates"];
+      var surfaceCoordinatesFlipped = [];
+      for (let i = 0; i < surfaceCoordinates.length; i++) {
+        const li = surfaceCoordinates[i];
+        var flippedLi = [];
+        for (let j = 0; j < li.length; j++) {
+          const item = li[j];
+          flippedLi.push(0 - item);
+        }
+        surfaceCoordinatesFlipped.push(flippedLi);
+      }
+      vis.addPlot(surfaceCoordinates, "surface", "values", surfaceData["colorVar"], {size: 1, showLegend: true, colorScale: "Viridis"})
+      vis.addPlot(surfaceCoordinatesFlipped, "surface", "values", surfaceData["colorVar"], {size: 1, showLegend: false, colorScale: "Viridis"})
       vis.createButtons(["json", "label"]);
       vis.doRender();
       window.onresize = function () {

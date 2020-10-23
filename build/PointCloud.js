@@ -23,8 +23,11 @@ var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
 var PointCloud = (function (_super) {
     __extends(PointCloud, _super);
-    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration) {
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
+    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._pointPicking = false;
         _this._selectionCallback = function (selection) { return false; };
         _this._foldVectors = [];
@@ -45,7 +48,7 @@ var PointCloud = (function (_super) {
                     if (foldedEmbedding[i].length == 2) {
                         foldedEmbedding[i].push(0);
                     }
-                    var fv = new math_1.Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(foldedEmbedding[i][0] * _this.xScale, 0, foldedEmbedding[i][1] * _this.yScale);
                     _this._foldVectors.push(fv);
                     _this._foldVectorFract.push(fv.divide(new math_1.Vector3(_this._foldAnimFrames, _this._foldAnimFrames, _this._foldAnimFrames)));
                 }
@@ -55,7 +58,7 @@ var PointCloud = (function (_super) {
                 foldedEmbedding = JSON.parse(JSON.stringify(coordinates));
                 for (var i = 0; i < foldedEmbedding.length; i++) {
                     foldedEmbedding[i][2] = 0;
-                    var fv = new math_1.Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(foldedEmbedding[i][0] * _this.xScale, 0, foldedEmbedding[i][1] * _this.yScale);
                     _this._foldVectors.push(fv);
                     _this._foldVectorFract.push(fv.divide(new math_1.Vector3(_this._foldAnimFrames, _this._foldAnimFrames, _this._foldAnimFrames)));
                 }
@@ -72,14 +75,14 @@ var PointCloud = (function (_super) {
             var colors = [];
             if (this._folded) {
                 for (var p = 0; p < this._coords.length; p++) {
-                    positions.push(this._foldedEmbedding[p][0], this._foldedEmbedding[p][2], this._foldedEmbedding[p][1]);
+                    positions.push(this._foldedEmbedding[p][0] * this.xScale, this._foldedEmbedding[p][2] * this.zScale, this._foldedEmbedding[p][1] * this.yScale);
                     var col = math_1.Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
             }
             else {
                 for (var p = 0; p < this._coords.length; p++) {
-                    positions.push(this._coords[p][0], this._coords[p][2], this._coords[p][1]);
+                    positions.push(this._coords[p][0] * this.xScale, this._coords[p][2] * this.zScale, this._coords[p][1] * this.yScale);
                     var col = math_1.Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
@@ -105,17 +108,17 @@ var PointCloud = (function (_super) {
             SPS.addShape(cell, this._coords.length);
             if (this._folded) {
                 for (var i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._foldedEmbedding[i][0];
-                    SPS.particles[i].position.z = this._foldedEmbedding[i][1];
-                    SPS.particles[i].position.y = this._foldedEmbedding[i][2];
+                    SPS.particles[i].position.x = this._foldedEmbedding[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._foldedEmbedding[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._foldedEmbedding[i][2] * this.yScale;
                     SPS.particles[i].color = math_1.Color4.FromHexString(this._coordColors[i]);
                 }
             }
             else {
                 for (var i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._coords[i][0];
-                    SPS.particles[i].position.z = this._coords[i][1];
-                    SPS.particles[i].position.y = this._coords[i][2];
+                    SPS.particles[i].position.x = this._coords[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._coords[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._coords[i][2] * this.yScale;
                     SPS.particles[i].color = math_1.Color4.FromHexString(this._coordColors[i]);
                 }
             }
@@ -140,7 +143,7 @@ var PointCloud = (function (_super) {
         this._folded = true;
         if (this._SPS) {
             for (var i = 0; i < this._SPS.particles.length; i++) {
-                this._SPS.particles[i].position = new math_1.Vector3(this._foldedEmbedding[i][0], this._foldedEmbedding[i][2], this._foldedEmbedding[i][1]);
+                this._SPS.particles[i].position = new math_1.Vector3(this._foldedEmbedding[i][0] * this.xScale, this._foldedEmbedding[i][2] * this.zScale, this._foldedEmbedding[i][1] * this.yScale);
             }
             this._SPS.setParticles();
         }
@@ -148,9 +151,9 @@ var PointCloud = (function (_super) {
             var positionFunction = function (positions) {
                 var numberOfVertices = positions.length / 3;
                 for (var i = 0; i < numberOfVertices; i++) {
-                    positions[i * 3] = this._foldedEmbedding[i][0];
-                    positions[i * 3 + 1] = this._foldedEmbedding[i][2];
-                    positions[i * 3 + 2] = this._foldedEmbedding[i][1];
+                    positions[i * 3] = this._foldedEmbedding[i][0] * this.xScale;
+                    positions[i * 3 + 1] = this._foldedEmbedding[i][2] * this.zScale;
+                    positions[i * 3 + 2] = this._foldedEmbedding[i][1] * this.yScale;
                 }
             };
             this.mesh.updateMeshPositions(positionFunction.bind(this), true);
@@ -173,7 +176,7 @@ var PointCloud = (function (_super) {
             else {
                 this._folded = false;
                 for (var i = 0; i < this._SPS.particles.length; i++) {
-                    this._SPS.particles[i].position = new math_1.Vector3(this._coords[i][0], this._coords[i][2], this._coords[i][1]);
+                    this._SPS.particles[i].position = new math_1.Vector3(this._coords[i][0] * this.xScale, this._coords[i][2] * this.zScale, this._coords[i][1] * this.yScale);
                 }
                 this._SPS.setParticles();
                 this.mesh.refreshBoundingInfo();
@@ -201,9 +204,9 @@ var PointCloud = (function (_super) {
                 var positionFunction = function (positions) {
                     var numberOfVertices = positions.length / 3;
                     for (var i = 0; i < numberOfVertices; i++) {
-                        positions[i * 3] = this._coords[i][0];
-                        positions[i * 3 + 1] = this._coords[i][2];
-                        positions[i * 3 + 2] = this._coords[i][1];
+                        positions[i * 3] = this._coords[i][0] * this.xScale;
+                        positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
+                        positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
                     }
                 };
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);

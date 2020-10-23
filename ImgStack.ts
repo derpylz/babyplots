@@ -13,7 +13,19 @@ export class ImgStack extends Plot {
     private _intensityMode: string;
     private _channelCoords: number[][][];
     private _channelCoordIntensities: number[][];
-    constructor(scene: Scene, values: number[], indices: number[], attributes: { dim: number[] }, legendData: LegendData, size: number, backgroundColor: string, intensityMode: string) {
+    constructor(
+        scene: Scene,
+        values: number[],
+        indices: number[],
+        attributes: { dim: number[] },
+        legendData: LegendData,
+        size: number,
+        backgroundColor: string,
+        intensityMode: string,
+        xScale: number = 1,
+        yScale: number = 1,
+        zScale: number = 1
+    ) {
         let colSize = attributes.dim[0];
         let rowSize = attributes.dim[1];
         let channels = attributes.dim[2];
@@ -34,10 +46,14 @@ export class ImgStack extends Plot {
             let channelIndex = sliceIndex - channelSize * channel;
             let row = Math.floor(channelIndex / colSize);
             let col = channelIndex % colSize;
-            coords[channel].push([col, row, slice * size]);
+            coords[channel].push([
+                col * xScale,
+                row * yScale,
+                slice * zScale
+            ]);
             Intensities[channel].push(values[i]);
         }
-        super(scene, [], [], 1, legendData);
+        super(scene, [], [], size, legendData, xScale, yScale, zScale);
         this._channelCoords = coords;
         this._channelCoordIntensities = Intensities;
         this._backgroundColor = backgroundColor;
@@ -83,8 +99,17 @@ export class ImgStack extends Plot {
                     for (let intens = 0; intens < alphaIntensities.length; intens++) {
                         const testIntensity = alphaIntensities[intens];
                         if ((channelIntensities[p] - minIntensity) / (1 - minIntensity) <= testIntensity) {
-                            alphaPositions[intens].push(channelCoords[p][2], channelCoords[p][0], channelCoords[p][1]);
-                            alphaColors[intens].push(channelColorRGB[0], channelColorRGB[1], channelColorRGB[2], 1);
+                            alphaPositions[intens].push(
+                                channelCoords[p][2],
+                                channelCoords[p][0],
+                                channelCoords[p][1]
+                            );
+                            alphaColors[intens].push(
+                                channelColorRGB[0],
+                                channelColorRGB[1],
+                                channelColorRGB[2],
+                                1
+                            );
                             break;
                         }
                     }
@@ -116,7 +141,7 @@ export class ImgStack extends Plot {
                     if (this._intensityMode === "mix") {
                         let colormix = chroma.mix(this._backgroundColor, channelColor, channelIntensities[p]).rgb();
                         colors.push(colormix[0] / 255, colormix[1] / 255, colormix[2] / 255, 1);
-                    } else {;
+                    } else {
                         colors.push(channelColorRGB[0], channelColorRGB[1], channelColorRGB[2], 1);
                     }
                 }

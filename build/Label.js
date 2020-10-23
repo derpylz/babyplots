@@ -6,8 +6,26 @@ var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var pointerDragBehavior_1 = require("@babylonjs/core/Behaviors/Meshes/pointerDragBehavior");
 var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture");
 var controls_1 = require("@babylonjs/gui/2D/controls");
+var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
+var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder");
 var Arrow = (function () {
-    function Arrow() {
+    function Arrow(from, to, scene, color) {
+        this.size = 1;
+        var lines = linesBuilder_1.LinesBuilder.CreateLineSystem('ls', {
+            lines: [[from, to]],
+            updatable: true
+        }, scene);
+        lines.color = new math_1.Color3(0, 0, 0);
+        if (color !== undefined) {
+            lines.color = math_1.Color3.FromHexString(color);
+        }
+        this._lines = lines;
+        var tip = cylinderBuilder_1.CylinderBuilder.CreateCylinder("tip", {
+            diameterTop: 0,
+            diameterBottom: this.size,
+            tessellation: 36
+        }, scene);
+        tip.position = to;
     }
     return Arrow;
 }());
@@ -150,6 +168,9 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype._addLabelBtnClick = function (event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
+    };
+    AnnotationManager.prototype.addArrow = function (from, to) {
+        this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
     AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";

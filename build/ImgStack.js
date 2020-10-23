@@ -25,7 +25,10 @@ var babyplots_1 = require("./babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
         var _this = this;
         var colSize = attributes.dim[0];
         var rowSize = attributes.dim[1];
@@ -47,10 +50,14 @@ var ImgStack = (function (_super) {
             var channelIndex = sliceIndex - channelSize * channel;
             var row = Math.floor(channelIndex / colSize);
             var col = channelIndex % colSize;
-            coords[channel].push([col, row, slice * size]);
+            coords[channel].push([
+                col * xScale,
+                row * yScale,
+                slice * zScale
+            ]);
             Intensities[channel].push(values[i]);
         }
-        _this = _super.call(this, scene, [], [], 1, legendData) || this;
+        _this = _super.call(this, scene, [], [], size, legendData, xScale, yScale, zScale) || this;
         _this._channelCoords = coords;
         _this._channelCoordIntensities = Intensities;
         _this._backgroundColor = backgroundColor;
@@ -131,7 +138,6 @@ var ImgStack = (function (_super) {
                         colors.push(colormix[0] / 255, colormix[1] / 255, colormix[2] / 255, 1);
                     }
                     else {
-                        ;
                         colors.push(channelColorRGB[0], channelColorRGB[1], channelColorRGB[2], 1);
                     }
                 }

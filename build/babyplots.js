@@ -47,13 +47,19 @@ function matrixMax(matrix) {
 }
 exports.matrixMax = matrixMax;
 var Plot = (function () {
-    function Plot(scene, coordinates, colorVar, size, legendData) {
+    function Plot(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
         this._size = 1;
         this._scene = scene;
         this._coords = coordinates;
         this._coordColors = colorVar;
         this._size = size;
         this.legendData = legendData;
+        this.xScale = xScale;
+        this.yScale = yScale;
+        this.zScale = zScale;
     }
     Plot.prototype.updateSize = function () { };
     Plot.prototype.update = function () { return false; };
@@ -138,21 +144,32 @@ function isValidPlot(plotData) {
 }
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
-    function Plots(canvasElement, backgroundColor) {
-        if (backgroundColor === void 0) { backgroundColor = "#ffffffff"; }
+    function Plots(canvasElement, options) {
+        if (options === void 0) { options = {}; }
         this._showLegend = true;
         this._hasAnim = false;
+        this._axes = [];
         this._downloadObj = {};
         this._recording = false;
         this._turned = 0;
         this._wasTurning = false;
+        this._xScale = 1;
+        this._yScale = 1;
+        this._zScale = 1;
         this.plots = [];
         this.turntable = false;
         this.rotationRate = 0.01;
         this.fixedSize = false;
         this.ymax = 0;
         this.R = false;
-        this._backgroundColor = backgroundColor;
+        var opts = {
+            backgroundColor: "#ffffffff",
+            xScale: 1,
+            yScale: 1,
+            zScale: 1
+        };
+        Object.assign(opts, options);
+        this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement);
         this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new scene_1.Scene(this._engine);
@@ -161,7 +178,10 @@ var Plots = (function () {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl(this.canvas);
         this.camera.wheelPrecision = 50;
-        this.scene.clearColor = math_1.Color4.FromHexString(backgroundColor);
+        this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
+        this._xScale = opts.xScale;
+        this._yScale = opts.yScale;
+        this._zScale = opts.zScale;
         this._hl1 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new math_1.Color3(1, 1, 1);
         this._hl1.specular = new math_1.Color3(0, 0, 0);
@@ -180,6 +200,9 @@ var Plots = (function () {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        this._downloadObj = {
+            plots: []
+        };
     }
     Plots.prototype.fromJSON = function (plotData) {
         if (plotData["turntable"] !== undefined) {
@@ -192,52 +215,72 @@ var Plots = (function () {
             this._backgroundColor = plotData["backgroundColor"];
             this.scene.clearColor = math_1.Color4.FromHexString(this._backgroundColor);
         }
-        if (plotData["coordinates"] && plotData["plotType"] && plotData["colorBy"]) {
-            console.log(plotData);
-            this.addPlot(plotData["coordinates"], plotData["plotType"], plotData["colorBy"], plotData["colorVar"], {
-                size: plotData["size"],
-                scaleColumn: plotData["scaleColumn"],
-                scaleRow: plotData["scaleRow"],
-                colorScale: plotData["colorScale"],
-                customColorScale: plotData["customColorScale"],
-                colorScaleInverted: plotData["colorScaleInverted"],
-                sortedCategories: plotData["sortedCategories"],
-                showLegend: plotData["showLegend"],
-                fontSize: plotData["fontSize"],
-                fontColor: plotData["fontColor"],
-                legendTitle: plotData["legendTitle"],
-                legendTitleFontSize: plotData["legendTitleFontSize"],
-                showAxes: plotData["showAxes"],
-                axisLabels: plotData["axisLabels"],
-                axisColors: plotData["axisColors"],
-                tickBreaks: plotData["tickBreaks"],
-                showTickLines: plotData["showTickLines"],
-                tickLineColors: plotData["tickLineColors"],
-                folded: plotData["folded"],
-                foldedEmbedding: plotData["foldedEmbedding"],
-                foldAnimDelay: plotData["foldAnimDelay"],
-                foldAnimDuration: plotData["foldAnimDuration"],
-                colnames: plotData["colnames"],
-                rownames: plotData["rownames"]
-            });
+        if (plotData["xScale"] !== undefined) {
+            this._xScale = plotData["xScale"];
         }
-        else if (plotData["values"] && plotData["indices"] && plotData["attributes"]) {
-            this.addImgStack(plotData["values"], plotData["indices"], plotData["attributes"], {
-                size: plotData["size"],
-                colorScale: plotData["colorScale"],
-                showLegend: plotData["showLegend"],
-                fontSize: plotData["fontSize"],
-                fontColor: plotData["fontColor"],
-                legendTitle: plotData["legendTitle"],
-                legendTitleFontSize: plotData["legendTitleFontSize"],
-                showAxes: plotData["showAxes"],
-                axisLabels: plotData["axisLabels"],
-                axisColors: plotData["axisColors"],
-                tickBreaks: plotData["tickBreaks"],
-                showTickLines: plotData["showTickLines"],
-                tickLineColors: plotData["tickLineColors"],
-                intensityMode: plotData["intensityMode"]
-            });
+        if (plotData["yScale"] !== undefined) {
+            this._yScale = plotData["yScale"];
+        }
+        if (plotData["zScale"] !== undefined) {
+            this._zScale = plotData["zScale"];
+        }
+        if (plotData["cameraAlpha"] !== undefined) {
+            this.camera.alpha = plotData["cameraAlpha"];
+        }
+        if (plotData["cameraBeta"] !== undefined) {
+            this.camera.beta = plotData["cameraBeta"];
+        }
+        if (plotData["cameraRadius"] !== undefined) {
+            this.camera.radius = plotData["cameraRadius"];
+        }
+        for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
+            var plot = plotData["plots"][plotIdx];
+            if (plot["plotType"] === "imageStack") {
+                this.addImgStack(plot["values"], plot["indices"], plot["attributes"], {
+                    size: plot["size"],
+                    colorScale: plot["colorScale"],
+                    showLegend: plot["showLegend"],
+                    fontSize: plot["fontSize"],
+                    fontColor: plot["fontColor"],
+                    legendTitle: plot["legendTitle"],
+                    legendTitleFontSize: plot["legendTitleFontSize"],
+                    legendPosition: plot["legendPosition"],
+                    showAxes: plot["showAxes"],
+                    axisLabels: plot["axisLabels"],
+                    axisColors: plot["axisColors"],
+                    tickBreaks: plot["tickBreaks"],
+                    showTickLines: plot["showTickLines"],
+                    tickLineColors: plot["tickLineColors"],
+                    intensityMode: plot["intensityMode"]
+                });
+            }
+            else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+                this.addPlot(plot["coordinates"], plot["plotType"], plot["colorBy"], plot["colorVar"], {
+                    size: plot["size"],
+                    colorScale: plot["colorScale"],
+                    customColorScale: plot["customColorScale"],
+                    colorScaleInverted: plot["colorScaleInverted"],
+                    sortedCategories: plot["sortedCategories"],
+                    showLegend: plot["showLegend"],
+                    fontSize: plot["fontSize"],
+                    fontColor: plot["fontColor"],
+                    legendTitle: plot["legendTitle"],
+                    legendTitleFontSize: plot["legendTitleFontSize"],
+                    legendPosition: plot["legendPosition"],
+                    showAxes: plot["showAxes"],
+                    axisLabels: plot["axisLabels"],
+                    axisColors: plot["axisColors"],
+                    tickBreaks: plot["tickBreaks"],
+                    showTickLines: plot["showTickLines"],
+                    tickLineColors: plot["tickLineColors"],
+                    folded: plot["folded"],
+                    foldedEmbedding: plot["foldedEmbedding"],
+                    foldAnimDelay: plot["foldAnimDelay"],
+                    foldAnimDuration: plot["foldAnimDuration"],
+                    colnames: plot["colnames"],
+                    rownames: plot["rownames"]
+                });
+            }
         }
         if (plotData["labels"]) {
             this._annotationManager.fixedLabels = true;
@@ -283,7 +326,19 @@ var Plots = (function () {
     };
     Plots.prototype._downloadJson = function () {
         var dlElement = document.createElement("a");
+        this._downloadObj["turntable"] = this.turntable;
+        this._downloadObj["rotationRate"] = this.rotationRate;
+        this._downloadObj["backgroundColor"] = this._backgroundColor;
+        this._downloadObj["xScale"] = this._xScale;
+        this._downloadObj["yScale"] = this._yScale;
+        this._downloadObj["zScale"] = this._zScale;
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         this._downloadObj["labels"] = this._annotationManager.exportLabels();
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         var dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -308,8 +363,8 @@ var Plots = (function () {
             boundingBox.minimumWorld.z,
             boundingBox.maximumWorld.z
         ];
-        this._axes.axisData.range = [rangeX, rangeY, rangeZ];
-        this._axes.update(this.camera, true);
+        this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
+        this._axes[0].update(this.camera, true);
     };
     Plots.prototype._startRecording = function () {
         this._recording = true;
@@ -334,12 +389,14 @@ var Plots = (function () {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ];
-                this._axes.axisData.range = [rangeX, rangeY, rangeZ];
-                this._axes.update(this.camera, true);
+                this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
+                this._axes[0].update(this.camera, true);
             }
         }
         if (this._axes) {
-            this._axes.update(this.camera);
+            for (var i = 0; i < this._axes.length; i++) {
+                this._axes[i].update(this.camera);
+            }
         }
         this._annotationManager.update();
     };
@@ -434,6 +491,7 @@ var Plots = (function () {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -443,7 +501,8 @@ var Plots = (function () {
             intensityMode: "alpha"
         };
         Object.assign(opts, options);
-        this._downloadObj = {
+        this._downloadObj["plots"].push({
+            plotType: "imageStack",
             values: values,
             indices: indices,
             attributes: attributes,
@@ -454,30 +513,28 @@ var Plots = (function () {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
-            labels: [],
-            backgroundColor: this._backgroundColor,
             intensityMode: opts.intensityMode
-        };
+        });
         var legendData = {
             showLegend: false,
             discrete: false,
             breaks: [],
             colorScale: "",
-            inverted: false
+            inverted: false,
+            position: opts.legendPosition
         };
         legendData.fontSize = opts.fontSize;
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
-        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode);
+        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale);
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
@@ -488,8 +545,9 @@ var Plots = (function () {
         if (options === void 0) { options = {}; }
         var opts = {
             size: 1,
-            scaleColumn: 1,
-            scaleRow: 1,
+            xScale: 1,
+            yScale: 1,
+            zScale: 1,
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
@@ -499,6 +557,7 @@ var Plots = (function () {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -513,15 +572,12 @@ var Plots = (function () {
             rownames: null
         };
         Object.assign(opts, options);
-        console.log(opts);
-        this._downloadObj = {
-            coordinates: coordinates,
+        this._downloadObj["plots"].push({
             plotType: plotType,
+            coordinates: coordinates,
             colorBy: colorBy,
             colorVar: colorVar,
             size: opts.size,
-            scaleColumn: opts.scaleColumn,
-            scaleRow: opts.scaleRow,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
             colorScaleInverted: opts.colorScaleInverted,
@@ -531,6 +587,7 @@ var Plots = (function () {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -541,13 +598,9 @@ var Plots = (function () {
             foldedEmbedding: opts.foldedEmbedding,
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
             colnames: opts.colnames,
-            rownames: opts.rownames,
-            labels: [],
-            backgroundColor: this._backgroundColor
-        };
+            rownames: opts.rownames
+        });
         var coordColors = [];
         var legendData;
         var rangeX;
@@ -614,7 +667,8 @@ var Plots = (function () {
                     breaks: uniqueGroups,
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 };
                 break;
             case "values":
@@ -655,7 +709,8 @@ var Plots = (function () {
                     breaks: [min_1.toString(), max_1.toString()],
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: opts.colorScaleInverted
+                    inverted: opts.colorScaleInverted,
+                    position: opts.legendPosition
                 };
                 break;
             case "direct":
@@ -673,7 +728,8 @@ var Plots = (function () {
                     breaks: [],
                     colorScale: "",
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 };
                 break;
         }
@@ -685,7 +741,7 @@ var Plots = (function () {
         var scale;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration, this._xScale, this._yScale, this._zScale);
                 var boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -699,28 +755,32 @@ var Plots = (function () {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ];
-                scale = [1, 1, 1];
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ];
                 break;
             case "surface":
-                plot = new Surface_1.Surface(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new Surface_1.Surface(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ];
                 break;
             case "heatMap":
-                plot = new HeatMap_1.HeatMap(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new HeatMap_1.HeatMap(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ];
                 break;
         }
@@ -742,7 +802,7 @@ var Plots = (function () {
             colnames: opts.colnames,
             rownames: opts.rownames
         };
-        this._axes = new Axes_1.Axes(axisData, this.scene, plotType == "heatMap");
+        this._axes.push(new Axes_1.Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this;
     };
@@ -750,190 +810,234 @@ var Plots = (function () {
         if (this._legend) {
             this._legend.dispose();
         }
-        var legendData = this.plots[0].legendData;
+        var uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        var rightFree = true;
+        var leftFree = true;
+        for (var i = 0; i < this.plots.length; i++) {
+            var plot = this.plots[i];
+            var legendData = plot.legendData;
+            if (["right", "left"].indexOf(legendData.position) === -1) {
+                legendData.position = null;
+            }
+            if (legendData.showLegend) {
+                if (legendData.position === null) {
+                    if (rightFree) {
+                        legendData.position = "right";
+                        rightFree = false;
+                    }
+                    else if (leftFree) {
+                        legendData.position = "left";
+                        leftFree = false;
+                    }
+                    else {
+                        legendData.showLegend = false;
+                    }
+                }
+                else {
+                    if (legendData.position === "right") {
+                        rightFree = false;
+                    }
+                    else {
+                        leftFree = false;
+                    }
+                }
+                uiLayer = this._createPlotLegend(legendData, uiLayer);
+            }
+        }
+        this._legend = uiLayer;
+    };
+    Plots.prototype._createPlotLegend = function (legendData, uiLayer) {
+        if (!legendData.showLegend) {
+            return uiLayer;
+        }
         var n;
         var breakN = 20;
-        if (legendData.showLegend) {
-            var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-            var grid = new controls_1.Grid();
-            advancedTexture.addControl(grid);
-            var legendWidth = 0.2;
-            if (legendData.discrete) {
-                n = legendData.breaks.length;
-                if (n > breakN * 2) {
-                    legendWidth = 0.4;
-                }
-                else if (n > breakN) {
-                    legendWidth = 0.3;
-                }
+        var grid = new controls_1.Grid();
+        uiLayer.addControl(grid);
+        var legendWidth = 0.2;
+        if (legendData.discrete) {
+            n = legendData.breaks.length;
+            if (n > breakN * 2) {
+                legendWidth = 0.4;
             }
+            else if (n > breakN) {
+                legendWidth = 0.3;
+            }
+        }
+        var legendColumn = 1;
+        if (legendData.position === "right") {
             grid.addColumnDefinition(1 - legendWidth);
             grid.addColumnDefinition(legendWidth);
-            if (legendData.legendTitle && legendData.legendTitle !== "") {
-                grid.addRowDefinition(0.1);
-                grid.addRowDefinition(0.85);
-                grid.addRowDefinition(0.05);
-            }
-            else {
-                grid.addRowDefinition(0.05);
-                grid.addRowDefinition(0.9);
-                grid.addRowDefinition(0.05);
-            }
-            if (legendData.legendTitle) {
-                var legendTitle = new controls_1.TextBlock();
-                legendTitle.text = legendData.legendTitle;
-                legendTitle.color = legendData.fontColor;
-                legendTitle.fontWeight = "bold";
-                if (legendData.legendTitleFontSize) {
-                    legendTitle.fontSize = legendData.legendTitleFontSize + "px";
-                }
-                else {
-                    legendTitle.fontSize = "20px";
-                }
-                legendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
-                legendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                grid.addControl(legendTitle, 0, 1);
-            }
-            if (!legendData.discrete) {
-                var innerGrid_1 = new controls_1.Grid();
-                innerGrid_1.addColumnDefinition(0.2);
-                innerGrid_1.addColumnDefinition(0.8);
-                grid.addControl(innerGrid_1, 1, 1);
-                var nBreaks = 115;
-                var labelSpace = 0.15;
-                if (this.canvas.height < 70) {
-                    nBreaks = 10;
-                    labelSpace = 0.45;
-                    innerGrid_1.addRowDefinition(1);
-                }
-                else if (this.canvas.height < 130) {
-                    nBreaks = 50;
-                    labelSpace = 0.3;
-                    innerGrid_1.addRowDefinition(1);
-                }
-                else {
-                    var padding = (this.canvas.height - 115) / 2;
-                    innerGrid_1.addRowDefinition(padding, true);
-                    innerGrid_1.addRowDefinition(115, true);
-                    innerGrid_1.addRowDefinition(padding, true);
-                }
-                var colors = void 0;
-                if (legendData.colorScale === "custom") {
-                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
-                }
-                else {
-                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
-                }
-                var scaleGrid = new controls_1.Grid();
-                for (var i = 0; i < nBreaks; i++) {
-                    scaleGrid.addRowDefinition(1 / nBreaks);
-                    var legendColor_1 = new controls_1.Rectangle();
-                    if (legendData.inverted) {
-                        legendColor_1.background = colors[i];
-                    }
-                    else {
-                        legendColor_1.background = colors[colors.length - i - 1];
-                    }
-                    legendColor_1.thickness = 0;
-                    legendColor_1.width = 0.5;
-                    legendColor_1.height = 1;
-                    scaleGrid.addControl(legendColor_1, i, 0);
-                }
-                var labelGrid = new controls_1.Grid();
-                labelGrid.addColumnDefinition(1);
-                labelGrid.addRowDefinition(labelSpace);
-                labelGrid.addRowDefinition(1 - labelSpace * 2);
-                labelGrid.addRowDefinition(labelSpace);
-                if (this.canvas.height < 130) {
-                    innerGrid_1.addControl(scaleGrid, 0, 0);
-                    innerGrid_1.addControl(labelGrid, 0, 1);
-                }
-                else {
-                    innerGrid_1.addControl(scaleGrid, 1, 0);
-                    innerGrid_1.addControl(labelGrid, 1, 1);
-                }
-                var minText = new controls_1.TextBlock();
-                minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
-                minText.color = legendData.fontColor;
-                minText.fontSize = legendData.fontSize + "px";
-                minText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(minText, 2, 0);
-                var maxText = new controls_1.TextBlock();
-                maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
-                maxText.color = legendData.fontColor;
-                maxText.fontSize = legendData.fontSize + "px";
-                maxText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(maxText, 0, 0);
-            }
-            else {
-                var innerGrid = new controls_1.Grid();
-                if (n > breakN * 2) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                }
-                else if (n > breakN) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                }
-                else {
-                    innerGrid.addColumnDefinition(0.2);
-                    innerGrid.addColumnDefinition(0.8);
-                }
-                for (var i = 0; i < n && i < breakN; i++) {
-                    if (n > breakN) {
-                        innerGrid.addRowDefinition(1 / breakN);
-                    }
-                    else {
-                        innerGrid.addRowDefinition(1 / n);
-                    }
-                }
-                grid.addControl(innerGrid, 1, 1);
-                var colors = void 0;
-                if (legendData.colorScale === "custom") {
-                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(n);
-                }
-                else {
-                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
-                }
-                for (var i = 0; i < n; i++) {
-                    var legendColor = new controls_1.Rectangle();
-                    legendColor.background = colors[i];
-                    legendColor.thickness = 0;
-                    legendColor.width = legendData.fontSize + "px";
-                    legendColor.height = legendData.fontSize + "px";
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendColor, i - breakN * 2, 4);
-                    }
-                    else if (i > breakN - 1) {
-                        innerGrid.addControl(legendColor, i - breakN, 2);
-                    }
-                    else {
-                        innerGrid.addControl(legendColor, i, 0);
-                    }
-                    var legendText = new controls_1.TextBlock();
-                    legendText.text = legendData.breaks[i].toString();
-                    legendText.color = legendData.fontColor;
-                    legendText.fontSize = legendData.fontSize + "px";
-                    legendText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendText, i - breakN * 2, 5);
-                    }
-                    if (i > breakN - 1) {
-                        innerGrid.addControl(legendText, i - breakN, 3);
-                    }
-                    else {
-                        innerGrid.addControl(legendText, i, 1);
-                    }
-                }
-            }
-            this._legend = advancedTexture;
         }
+        else {
+            grid.addColumnDefinition(legendWidth);
+            grid.addColumnDefinition(1 - legendWidth);
+            legendColumn = 0;
+        }
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
+            grid.addRowDefinition(0.1);
+            grid.addRowDefinition(0.85);
+            grid.addRowDefinition(0.05);
+        }
+        else {
+            grid.addRowDefinition(0.05);
+            grid.addRowDefinition(0.9);
+            grid.addRowDefinition(0.05);
+        }
+        if (legendData.legendTitle) {
+            var legendTitle = new controls_1.TextBlock();
+            legendTitle.text = legendData.legendTitle;
+            legendTitle.color = legendData.fontColor;
+            legendTitle.fontWeight = "bold";
+            if (legendData.legendTitleFontSize) {
+                legendTitle.fontSize = legendData.legendTitleFontSize + "px";
+            }
+            else {
+                legendTitle.fontSize = "20px";
+            }
+            legendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            legendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            grid.addControl(legendTitle, 0, legendColumn);
+        }
+        if (!legendData.discrete) {
+            var innerGrid_1 = new controls_1.Grid();
+            innerGrid_1.addColumnDefinition(0.2);
+            innerGrid_1.addColumnDefinition(0.8);
+            grid.addControl(innerGrid_1, 1, legendColumn);
+            var nBreaks = 115;
+            var labelSpace = 0.15;
+            if (this.canvas.height < 70) {
+                nBreaks = 10;
+                labelSpace = 0.45;
+                innerGrid_1.addRowDefinition(1);
+            }
+            else if (this.canvas.height < 130) {
+                nBreaks = 50;
+                labelSpace = 0.3;
+                innerGrid_1.addRowDefinition(1);
+            }
+            else {
+                var padding = (this.canvas.height - 115) / 2;
+                innerGrid_1.addRowDefinition(padding, true);
+                innerGrid_1.addRowDefinition(115, true);
+                innerGrid_1.addRowDefinition(padding, true);
+            }
+            var colors = void 0;
+            if (legendData.colorScale === "custom") {
+                colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
+            }
+            else {
+                colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+            }
+            var scaleGrid = new controls_1.Grid();
+            for (var i = 0; i < nBreaks; i++) {
+                scaleGrid.addRowDefinition(1 / nBreaks);
+                var legendColor_1 = new controls_1.Rectangle();
+                if (legendData.inverted) {
+                    legendColor_1.background = colors[i];
+                }
+                else {
+                    legendColor_1.background = colors[colors.length - i - 1];
+                }
+                legendColor_1.thickness = 0;
+                legendColor_1.width = 0.5;
+                legendColor_1.height = 1;
+                scaleGrid.addControl(legendColor_1, i, 0);
+            }
+            var labelGrid = new controls_1.Grid();
+            labelGrid.addColumnDefinition(1);
+            labelGrid.addRowDefinition(labelSpace);
+            labelGrid.addRowDefinition(1 - labelSpace * 2);
+            labelGrid.addRowDefinition(labelSpace);
+            if (this.canvas.height < 130) {
+                innerGrid_1.addControl(scaleGrid, 0, 0);
+                innerGrid_1.addControl(labelGrid, 0, 1);
+            }
+            else {
+                innerGrid_1.addControl(scaleGrid, 1, 0);
+                innerGrid_1.addControl(labelGrid, 1, 1);
+            }
+            var minText = new controls_1.TextBlock();
+            minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
+            minText.color = legendData.fontColor;
+            minText.fontSize = legendData.fontSize + "px";
+            minText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(minText, 2, 0);
+            var maxText = new controls_1.TextBlock();
+            maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
+            maxText.color = legendData.fontColor;
+            maxText.fontSize = legendData.fontSize + "px";
+            maxText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(maxText, 0, 0);
+        }
+        else {
+            var innerGrid = new controls_1.Grid();
+            if (n > breakN * 2) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else if (n > breakN) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else {
+                innerGrid.addColumnDefinition(0.2);
+                innerGrid.addColumnDefinition(0.8);
+            }
+            for (var i = 0; i < n && i < breakN; i++) {
+                if (n > breakN) {
+                    innerGrid.addRowDefinition(1 / breakN);
+                }
+                else {
+                    innerGrid.addRowDefinition(1 / n);
+                }
+            }
+            grid.addControl(innerGrid, 1, legendColumn);
+            var colors = void 0;
+            if (legendData.colorScale === "custom") {
+                colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(n);
+            }
+            else {
+                colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
+            }
+            for (var i = 0; i < n; i++) {
+                var legendColor = new controls_1.Rectangle();
+                legendColor.background = colors[i];
+                legendColor.thickness = 0;
+                legendColor.width = legendData.fontSize + "px";
+                legendColor.height = legendData.fontSize + "px";
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendColor, i - breakN * 2, 4);
+                }
+                else if (i > breakN - 1) {
+                    innerGrid.addControl(legendColor, i - breakN, 2);
+                }
+                else {
+                    innerGrid.addControl(legendColor, i, 0);
+                }
+                var legendText = new controls_1.TextBlock();
+                legendText.text = legendData.breaks[i].toString();
+                legendText.color = legendData.fontColor;
+                legendText.fontSize = legendData.fontSize + "px";
+                legendText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendText, i - breakN * 2, 5);
+                }
+                if (i > breakN - 1) {
+                    innerGrid.addControl(legendText, i - breakN, 3);
+                }
+                else {
+                    innerGrid.addControl(legendText, i, 1);
+                }
+            }
+        }
+        return uiLayer;
     };
     Plots.prototype.doRender = function () {
         var _this = this;

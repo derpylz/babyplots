@@ -420,28 +420,28 @@ var standardMaterial_1 = __webpack_require__(/*! @babylonjs/core/Materials/stand
 var babyplots_1 = __webpack_require__(/*! ./babyplots */ "./babyplots.ts");
 var HeatMap = (function (_super) {
     __extends(HeatMap, _super);
-    function HeatMap(scene, coordinates, colorVar, size, scaleColumn, scaleRow, legendData) {
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
-        _this.scaleColumn = scaleColumn;
-        _this.scaleRow = scaleRow;
+    function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createHeatMap();
         return _this;
     }
     HeatMap.prototype._createHeatMap = function () {
-        var max = babyplots_1.matrixMax(this._coords);
         var boxes = [];
         for (var row = 0; row < this._coords.length; row++) {
             var rowCoords = this._coords[row];
             for (var column = 0; column < rowCoords.length; column++) {
                 var coord = rowCoords[column];
                 if (coord > 0) {
-                    var height = coord / max * this._size;
+                    var height = coord * this.yScale;
                     var box = boxBuilder_1.BoxBuilder.CreateBox("box_" + row + "-" + column, {
                         height: height,
-                        width: this.scaleColumn,
-                        depth: this.scaleRow
+                        width: this.xScale * this._size,
+                        depth: this.zScale * this._size
                     }, this._scene);
-                    box.position = new math_1.Vector3(row * this.scaleColumn + 0.5 * this.scaleColumn, height / 2, column * this.scaleRow + 0.5 * this.scaleRow);
+                    box.position = new math_1.Vector3(row * this.xScale + 0.5 * this.xScale, height / 2, column * this.zScale + 0.5 * this.zScale);
                     var mat = new standardMaterial_1.StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;
                     mat.diffuseColor = math_1.Color3.FromHexString(this._coordColors[column + row * rowCoords.length].substring(0, 7));
@@ -449,8 +449,11 @@ var HeatMap = (function (_super) {
                     boxes.push(box);
                 }
                 else {
-                    var box = planeBuilder_1.PlaneBuilder.CreatePlane("box_" + row + "-" + column, { width: this.scaleColumn, height: this.scaleRow }, this._scene);
-                    box.position = new math_1.Vector3(row * this.scaleColumn + 0.5 * this.scaleColumn, 0, column * this.scaleRow + 0.5 * this.scaleRow);
+                    var box = planeBuilder_1.PlaneBuilder.CreatePlane("box_" + row + "-" + column, {
+                        width: this.xScale * this._size,
+                        height: this.zScale * this._size
+                    }, this._scene);
+                    box.position = new math_1.Vector3(row * this.xScale + 0.5 * this.xScale, 0, column * this.zScale + 0.5 * this.zScale);
                     box.rotation.x = Math.PI / 2;
                     var mat = new standardMaterial_1.StandardMaterial("box_" + row + "-" + column + "_color", this._scene);
                     mat.alpha = 1;
@@ -513,7 +516,10 @@ var babyplots_1 = __webpack_require__(/*! ./babyplots */ "./babyplots.ts");
 var chroma_js_1 = __importDefault(__webpack_require__(/*! chroma-js */ "./node_modules/chroma-js/chroma.js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
         var _this = this;
         var colSize = attributes.dim[0];
         var rowSize = attributes.dim[1];
@@ -535,10 +541,14 @@ var ImgStack = (function (_super) {
             var channelIndex = sliceIndex - channelSize * channel;
             var row = Math.floor(channelIndex / colSize);
             var col = channelIndex % colSize;
-            coords[channel].push([col, row, slice * size]);
+            coords[channel].push([
+                col * xScale,
+                row * yScale,
+                slice * zScale
+            ]);
             Intensities[channel].push(values[i]);
         }
-        _this = _super.call(this, scene, [], [], 1, legendData) || this;
+        _this = _super.call(this, scene, [], [], size, legendData, xScale, yScale, zScale) || this;
         _this._channelCoords = coords;
         _this._channelCoordIntensities = Intensities;
         _this._backgroundColor = backgroundColor;
@@ -619,7 +629,6 @@ var ImgStack = (function (_super) {
                         colors.push(colormix[0] / 255, colormix[1] / 255, colormix[2] / 255, 1);
                     }
                     else {
-                        ;
                         colors.push(channelColorRGB[0], channelColorRGB[1], channelColorRGB[2], 1);
                     }
                 }
@@ -661,13 +670,31 @@ var planeBuilder_1 = __webpack_require__(/*! @babylonjs/core/Meshes/Builders/pla
 var pointerDragBehavior_1 = __webpack_require__(/*! @babylonjs/core/Behaviors/Meshes/pointerDragBehavior */ "./node_modules/@babylonjs/core/Behaviors/Meshes/pointerDragBehavior.js");
 var advancedDynamicTexture_1 = __webpack_require__(/*! @babylonjs/gui/2D/advancedDynamicTexture */ "./node_modules/@babylonjs/gui/2D/advancedDynamicTexture.js");
 var controls_1 = __webpack_require__(/*! @babylonjs/gui/2D/controls */ "./node_modules/@babylonjs/gui/2D/controls/index.js");
+var linesBuilder_1 = __webpack_require__(/*! @babylonjs/core/Meshes/Builders/linesBuilder */ "./node_modules/@babylonjs/core/Meshes/Builders/linesBuilder.js");
+var cylinderBuilder_1 = __webpack_require__(/*! @babylonjs/core/Meshes/Builders/cylinderBuilder */ "./node_modules/@babylonjs/core/Meshes/Builders/cylinderBuilder.js");
 var Arrow = (function () {
-    function Arrow() {
+    function Arrow(from, to, scene, color) {
+        this.size = 1;
+        var lines = linesBuilder_1.LinesBuilder.CreateLineSystem('ls', {
+            lines: [[from, to]],
+            updatable: true
+        }, scene);
+        lines.color = new math_1.Color3(0, 0, 0);
+        if (color !== undefined) {
+            lines.color = math_1.Color3.FromHexString(color);
+        }
+        this._lines = lines;
+        var tip = cylinderBuilder_1.CylinderBuilder.CreateCylinder("tip", {
+            diameterTop: 0,
+            diameterBottom: this.size,
+            tessellation: 36
+        }, scene);
+        tip.position = to;
     }
     return Arrow;
 }());
 var Label = (function () {
-    function Label(text, position, scene) {
+    function Label(text, position, scene, color) {
         this.size = 100;
         this.color = "black";
         this.fixed = false;
@@ -675,6 +702,9 @@ var Label = (function () {
             width: 5,
             height: 5
         }, scene);
+        if (color !== undefined) {
+            this.color = color;
+        }
         plane.position = position;
         var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateForMesh(plane);
         var background = new controls_1.Rectangle();
@@ -802,6 +832,9 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype._addLabelBtnClick = function (event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
+    };
+    AnnotationManager.prototype.addArrow = function (from, to) {
+        this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
     AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";
@@ -936,8 +969,11 @@ var standardMaterial_1 = __webpack_require__(/*! @babylonjs/core/Materials/stand
 var babyplots_1 = __webpack_require__(/*! ./babyplots */ "./babyplots.ts");
 var PointCloud = (function (_super) {
     __extends(PointCloud, _super);
-    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration) {
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
+    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._pointPicking = false;
         _this._selectionCallback = function (selection) { return false; };
         _this._foldVectors = [];
@@ -958,7 +994,7 @@ var PointCloud = (function (_super) {
                     if (foldedEmbedding[i].length == 2) {
                         foldedEmbedding[i].push(0);
                     }
-                    var fv = new math_1.Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(foldedEmbedding[i][0] * _this.xScale, 0, foldedEmbedding[i][1] * _this.yScale);
                     _this._foldVectors.push(fv);
                     _this._foldVectorFract.push(fv.divide(new math_1.Vector3(_this._foldAnimFrames, _this._foldAnimFrames, _this._foldAnimFrames)));
                 }
@@ -968,7 +1004,7 @@ var PointCloud = (function (_super) {
                 foldedEmbedding = JSON.parse(JSON.stringify(coordinates));
                 for (var i = 0; i < foldedEmbedding.length; i++) {
                     foldedEmbedding[i][2] = 0;
-                    var fv = new math_1.Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(foldedEmbedding[i][0] * _this.xScale, 0, foldedEmbedding[i][1] * _this.yScale);
                     _this._foldVectors.push(fv);
                     _this._foldVectorFract.push(fv.divide(new math_1.Vector3(_this._foldAnimFrames, _this._foldAnimFrames, _this._foldAnimFrames)));
                 }
@@ -985,14 +1021,14 @@ var PointCloud = (function (_super) {
             var colors = [];
             if (this._folded) {
                 for (var p = 0; p < this._coords.length; p++) {
-                    positions.push(this._foldedEmbedding[p][0], this._foldedEmbedding[p][2], this._foldedEmbedding[p][1]);
+                    positions.push(this._foldedEmbedding[p][0] * this.xScale, this._foldedEmbedding[p][2] * this.zScale, this._foldedEmbedding[p][1] * this.yScale);
                     var col = math_1.Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
             }
             else {
                 for (var p = 0; p < this._coords.length; p++) {
-                    positions.push(this._coords[p][0], this._coords[p][2], this._coords[p][1]);
+                    positions.push(this._coords[p][0] * this.xScale, this._coords[p][2] * this.zScale, this._coords[p][1] * this.yScale);
                     var col = math_1.Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
@@ -1018,17 +1054,17 @@ var PointCloud = (function (_super) {
             SPS.addShape(cell, this._coords.length);
             if (this._folded) {
                 for (var i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._foldedEmbedding[i][0];
-                    SPS.particles[i].position.z = this._foldedEmbedding[i][1];
-                    SPS.particles[i].position.y = this._foldedEmbedding[i][2];
+                    SPS.particles[i].position.x = this._foldedEmbedding[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._foldedEmbedding[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._foldedEmbedding[i][2] * this.yScale;
                     SPS.particles[i].color = math_1.Color4.FromHexString(this._coordColors[i]);
                 }
             }
             else {
                 for (var i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._coords[i][0];
-                    SPS.particles[i].position.z = this._coords[i][1];
-                    SPS.particles[i].position.y = this._coords[i][2];
+                    SPS.particles[i].position.x = this._coords[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._coords[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._coords[i][2] * this.yScale;
                     SPS.particles[i].color = math_1.Color4.FromHexString(this._coordColors[i]);
                 }
             }
@@ -1053,7 +1089,7 @@ var PointCloud = (function (_super) {
         this._folded = true;
         if (this._SPS) {
             for (var i = 0; i < this._SPS.particles.length; i++) {
-                this._SPS.particles[i].position = new math_1.Vector3(this._foldedEmbedding[i][0], this._foldedEmbedding[i][2], this._foldedEmbedding[i][1]);
+                this._SPS.particles[i].position = new math_1.Vector3(this._foldedEmbedding[i][0] * this.xScale, this._foldedEmbedding[i][2] * this.zScale, this._foldedEmbedding[i][1] * this.yScale);
             }
             this._SPS.setParticles();
         }
@@ -1061,9 +1097,9 @@ var PointCloud = (function (_super) {
             var positionFunction = function (positions) {
                 var numberOfVertices = positions.length / 3;
                 for (var i = 0; i < numberOfVertices; i++) {
-                    positions[i * 3] = this._foldedEmbedding[i][0];
-                    positions[i * 3 + 1] = this._foldedEmbedding[i][2];
-                    positions[i * 3 + 2] = this._foldedEmbedding[i][1];
+                    positions[i * 3] = this._foldedEmbedding[i][0] * this.xScale;
+                    positions[i * 3 + 1] = this._foldedEmbedding[i][2] * this.zScale;
+                    positions[i * 3 + 2] = this._foldedEmbedding[i][1] * this.yScale;
                 }
             };
             this.mesh.updateMeshPositions(positionFunction.bind(this), true);
@@ -1086,7 +1122,7 @@ var PointCloud = (function (_super) {
             else {
                 this._folded = false;
                 for (var i = 0; i < this._SPS.particles.length; i++) {
-                    this._SPS.particles[i].position = new math_1.Vector3(this._coords[i][0], this._coords[i][2], this._coords[i][1]);
+                    this._SPS.particles[i].position = new math_1.Vector3(this._coords[i][0] * this.xScale, this._coords[i][2] * this.zScale, this._coords[i][1] * this.yScale);
                 }
                 this._SPS.setParticles();
                 this.mesh.refreshBoundingInfo();
@@ -1114,9 +1150,9 @@ var PointCloud = (function (_super) {
                 var positionFunction = function (positions) {
                     var numberOfVertices = positions.length / 3;
                     for (var i = 0; i < numberOfVertices; i++) {
-                        positions[i * 3] = this._coords[i][0];
-                        positions[i * 3 + 1] = this._coords[i][2];
-                        positions[i * 3 + 2] = this._coords[i][1];
+                        positions[i * 3] = this._coords[i][0] * this.xScale;
+                        positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
+                        positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
                     }
                 };
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
@@ -1192,15 +1228,15 @@ var babyplots_1 = __webpack_require__(/*! ./babyplots */ "./babyplots.ts");
 var chroma_js_1 = __importDefault(__webpack_require__(/*! chroma-js */ "./node_modules/chroma-js/chroma.js"));
 var Surface = (function (_super) {
     __extends(Surface, _super);
-    function Surface(scene, coordinates, colorVar, size, scaleColumn, scaleRow, legendData) {
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData) || this;
-        _this.scaleColumn = scaleColumn;
-        _this.scaleRow = scaleRow;
+    function Surface(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createSurface();
         return _this;
     }
     Surface.prototype._createSurface = function () {
-        var max = babyplots_1.matrixMax(this._coords);
         var surface = new mesh_1.Mesh("surface", this._scene);
         var positions = [];
         var indices = [];
@@ -1208,7 +1244,7 @@ var Surface = (function (_super) {
             var rowCoords = this._coords[row];
             for (var column = 0; column < rowCoords.length; column++) {
                 var coord = rowCoords[column];
-                positions.push(column * this.scaleRow, coord / max * this._size, row * this.scaleColumn);
+                positions.push(column * this.xScale, coord * this.yScale, row * this.zScale);
                 if (row < this._coords.length - 1 && column < rowCoords.length - 1) {
                     indices.push(column + row * rowCoords.length, rowCoords.length + row * rowCoords.length + column, column + row * rowCoords.length + 1, column + row * rowCoords.length + 1, rowCoords.length + row * rowCoords.length + column, rowCoords.length + row * rowCoords.length + column + 1);
                 }
@@ -1303,13 +1339,19 @@ function matrixMax(matrix) {
 }
 exports.matrixMax = matrixMax;
 var Plot = (function () {
-    function Plot(scene, coordinates, colorVar, size, legendData) {
+    function Plot(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
         this._size = 1;
         this._scene = scene;
         this._coords = coordinates;
         this._coordColors = colorVar;
         this._size = size;
         this.legendData = legendData;
+        this.xScale = xScale;
+        this.yScale = yScale;
+        this.zScale = zScale;
     }
     Plot.prototype.updateSize = function () { };
     Plot.prototype.update = function () { return false; };
@@ -1394,21 +1436,34 @@ function isValidPlot(plotData) {
 }
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
-    function Plots(canvasElement, backgroundColor) {
-        if (backgroundColor === void 0) { backgroundColor = "#ffffffff"; }
+    function Plots(canvasElement, options) {
+        if (options === void 0) { options = {}; }
         this._showLegend = true;
         this._hasAnim = false;
+        this._axes = [];
         this._downloadObj = {};
         this._recording = false;
         this._turned = 0;
         this._wasTurning = false;
+        this._xScale = 1;
+        this._yScale = 1;
+        this._zScale = 1;
         this.plots = [];
-        this.turntable = false;
-        this.rotationRate = 0.01;
         this.fixedSize = false;
         this.ymax = 0;
         this.R = false;
-        this._backgroundColor = backgroundColor;
+        var opts = {
+            backgroundColor: "#ffffffff",
+            xScale: 1,
+            yScale: 1,
+            zScale: 1,
+            turntable: false,
+            rotationRate: 0.01
+        };
+        Object.assign(opts, options);
+        this.turntable = opts.turntable;
+        this.rotationRate = opts.rotationRate;
+        this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement);
         this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new scene_1.Scene(this._engine);
@@ -1417,7 +1472,10 @@ var Plots = (function () {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl(this.canvas);
         this.camera.wheelPrecision = 50;
-        this.scene.clearColor = math_1.Color4.FromHexString(backgroundColor);
+        this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
+        this._xScale = opts.xScale;
+        this._yScale = opts.yScale;
+        this._zScale = opts.zScale;
         this._hl1 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new math_1.Color3(1, 1, 1);
         this._hl1.specular = new math_1.Color3(0, 0, 0);
@@ -1436,6 +1494,9 @@ var Plots = (function () {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        this._downloadObj = {
+            plots: []
+        };
     }
     Plots.prototype.fromJSON = function (plotData) {
         if (plotData["turntable"] !== undefined) {
@@ -1448,52 +1509,63 @@ var Plots = (function () {
             this._backgroundColor = plotData["backgroundColor"];
             this.scene.clearColor = math_1.Color4.FromHexString(this._backgroundColor);
         }
-        if (plotData["coordinates"] && plotData["plotType"] && plotData["colorBy"]) {
-            console.log(plotData);
-            this.addPlot(plotData["coordinates"], plotData["plotType"], plotData["colorBy"], plotData["colorVar"], {
-                size: plotData["size"],
-                scaleColumn: plotData["scaleColumn"],
-                scaleRow: plotData["scaleRow"],
-                colorScale: plotData["colorScale"],
-                customColorScale: plotData["customColorScale"],
-                colorScaleInverted: plotData["colorScaleInverted"],
-                sortedCategories: plotData["sortedCategories"],
-                showLegend: plotData["showLegend"],
-                fontSize: plotData["fontSize"],
-                fontColor: plotData["fontColor"],
-                legendTitle: plotData["legendTitle"],
-                legendTitleFontSize: plotData["legendTitleFontSize"],
-                showAxes: plotData["showAxes"],
-                axisLabels: plotData["axisLabels"],
-                axisColors: plotData["axisColors"],
-                tickBreaks: plotData["tickBreaks"],
-                showTickLines: plotData["showTickLines"],
-                tickLineColors: plotData["tickLineColors"],
-                folded: plotData["folded"],
-                foldedEmbedding: plotData["foldedEmbedding"],
-                foldAnimDelay: plotData["foldAnimDelay"],
-                foldAnimDuration: plotData["foldAnimDuration"],
-                colnames: plotData["colnames"],
-                rownames: plotData["rownames"]
-            });
+        if (plotData["xScale"] !== undefined) {
+            this._xScale = plotData["xScale"];
         }
-        else if (plotData["values"] && plotData["indices"] && plotData["attributes"]) {
-            this.addImgStack(plotData["values"], plotData["indices"], plotData["attributes"], {
-                size: plotData["size"],
-                colorScale: plotData["colorScale"],
-                showLegend: plotData["showLegend"],
-                fontSize: plotData["fontSize"],
-                fontColor: plotData["fontColor"],
-                legendTitle: plotData["legendTitle"],
-                legendTitleFontSize: plotData["legendTitleFontSize"],
-                showAxes: plotData["showAxes"],
-                axisLabels: plotData["axisLabels"],
-                axisColors: plotData["axisColors"],
-                tickBreaks: plotData["tickBreaks"],
-                showTickLines: plotData["showTickLines"],
-                tickLineColors: plotData["tickLineColors"],
-                intensityMode: plotData["intensityMode"]
-            });
+        if (plotData["yScale"] !== undefined) {
+            this._yScale = plotData["yScale"];
+        }
+        if (plotData["zScale"] !== undefined) {
+            this._zScale = plotData["zScale"];
+        }
+        for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
+            var plot = plotData["plots"][plotIdx];
+            if (plot["plotType"] === "imageStack") {
+                this.addImgStack(plot["values"], plot["indices"], plot["attributes"], {
+                    size: plot["size"],
+                    colorScale: plot["colorScale"],
+                    showLegend: plot["showLegend"],
+                    fontSize: plot["fontSize"],
+                    fontColor: plot["fontColor"],
+                    legendTitle: plot["legendTitle"],
+                    legendTitleFontSize: plot["legendTitleFontSize"],
+                    legendPosition: plot["legendPosition"],
+                    showAxes: plot["showAxes"],
+                    axisLabels: plot["axisLabels"],
+                    axisColors: plot["axisColors"],
+                    tickBreaks: plot["tickBreaks"],
+                    showTickLines: plot["showTickLines"],
+                    tickLineColors: plot["tickLineColors"],
+                    intensityMode: plot["intensityMode"]
+                });
+            }
+            else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+                this.addPlot(plot["coordinates"], plot["plotType"], plot["colorBy"], plot["colorVar"], {
+                    size: plot["size"],
+                    colorScale: plot["colorScale"],
+                    customColorScale: plot["customColorScale"],
+                    colorScaleInverted: plot["colorScaleInverted"],
+                    sortedCategories: plot["sortedCategories"],
+                    showLegend: plot["showLegend"],
+                    fontSize: plot["fontSize"],
+                    fontColor: plot["fontColor"],
+                    legendTitle: plot["legendTitle"],
+                    legendTitleFontSize: plot["legendTitleFontSize"],
+                    legendPosition: plot["legendPosition"],
+                    showAxes: plot["showAxes"],
+                    axisLabels: plot["axisLabels"],
+                    axisColors: plot["axisColors"],
+                    tickBreaks: plot["tickBreaks"],
+                    showTickLines: plot["showTickLines"],
+                    tickLineColors: plot["tickLineColors"],
+                    folded: plot["folded"],
+                    foldedEmbedding: plot["foldedEmbedding"],
+                    foldAnimDelay: plot["foldAnimDelay"],
+                    foldAnimDuration: plot["foldAnimDuration"],
+                    colnames: plot["colnames"],
+                    rownames: plot["rownames"]
+                });
+            }
         }
         if (plotData["labels"]) {
             this._annotationManager.fixedLabels = true;
@@ -1511,6 +1583,15 @@ var Plots = (function () {
                     }
                 }
             }
+        }
+        if (plotData["cameraAlpha"] !== undefined) {
+            this.camera.alpha = plotData["cameraAlpha"];
+        }
+        if (plotData["cameraBeta"] !== undefined) {
+            this.camera.beta = plotData["cameraBeta"];
+        }
+        if (plotData["cameraRadius"] !== undefined) {
+            this.camera.radius = plotData["cameraRadius"];
         }
     };
     Plots.prototype.createButtons = function (whichBtns) {
@@ -1539,7 +1620,19 @@ var Plots = (function () {
     };
     Plots.prototype._downloadJson = function () {
         var dlElement = document.createElement("a");
+        this._downloadObj["turntable"] = this.turntable;
+        this._downloadObj["rotationRate"] = this.rotationRate;
+        this._downloadObj["backgroundColor"] = this._backgroundColor;
+        this._downloadObj["xScale"] = this._xScale;
+        this._downloadObj["yScale"] = this._yScale;
+        this._downloadObj["zScale"] = this._zScale;
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         this._downloadObj["labels"] = this._annotationManager.exportLabels();
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         var dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -1564,8 +1657,8 @@ var Plots = (function () {
             boundingBox.minimumWorld.z,
             boundingBox.maximumWorld.z
         ];
-        this._axes.axisData.range = [rangeX, rangeY, rangeZ];
-        this._axes.update(this.camera, true);
+        this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
+        this._axes[0].update(this.camera, true);
     };
     Plots.prototype._startRecording = function () {
         this._recording = true;
@@ -1590,12 +1683,14 @@ var Plots = (function () {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ];
-                this._axes.axisData.range = [rangeX, rangeY, rangeZ];
-                this._axes.update(this.camera, true);
+                this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
+                this._axes[0].update(this.camera, true);
             }
         }
         if (this._axes) {
-            this._axes.update(this.camera);
+            for (var i = 0; i < this._axes.length; i++) {
+                this._axes[i].update(this.camera);
+            }
         }
         this._annotationManager.update();
     };
@@ -1685,11 +1780,12 @@ var Plots = (function () {
         var opts = {
             size: 1,
             colorScale: null,
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -1699,7 +1795,8 @@ var Plots = (function () {
             intensityMode: "alpha"
         };
         Object.assign(opts, options);
-        this._downloadObj = {
+        this._downloadObj["plots"].push({
+            plotType: "imageStack",
             values: values,
             indices: indices,
             attributes: attributes,
@@ -1710,30 +1807,28 @@ var Plots = (function () {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
-            labels: [],
-            backgroundColor: this._backgroundColor,
             intensityMode: opts.intensityMode
-        };
+        });
         var legendData = {
             showLegend: false,
             discrete: false,
             breaks: [],
             colorScale: "",
-            inverted: false
+            inverted: false,
+            position: opts.legendPosition
         };
         legendData.fontSize = opts.fontSize;
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
-        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode);
+        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale);
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
@@ -1744,17 +1839,19 @@ var Plots = (function () {
         if (options === void 0) { options = {}; }
         var opts = {
             size: 1,
-            scaleColumn: 1,
-            scaleRow: 1,
+            xScale: 1,
+            yScale: 1,
+            zScale: 1,
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
             sortedCategories: [],
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -1769,15 +1866,12 @@ var Plots = (function () {
             rownames: null
         };
         Object.assign(opts, options);
-        console.log(opts);
-        this._downloadObj = {
-            coordinates: coordinates,
+        this._downloadObj["plots"].push({
             plotType: plotType,
+            coordinates: coordinates,
             colorBy: colorBy,
             colorVar: colorVar,
             size: opts.size,
-            scaleColumn: opts.scaleColumn,
-            scaleRow: opts.scaleRow,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
             colorScaleInverted: opts.colorScaleInverted,
@@ -1787,6 +1881,7 @@ var Plots = (function () {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -1797,13 +1892,9 @@ var Plots = (function () {
             foldedEmbedding: opts.foldedEmbedding,
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
             colnames: opts.colnames,
-            rownames: opts.rownames,
-            labels: [],
-            backgroundColor: this._backgroundColor
-        };
+            rownames: opts.rownames
+        });
         var coordColors = [];
         var legendData;
         var rangeX;
@@ -1870,7 +1961,8 @@ var Plots = (function () {
                     breaks: uniqueGroups,
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 };
                 break;
             case "values":
@@ -1911,7 +2003,8 @@ var Plots = (function () {
                     breaks: [min_1.toString(), max_1.toString()],
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: opts.colorScaleInverted
+                    inverted: opts.colorScaleInverted,
+                    position: opts.legendPosition
                 };
                 break;
             case "direct":
@@ -1929,7 +2022,8 @@ var Plots = (function () {
                     breaks: [],
                     colorScale: "",
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 };
                 break;
         }
@@ -1941,7 +2035,7 @@ var Plots = (function () {
         var scale;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration, this._xScale, this._yScale, this._zScale);
                 var boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -1955,28 +2049,32 @@ var Plots = (function () {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ];
-                scale = [1, 1, 1];
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ];
                 break;
             case "surface":
-                plot = new Surface_1.Surface(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new Surface_1.Surface(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ];
                 break;
             case "heatMap":
-                plot = new HeatMap_1.HeatMap(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new HeatMap_1.HeatMap(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ];
                 break;
         }
@@ -1998,7 +2096,7 @@ var Plots = (function () {
             colnames: opts.colnames,
             rownames: opts.rownames
         };
-        this._axes = new Axes_1.Axes(axisData, this.scene, plotType == "heatMap");
+        this._axes.push(new Axes_1.Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this;
     };
@@ -2006,190 +2104,234 @@ var Plots = (function () {
         if (this._legend) {
             this._legend.dispose();
         }
-        var legendData = this.plots[0].legendData;
+        var uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        var rightFree = true;
+        var leftFree = true;
+        for (var i = 0; i < this.plots.length; i++) {
+            var plot = this.plots[i];
+            var legendData = plot.legendData;
+            if (["right", "left"].indexOf(legendData.position) === -1) {
+                legendData.position = null;
+            }
+            if (legendData.showLegend) {
+                if (legendData.position === null) {
+                    if (rightFree) {
+                        legendData.position = "right";
+                        rightFree = false;
+                    }
+                    else if (leftFree) {
+                        legendData.position = "left";
+                        leftFree = false;
+                    }
+                    else {
+                        legendData.showLegend = false;
+                    }
+                }
+                else {
+                    if (legendData.position === "right") {
+                        rightFree = false;
+                    }
+                    else {
+                        leftFree = false;
+                    }
+                }
+                uiLayer = this._createPlotLegend(legendData, uiLayer);
+            }
+        }
+        this._legend = uiLayer;
+    };
+    Plots.prototype._createPlotLegend = function (legendData, uiLayer) {
+        if (!legendData.showLegend) {
+            return uiLayer;
+        }
         var n;
         var breakN = 20;
-        if (legendData.showLegend) {
-            var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-            var grid = new controls_1.Grid();
-            advancedTexture.addControl(grid);
-            var legendWidth = 0.2;
-            if (legendData.discrete) {
-                n = legendData.breaks.length;
-                if (n > breakN * 2) {
-                    legendWidth = 0.4;
-                }
-                else if (n > breakN) {
-                    legendWidth = 0.3;
-                }
+        var grid = new controls_1.Grid();
+        uiLayer.addControl(grid);
+        var legendWidth = 0.2;
+        if (legendData.discrete) {
+            n = legendData.breaks.length;
+            if (n > breakN * 2) {
+                legendWidth = 0.4;
             }
+            else if (n > breakN) {
+                legendWidth = 0.3;
+            }
+        }
+        var legendColumn = 1;
+        if (legendData.position === "right") {
             grid.addColumnDefinition(1 - legendWidth);
             grid.addColumnDefinition(legendWidth);
-            if (legendData.legendTitle && legendData.legendTitle !== "") {
-                grid.addRowDefinition(0.1);
-                grid.addRowDefinition(0.85);
-                grid.addRowDefinition(0.05);
-            }
-            else {
-                grid.addRowDefinition(0.05);
-                grid.addRowDefinition(0.9);
-                grid.addRowDefinition(0.05);
-            }
-            if (legendData.legendTitle) {
-                var legendTitle = new controls_1.TextBlock();
-                legendTitle.text = legendData.legendTitle;
-                legendTitle.color = legendData.fontColor;
-                legendTitle.fontWeight = "bold";
-                if (legendData.legendTitleFontSize) {
-                    legendTitle.fontSize = legendData.legendTitleFontSize + "px";
-                }
-                else {
-                    legendTitle.fontSize = "20px";
-                }
-                legendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
-                legendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                grid.addControl(legendTitle, 0, 1);
-            }
-            if (!legendData.discrete) {
-                var innerGrid_1 = new controls_1.Grid();
-                innerGrid_1.addColumnDefinition(0.2);
-                innerGrid_1.addColumnDefinition(0.8);
-                grid.addControl(innerGrid_1, 1, 1);
-                var nBreaks = 115;
-                var labelSpace = 0.15;
-                if (this.canvas.height < 70) {
-                    nBreaks = 10;
-                    labelSpace = 0.45;
-                    innerGrid_1.addRowDefinition(1);
-                }
-                else if (this.canvas.height < 130) {
-                    nBreaks = 50;
-                    labelSpace = 0.3;
-                    innerGrid_1.addRowDefinition(1);
-                }
-                else {
-                    var padding = (this.canvas.height - 115) / 2;
-                    innerGrid_1.addRowDefinition(padding, true);
-                    innerGrid_1.addRowDefinition(115, true);
-                    innerGrid_1.addRowDefinition(padding, true);
-                }
-                var colors = void 0;
-                if (legendData.colorScale === "custom") {
-                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
-                }
-                else {
-                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
-                }
-                var scaleGrid = new controls_1.Grid();
-                for (var i = 0; i < nBreaks; i++) {
-                    scaleGrid.addRowDefinition(1 / nBreaks);
-                    var legendColor_1 = new controls_1.Rectangle();
-                    if (legendData.inverted) {
-                        legendColor_1.background = colors[i];
-                    }
-                    else {
-                        legendColor_1.background = colors[colors.length - i - 1];
-                    }
-                    legendColor_1.thickness = 0;
-                    legendColor_1.width = 0.5;
-                    legendColor_1.height = 1;
-                    scaleGrid.addControl(legendColor_1, i, 0);
-                }
-                var labelGrid = new controls_1.Grid();
-                labelGrid.addColumnDefinition(1);
-                labelGrid.addRowDefinition(labelSpace);
-                labelGrid.addRowDefinition(1 - labelSpace * 2);
-                labelGrid.addRowDefinition(labelSpace);
-                if (this.canvas.height < 130) {
-                    innerGrid_1.addControl(scaleGrid, 0, 0);
-                    innerGrid_1.addControl(labelGrid, 0, 1);
-                }
-                else {
-                    innerGrid_1.addControl(scaleGrid, 1, 0);
-                    innerGrid_1.addControl(labelGrid, 1, 1);
-                }
-                var minText = new controls_1.TextBlock();
-                minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
-                minText.color = legendData.fontColor;
-                minText.fontSize = legendData.fontSize + "px";
-                minText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(minText, 2, 0);
-                var maxText = new controls_1.TextBlock();
-                maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
-                maxText.color = legendData.fontColor;
-                maxText.fontSize = legendData.fontSize + "px";
-                maxText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(maxText, 0, 0);
-            }
-            else {
-                var innerGrid = new controls_1.Grid();
-                if (n > breakN * 2) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                }
-                else if (n > breakN) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                }
-                else {
-                    innerGrid.addColumnDefinition(0.2);
-                    innerGrid.addColumnDefinition(0.8);
-                }
-                for (var i = 0; i < n && i < breakN; i++) {
-                    if (n > breakN) {
-                        innerGrid.addRowDefinition(1 / breakN);
-                    }
-                    else {
-                        innerGrid.addRowDefinition(1 / n);
-                    }
-                }
-                grid.addControl(innerGrid, 1, 1);
-                var colors = void 0;
-                if (legendData.colorScale === "custom") {
-                    colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(n);
-                }
-                else {
-                    colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
-                }
-                for (var i = 0; i < n; i++) {
-                    var legendColor = new controls_1.Rectangle();
-                    legendColor.background = colors[i];
-                    legendColor.thickness = 0;
-                    legendColor.width = legendData.fontSize + "px";
-                    legendColor.height = legendData.fontSize + "px";
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendColor, i - breakN * 2, 4);
-                    }
-                    else if (i > breakN - 1) {
-                        innerGrid.addControl(legendColor, i - breakN, 2);
-                    }
-                    else {
-                        innerGrid.addControl(legendColor, i, 0);
-                    }
-                    var legendText = new controls_1.TextBlock();
-                    legendText.text = legendData.breaks[i].toString();
-                    legendText.color = legendData.fontColor;
-                    legendText.fontSize = legendData.fontSize + "px";
-                    legendText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendText, i - breakN * 2, 5);
-                    }
-                    if (i > breakN - 1) {
-                        innerGrid.addControl(legendText, i - breakN, 3);
-                    }
-                    else {
-                        innerGrid.addControl(legendText, i, 1);
-                    }
-                }
-            }
-            this._legend = advancedTexture;
         }
+        else {
+            grid.addColumnDefinition(legendWidth);
+            grid.addColumnDefinition(1 - legendWidth);
+            legendColumn = 0;
+        }
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
+            grid.addRowDefinition(0.1);
+            grid.addRowDefinition(0.85);
+            grid.addRowDefinition(0.05);
+        }
+        else {
+            grid.addRowDefinition(0.05);
+            grid.addRowDefinition(0.9);
+            grid.addRowDefinition(0.05);
+        }
+        if (legendData.legendTitle) {
+            var legendTitle = new controls_1.TextBlock();
+            legendTitle.text = legendData.legendTitle;
+            legendTitle.color = legendData.fontColor;
+            legendTitle.fontWeight = "bold";
+            if (legendData.legendTitleFontSize) {
+                legendTitle.fontSize = legendData.legendTitleFontSize + "px";
+            }
+            else {
+                legendTitle.fontSize = "20px";
+            }
+            legendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            legendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            grid.addControl(legendTitle, 0, legendColumn);
+        }
+        if (!legendData.discrete) {
+            var innerGrid_1 = new controls_1.Grid();
+            innerGrid_1.addColumnDefinition(0.2);
+            innerGrid_1.addColumnDefinition(0.8);
+            grid.addControl(innerGrid_1, 1, legendColumn);
+            var nBreaks = 115;
+            var labelSpace = 0.15;
+            if (this.canvas.height < 70) {
+                nBreaks = 10;
+                labelSpace = 0.45;
+                innerGrid_1.addRowDefinition(1);
+            }
+            else if (this.canvas.height < 130) {
+                nBreaks = 50;
+                labelSpace = 0.3;
+                innerGrid_1.addRowDefinition(1);
+            }
+            else {
+                var padding = (this.canvas.height - 115) / 2;
+                innerGrid_1.addRowDefinition(padding, true);
+                innerGrid_1.addRowDefinition(115, true);
+                innerGrid_1.addRowDefinition(padding, true);
+            }
+            var colors = void 0;
+            if (legendData.colorScale === "custom") {
+                colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
+            }
+            else {
+                colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+            }
+            var scaleGrid = new controls_1.Grid();
+            for (var i = 0; i < nBreaks; i++) {
+                scaleGrid.addRowDefinition(1 / nBreaks);
+                var legendColor_1 = new controls_1.Rectangle();
+                if (legendData.inverted) {
+                    legendColor_1.background = colors[i];
+                }
+                else {
+                    legendColor_1.background = colors[colors.length - i - 1];
+                }
+                legendColor_1.thickness = 0;
+                legendColor_1.width = 0.5;
+                legendColor_1.height = 1;
+                scaleGrid.addControl(legendColor_1, i, 0);
+            }
+            var labelGrid = new controls_1.Grid();
+            labelGrid.addColumnDefinition(1);
+            labelGrid.addRowDefinition(labelSpace);
+            labelGrid.addRowDefinition(1 - labelSpace * 2);
+            labelGrid.addRowDefinition(labelSpace);
+            if (this.canvas.height < 130) {
+                innerGrid_1.addControl(scaleGrid, 0, 0);
+                innerGrid_1.addControl(labelGrid, 0, 1);
+            }
+            else {
+                innerGrid_1.addControl(scaleGrid, 1, 0);
+                innerGrid_1.addControl(labelGrid, 1, 1);
+            }
+            var minText = new controls_1.TextBlock();
+            minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
+            minText.color = legendData.fontColor;
+            minText.fontSize = legendData.fontSize + "px";
+            minText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(minText, 2, 0);
+            var maxText = new controls_1.TextBlock();
+            maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
+            maxText.color = legendData.fontColor;
+            maxText.fontSize = legendData.fontSize + "px";
+            maxText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(maxText, 0, 0);
+        }
+        else {
+            var innerGrid = new controls_1.Grid();
+            if (n > breakN * 2) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else if (n > breakN) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else {
+                innerGrid.addColumnDefinition(0.2);
+                innerGrid.addColumnDefinition(0.8);
+            }
+            for (var i = 0; i < n && i < breakN; i++) {
+                if (n > breakN) {
+                    innerGrid.addRowDefinition(1 / breakN);
+                }
+                else {
+                    innerGrid.addRowDefinition(1 / n);
+                }
+            }
+            grid.addControl(innerGrid, 1, legendColumn);
+            var colors = void 0;
+            if (legendData.colorScale === "custom") {
+                colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(n);
+            }
+            else {
+                colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
+            }
+            for (var i = 0; i < n; i++) {
+                var legendColor = new controls_1.Rectangle();
+                legendColor.background = colors[i];
+                legendColor.thickness = 0;
+                legendColor.width = legendData.fontSize + "px";
+                legendColor.height = legendData.fontSize + "px";
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendColor, i - breakN * 2, 4);
+                }
+                else if (i > breakN - 1) {
+                    innerGrid.addControl(legendColor, i - breakN, 2);
+                }
+                else {
+                    innerGrid.addControl(legendColor, i, 0);
+                }
+                var legendText = new controls_1.TextBlock();
+                legendText.text = legendData.breaks[i].toString();
+                legendText.color = legendData.fontColor;
+                legendText.fontSize = legendData.fontSize + "px";
+                legendText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendText, i - breakN * 2, 5);
+                }
+                if (i > breakN - 1) {
+                    innerGrid.addControl(legendText, i - breakN, 3);
+                }
+                else {
+                    innerGrid.addControl(legendText, i, 1);
+                }
+            }
+        }
+        return uiLayer;
     };
     Plots.prototype.doRender = function () {
         var _this = this;
@@ -40532,6 +40674,338 @@ var BoxBuilder = /** @class */ (function () {
 }());
 
 //# sourceMappingURL=boxBuilder.js.map
+
+/***/ }),
+
+/***/ "./node_modules/@babylonjs/core/Meshes/Builders/cylinderBuilder.js":
+/*!*************************************************************************!*\
+  !*** ./node_modules/@babylonjs/core/Meshes/Builders/cylinderBuilder.js ***!
+  \*************************************************************************/
+/*! exports provided: CylinderBuilder */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CylinderBuilder", function() { return CylinderBuilder; });
+/* harmony import */ var _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../Maths/math.vector */ "./node_modules/@babylonjs/core/Maths/math.vector.js");
+/* harmony import */ var _Maths_math_color__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../Maths/math.color */ "./node_modules/@babylonjs/core/Maths/math.color.js");
+/* harmony import */ var _mesh__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../mesh */ "./node_modules/@babylonjs/core/Meshes/mesh.js");
+/* harmony import */ var _mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../mesh.vertexData */ "./node_modules/@babylonjs/core/Meshes/mesh.vertexData.js");
+/* harmony import */ var _scene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../scene */ "./node_modules/@babylonjs/core/scene.js");
+/* harmony import */ var _Maths_math_axis__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../Maths/math.axis */ "./node_modules/@babylonjs/core/Maths/math.axis.js");
+
+
+
+
+
+
+_mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__["VertexData"].CreateCylinder = function (options) {
+    var height = options.height || 2;
+    var diameterTop = (options.diameterTop === 0) ? 0 : options.diameterTop || options.diameter || 1;
+    var diameterBottom = (options.diameterBottom === 0) ? 0 : options.diameterBottom || options.diameter || 1;
+    diameterTop = diameterTop || 0.00001; // Prevent broken normals
+    diameterBottom = diameterBottom || 0.00001; // Prevent broken normals
+    var tessellation = options.tessellation || 24;
+    var subdivisions = options.subdivisions || 1;
+    var hasRings = options.hasRings ? true : false;
+    var enclose = options.enclose ? true : false;
+    var cap = (options.cap === 0) ? 0 : options.cap || _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CAP_ALL;
+    var arc = options.arc && (options.arc <= 0 || options.arc > 1) ? 1.0 : options.arc || 1.0;
+    var sideOrientation = (options.sideOrientation === 0) ? 0 : options.sideOrientation || _mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__["VertexData"].DEFAULTSIDE;
+    var faceUV = options.faceUV || new Array(3);
+    var faceColors = options.faceColors;
+    // default face colors and UV if undefined
+    var quadNb = (arc !== 1 && enclose) ? 2 : 0;
+    var ringNb = (hasRings) ? subdivisions : 1;
+    var surfaceNb = 2 + (1 + quadNb) * ringNb;
+    var f;
+    for (f = 0; f < surfaceNb; f++) {
+        if (faceColors && faceColors[f] === undefined) {
+            faceColors[f] = new _Maths_math_color__WEBPACK_IMPORTED_MODULE_1__["Color4"](1, 1, 1, 1);
+        }
+    }
+    for (f = 0; f < surfaceNb; f++) {
+        if (faceUV && faceUV[f] === undefined) {
+            faceUV[f] = new _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector4"](0, 0, 1, 1);
+        }
+    }
+    var indices = new Array();
+    var positions = new Array();
+    var normals = new Array();
+    var uvs = new Array();
+    var colors = new Array();
+    var angle_step = Math.PI * 2 * arc / tessellation;
+    var angle;
+    var h;
+    var radius;
+    var tan = (diameterBottom - diameterTop) / 2 / height;
+    var ringVertex = _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].Zero();
+    var ringNormal = _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].Zero();
+    var ringFirstVertex = _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].Zero();
+    var ringFirstNormal = _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].Zero();
+    var quadNormal = _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].Zero();
+    var Y = _Maths_math_axis__WEBPACK_IMPORTED_MODULE_5__["Axis"].Y;
+    // positions, normals, uvs
+    var i;
+    var j;
+    var r;
+    var ringIdx = 1;
+    var s = 1; // surface index
+    var cs = 0;
+    var v = 0;
+    for (i = 0; i <= subdivisions; i++) {
+        h = i / subdivisions;
+        radius = (h * (diameterTop - diameterBottom) + diameterBottom) / 2;
+        ringIdx = (hasRings && i !== 0 && i !== subdivisions) ? 2 : 1;
+        for (r = 0; r < ringIdx; r++) {
+            if (hasRings) {
+                s += r;
+            }
+            if (enclose) {
+                s += 2 * r;
+            }
+            for (j = 0; j <= tessellation; j++) {
+                angle = j * angle_step;
+                // position
+                ringVertex.x = Math.cos(-angle) * radius;
+                ringVertex.y = -height / 2 + h * height;
+                ringVertex.z = Math.sin(-angle) * radius;
+                // normal
+                if (diameterTop === 0 && i === subdivisions) {
+                    // if no top cap, reuse former normals
+                    ringNormal.x = normals[normals.length - (tessellation + 1) * 3];
+                    ringNormal.y = normals[normals.length - (tessellation + 1) * 3 + 1];
+                    ringNormal.z = normals[normals.length - (tessellation + 1) * 3 + 2];
+                }
+                else {
+                    ringNormal.x = ringVertex.x;
+                    ringNormal.z = ringVertex.z;
+                    ringNormal.y = Math.sqrt(ringNormal.x * ringNormal.x + ringNormal.z * ringNormal.z) * tan;
+                    ringNormal.normalize();
+                }
+                // keep first ring vertex values for enclose
+                if (j === 0) {
+                    ringFirstVertex.copyFrom(ringVertex);
+                    ringFirstNormal.copyFrom(ringNormal);
+                }
+                positions.push(ringVertex.x, ringVertex.y, ringVertex.z);
+                normals.push(ringNormal.x, ringNormal.y, ringNormal.z);
+                if (hasRings) {
+                    v = (cs !== s) ? faceUV[s].y : faceUV[s].w;
+                }
+                else {
+                    v = faceUV[s].y + (faceUV[s].w - faceUV[s].y) * h;
+                }
+                uvs.push(faceUV[s].x + (faceUV[s].z - faceUV[s].x) * j / tessellation, v);
+                if (faceColors) {
+                    colors.push(faceColors[s].r, faceColors[s].g, faceColors[s].b, faceColors[s].a);
+                }
+            }
+            // if enclose, add four vertices and their dedicated normals
+            if (arc !== 1 && enclose) {
+                positions.push(ringVertex.x, ringVertex.y, ringVertex.z);
+                positions.push(0, ringVertex.y, 0);
+                positions.push(0, ringVertex.y, 0);
+                positions.push(ringFirstVertex.x, ringFirstVertex.y, ringFirstVertex.z);
+                _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].CrossToRef(Y, ringNormal, quadNormal);
+                quadNormal.normalize();
+                normals.push(quadNormal.x, quadNormal.y, quadNormal.z, quadNormal.x, quadNormal.y, quadNormal.z);
+                _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"].CrossToRef(ringFirstNormal, Y, quadNormal);
+                quadNormal.normalize();
+                normals.push(quadNormal.x, quadNormal.y, quadNormal.z, quadNormal.x, quadNormal.y, quadNormal.z);
+                if (hasRings) {
+                    v = (cs !== s) ? faceUV[s + 1].y : faceUV[s + 1].w;
+                }
+                else {
+                    v = faceUV[s + 1].y + (faceUV[s + 1].w - faceUV[s + 1].y) * h;
+                }
+                uvs.push(faceUV[s + 1].x, v);
+                uvs.push(faceUV[s + 1].z, v);
+                if (hasRings) {
+                    v = (cs !== s) ? faceUV[s + 2].y : faceUV[s + 2].w;
+                }
+                else {
+                    v = faceUV[s + 2].y + (faceUV[s + 2].w - faceUV[s + 2].y) * h;
+                }
+                uvs.push(faceUV[s + 2].x, v);
+                uvs.push(faceUV[s + 2].z, v);
+                if (faceColors) {
+                    colors.push(faceColors[s + 1].r, faceColors[s + 1].g, faceColors[s + 1].b, faceColors[s + 1].a);
+                    colors.push(faceColors[s + 1].r, faceColors[s + 1].g, faceColors[s + 1].b, faceColors[s + 1].a);
+                    colors.push(faceColors[s + 2].r, faceColors[s + 2].g, faceColors[s + 2].b, faceColors[s + 2].a);
+                    colors.push(faceColors[s + 2].r, faceColors[s + 2].g, faceColors[s + 2].b, faceColors[s + 2].a);
+                }
+            }
+            if (cs !== s) {
+                cs = s;
+            }
+        }
+    }
+    // indices
+    var e = (arc !== 1 && enclose) ? tessellation + 4 : tessellation; // correction of number of iteration if enclose
+    var s;
+    i = 0;
+    for (s = 0; s < subdivisions; s++) {
+        var i0 = 0;
+        var i1 = 0;
+        var i2 = 0;
+        var i3 = 0;
+        for (j = 0; j < tessellation; j++) {
+            i0 = i * (e + 1) + j;
+            i1 = (i + 1) * (e + 1) + j;
+            i2 = i * (e + 1) + (j + 1);
+            i3 = (i + 1) * (e + 1) + (j + 1);
+            indices.push(i0, i1, i2);
+            indices.push(i3, i2, i1);
+        }
+        if (arc !== 1 && enclose) { // if enclose, add two quads
+            indices.push(i0 + 2, i1 + 2, i2 + 2);
+            indices.push(i3 + 2, i2 + 2, i1 + 2);
+            indices.push(i0 + 4, i1 + 4, i2 + 4);
+            indices.push(i3 + 4, i2 + 4, i1 + 4);
+        }
+        i = (hasRings) ? (i + 2) : (i + 1);
+    }
+    // Caps
+    var createCylinderCap = function (isTop) {
+        var radius = isTop ? diameterTop / 2 : diameterBottom / 2;
+        if (radius === 0) {
+            return;
+        }
+        // Cap positions, normals & uvs
+        var angle;
+        var circleVector;
+        var i;
+        var u = (isTop) ? faceUV[surfaceNb - 1] : faceUV[0];
+        var c = null;
+        if (faceColors) {
+            c = (isTop) ? faceColors[surfaceNb - 1] : faceColors[0];
+        }
+        // cap center
+        var vbase = positions.length / 3;
+        var offset = isTop ? height / 2 : -height / 2;
+        var center = new _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, offset, 0);
+        positions.push(center.x, center.y, center.z);
+        normals.push(0, isTop ? 1 : -1, 0);
+        uvs.push(u.x + (u.z - u.x) * 0.5, u.y + (u.w - u.y) * 0.5);
+        if (c) {
+            colors.push(c.r, c.g, c.b, c.a);
+        }
+        var textureScale = new _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0.5, 0.5);
+        for (i = 0; i <= tessellation; i++) {
+            angle = Math.PI * 2 * i * arc / tessellation;
+            var cos = Math.cos(-angle);
+            var sin = Math.sin(-angle);
+            circleVector = new _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector3"](cos * radius, offset, sin * radius);
+            var textureCoordinate = new _Maths_math_vector__WEBPACK_IMPORTED_MODULE_0__["Vector2"](cos * textureScale.x + 0.5, sin * textureScale.y + 0.5);
+            positions.push(circleVector.x, circleVector.y, circleVector.z);
+            normals.push(0, isTop ? 1 : -1, 0);
+            uvs.push(u.x + (u.z - u.x) * textureCoordinate.x, u.y + (u.w - u.y) * textureCoordinate.y);
+            if (c) {
+                colors.push(c.r, c.g, c.b, c.a);
+            }
+        }
+        // Cap indices
+        for (i = 0; i < tessellation; i++) {
+            if (!isTop) {
+                indices.push(vbase);
+                indices.push(vbase + (i + 1));
+                indices.push(vbase + (i + 2));
+            }
+            else {
+                indices.push(vbase);
+                indices.push(vbase + (i + 2));
+                indices.push(vbase + (i + 1));
+            }
+        }
+    };
+    // add caps to geometry based on cap parameter
+    if ((cap === _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CAP_START)
+        || (cap === _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CAP_ALL)) {
+        createCylinderCap(false);
+    }
+    if ((cap === _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CAP_END)
+        || (cap === _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CAP_ALL)) {
+        createCylinderCap(true);
+    }
+    // Sides
+    _mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__["VertexData"]._ComputeSides(sideOrientation, positions, indices, normals, uvs, options.frontUVs, options.backUVs);
+    var vertexData = new _mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__["VertexData"]();
+    vertexData.indices = indices;
+    vertexData.positions = positions;
+    vertexData.normals = normals;
+    vertexData.uvs = uvs;
+    if (faceColors) {
+        vertexData.colors = colors;
+    }
+    return vertexData;
+};
+_mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].CreateCylinder = function (name, height, diameterTop, diameterBottom, tessellation, subdivisions, scene, updatable, sideOrientation) {
+    if (scene === undefined || !(scene instanceof _scene__WEBPACK_IMPORTED_MODULE_4__["Scene"])) {
+        if (scene !== undefined) {
+            sideOrientation = updatable || _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"].DEFAULTSIDE;
+            updatable = scene;
+        }
+        scene = subdivisions;
+        subdivisions = 1;
+    }
+    var options = {
+        height: height,
+        diameterTop: diameterTop,
+        diameterBottom: diameterBottom,
+        tessellation: tessellation,
+        subdivisions: subdivisions,
+        sideOrientation: sideOrientation,
+        updatable: updatable
+    };
+    return CylinderBuilder.CreateCylinder(name, options, scene);
+};
+/**
+ * Class containing static functions to help procedurally build meshes
+ */
+var CylinderBuilder = /** @class */ (function () {
+    function CylinderBuilder() {
+    }
+    /**
+     * Creates a cylinder or a cone mesh
+     * * The parameter `height` sets the height size (float) of the cylinder/cone (float, default 2).
+     * * The parameter `diameter` sets the diameter of the top and bottom cap at once (float, default 1).
+     * * The parameters `diameterTop` and `diameterBottom` overwrite the parameter `diameter` and set respectively the top cap and bottom cap diameter (floats, default 1). The parameter "diameterBottom" can't be zero.
+     * * The parameter `tessellation` sets the number of cylinder sides (positive integer, default 24). Set it to 3 to get a prism for instance.
+     * * The parameter `subdivisions` sets the number of rings along the cylinder height (positive integer, default 1).
+     * * The parameter `hasRings` (boolean, default false) makes the subdivisions independent from each other, so they become different faces.
+     * * The parameter `enclose`  (boolean, default false) adds two extra faces per subdivision to a sliced cylinder to close it around its height axis.
+     * * The parameter `cap` sets the way the cylinder is capped. Possible values : BABYLON.Mesh.NO_CAP, BABYLON.Mesh.CAP_START, BABYLON.Mesh.CAP_END, BABYLON.Mesh.CAP_ALL (default).
+     * * The parameter `arc` (float, default 1) is the ratio (max 1) to apply to the circumference to slice the cylinder.
+     * * You can set different colors and different images to each box side by using the parameters `faceColors` (an array of n Color3 elements) and `faceUV` (an array of n Vector4 elements).
+     * * The value of n is the number of cylinder faces. If the cylinder has only 1 subdivisions, n equals : top face + cylinder surface + bottom face = 3
+     * * Now, if the cylinder has 5 independent subdivisions (hasRings = true), n equals : top face + 5 stripe surfaces + bottom face = 2 + 5 = 7
+     * * Finally, if the cylinder has 5 independent subdivisions and is enclose, n equals : top face + 5 x (stripe surface + 2 closing faces) + bottom face = 2 + 5 * 3 = 17
+     * * Each array (color or UVs) is always ordered the same way : the first element is the bottom cap, the last element is the top cap. The other elements are each a ring surface.
+     * * If `enclose` is false, a ring surface is one element.
+     * * If `enclose` is true, a ring surface is 3 successive elements in the array : the tubular surface, then the two closing faces.
+     * * Example how to set colors and textures on a sliced cylinder : https://www.html5gamedevs.com/topic/17945-creating-a-closed-slice-of-a-cylinder/#comment-106379
+     * * You can also set the mesh side orientation with the values : BABYLON.Mesh.FRONTSIDE (default), BABYLON.Mesh.BACKSIDE or BABYLON.Mesh.DOUBLESIDE
+     * * If you create a double-sided mesh, you can choose what parts of the texture image to crop and stick respectively on the front and the back sides with the parameters `frontUVs` and `backUVs` (Vector4). Detail here : https://doc.babylonjs.com/babylon101/discover_basic_elements#side-orientation
+     * * The mesh can be set to updatable with the boolean parameter `updatable` (default false) if its internal geometry is supposed to change once created.
+     * @param name defines the name of the mesh
+     * @param options defines the options used to create the mesh
+     * @param scene defines the hosting scene
+     * @returns the cylinder mesh
+     * @see https://doc.babylonjs.com/how_to/set_shapes#cylinder-or-cone
+     */
+    CylinderBuilder.CreateCylinder = function (name, options, scene) {
+        var cylinder = new _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"](name, scene);
+        options.sideOrientation = _mesh__WEBPACK_IMPORTED_MODULE_2__["Mesh"]._GetDefaultSideOrientation(options.sideOrientation);
+        cylinder._originalBuilderSideOrientation = options.sideOrientation;
+        var vertexData = _mesh_vertexData__WEBPACK_IMPORTED_MODULE_3__["VertexData"].CreateCylinder(options);
+        vertexData.applyToMesh(cylinder, options.updatable);
+        return cylinder;
+    };
+    return CylinderBuilder;
+}());
+
+//# sourceMappingURL=cylinderBuilder.js.map
 
 /***/ }),
 

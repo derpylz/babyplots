@@ -20,8 +20,21 @@ export class PointCloud extends Plot {
     private _foldAnimFrames: number = 200;
     private _foldVectorFract: Vector3[] = [];
     private _foldDelay: number = 100;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, folded?: boolean, foldedEmbedding?: number[][], foldAnimDelay?: number, foldAnimDuration?: number) {
-        super(scene, coordinates, colorVar, size, legendData);
+    constructor(
+        scene: Scene,
+        coordinates: number[][],
+        colorVar: string[],
+        size: number,
+        legendData: LegendData,
+        folded?: boolean,
+        foldedEmbedding?: number[][],
+        foldAnimDelay?: number,
+        foldAnimDuration?: number,
+        xScale: number = 1,
+        yScale: number = 1,
+        zScale: number = 1
+    ) {
+        super(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._folded = folded;
         if (foldAnimDelay) {
             this._foldDelay = foldAnimDelay;
@@ -35,17 +48,32 @@ export class PointCloud extends Plot {
                     if (foldedEmbedding[i].length == 2) {
                         foldedEmbedding[i].push(0);
                     }
-                    let fv = new Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    let fv = new Vector3(
+                        coordinates[i][0] * this.xScale,
+                        coordinates[i][2] * this.zScale,
+                        coordinates[i][1] * this.yScale
+                    ).subtractFromFloats(
+                        foldedEmbedding[i][0] * this.xScale,
+                        0,
+                        foldedEmbedding[i][1] * this.yScale,
+                    );
                     this._foldVectors.push(fv);
                     this._foldVectorFract.push(fv.divide(new Vector3(this._foldAnimFrames, this._foldAnimFrames, this._foldAnimFrames)));
                 }
                 this._foldedEmbedding = foldedEmbedding;
-            }
-            else {
+            } else {
                 foldedEmbedding = JSON.parse(JSON.stringify(coordinates));
                 for (let i = 0; i < foldedEmbedding.length; i++) {
                     foldedEmbedding[i][2] = 0;
-                    let fv = new Vector3(coordinates[i][0], coordinates[i][2], coordinates[i][1]).subtractFromFloats(foldedEmbedding[i][0], 0, foldedEmbedding[i][1]);
+                    let fv = new Vector3(
+                        coordinates[i][0] * this.xScale,
+                        coordinates[i][2] * this.zScale,
+                        coordinates[i][1] * this.yScale
+                    ).subtractFromFloats(
+                        foldedEmbedding[i][0] * this.xScale,
+                        0,
+                        foldedEmbedding[i][1] * this.yScale
+                    );
                     this._foldVectors.push(fv);
                     this._foldVectorFract.push(fv.divide(new Vector3(this._foldAnimFrames, this._foldAnimFrames, this._foldAnimFrames)));
                 }
@@ -66,14 +94,21 @@ export class PointCloud extends Plot {
             let colors = [];
             if (this._folded) {
                 for (let p = 0; p < this._coords.length; p++) {
-                    positions.push(this._foldedEmbedding[p][0], this._foldedEmbedding[p][2], this._foldedEmbedding[p][1]);
+                    positions.push(
+                        this._foldedEmbedding[p][0] * this.xScale,
+                        this._foldedEmbedding[p][2] * this.zScale,
+                        this._foldedEmbedding[p][1] * this.yScale
+                    );
                     let col = Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
-            }
-            else {
+            } else {
                 for (let p = 0; p < this._coords.length; p++) {
-                    positions.push(this._coords[p][0], this._coords[p][2], this._coords[p][1]);
+                    positions.push(
+                        this._coords[p][0] * this.xScale,
+                        this._coords[p][2] * this.zScale,
+                        this._coords[p][1] * this.yScale
+                    );
                     let col = Color4.FromHexString(this._coordColors[p]);
                     colors.push(col.r, col.g, col.b, col.a);
                 }
@@ -105,17 +140,16 @@ export class PointCloud extends Plot {
             // position and color cells
             if (this._folded) {
                 for (let i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._foldedEmbedding[i][0];
-                    SPS.particles[i].position.z = this._foldedEmbedding[i][1];
-                    SPS.particles[i].position.y = this._foldedEmbedding[i][2];
+                    SPS.particles[i].position.x = this._foldedEmbedding[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._foldedEmbedding[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._foldedEmbedding[i][2] * this.yScale;
                     SPS.particles[i].color = Color4.FromHexString(this._coordColors[i]);
                 }
-            }
-            else {
+            } else {
                 for (let i = 0; i < SPS.nbParticles; i++) {
-                    SPS.particles[i].position.x = this._coords[i][0];
-                    SPS.particles[i].position.z = this._coords[i][1];
-                    SPS.particles[i].position.y = this._coords[i][2];
+                    SPS.particles[i].position.x = this._coords[i][0] * this.xScale;
+                    SPS.particles[i].position.z = this._coords[i][1] * this.zScale;
+                    SPS.particles[i].position.y = this._coords[i][2] * this.yScale;
                     SPS.particles[i].color = Color4.FromHexString(this._coordColors[i]);
                 }
             }
@@ -145,16 +179,20 @@ export class PointCloud extends Plot {
         this._folded = true;
         if (this._SPS) {
             for (let i = 0; i < this._SPS.particles.length; i++) {
-                this._SPS.particles[i].position = new Vector3(this._foldedEmbedding[i][0], this._foldedEmbedding[i][2], this._foldedEmbedding[i][1]);
+                this._SPS.particles[i].position = new Vector3(
+                    this._foldedEmbedding[i][0] * this.xScale,
+                    this._foldedEmbedding[i][2] * this.zScale,
+                    this._foldedEmbedding[i][1] * this.yScale
+                );
             }
             this._SPS.setParticles();
         } else {
             let positionFunction = function (positions: FloatArray) {
                 let numberOfVertices = positions.length / 3;
                 for (let i = 0; i < numberOfVertices; i++) {
-                    positions[i * 3] = this._foldedEmbedding[i][0];
-                    positions[i * 3 + 1] = this._foldedEmbedding[i][2];
-                    positions[i * 3 + 2] = this._foldedEmbedding[i][1];
+                    positions[i * 3] = this._foldedEmbedding[i][0] * this.xScale;
+                    positions[i * 3 + 1] = this._foldedEmbedding[i][2] * this.zScale;
+                    positions[i * 3 + 2] = this._foldedEmbedding[i][1] * this.yScale;
                 }
             }
             this.mesh.updateMeshPositions(positionFunction.bind(this), true);
@@ -167,32 +205,36 @@ export class PointCloud extends Plot {
         if (this._SPS && this._folded) {
             if (this._foldCounter < this._foldDelay) {
                 this._foldCounter += 1;
-            }
-            else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
+            } else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
                 for (let i = 0; i < this._SPS.particles.length; i++) {
                     this._SPS.particles[i].position.addInPlace(this._foldVectorFract[i]);
                 }
                 this._foldCounter += 1;
                 this._SPS.setParticles();
-            }
-            else {
+            } else {
                 this._folded = false;
                 for (let i = 0; i < this._SPS.particles.length; i++) {
-                    this._SPS.particles[i].position = new Vector3(this._coords[i][0], this._coords[i][2], this._coords[i][1]);
+                    this._SPS.particles[i].position = new Vector3(
+                        this._coords[i][0] * this.xScale,
+                        this._coords[i][2] * this.zScale,
+                        this._coords[i][1] * this.yScale
+                    );
                 }
                 this._SPS.setParticles();
                 this.mesh.refreshBoundingInfo();
             }
-        }
-        else if (this.mesh && this._folded) {
+        } else if (this.mesh && this._folded) {
             if (this._foldCounter < this._foldDelay) {
                 this._foldCounter += 1;
-            }
-            else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
+            } else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
                 let positionFunction = function (positions: FloatArray) {
                     let numberOfVertices = positions.length / 3;
                     for (let i = 0; i < numberOfVertices; i++) {
-                        let posVector = new Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).addInPlace(this._foldVectorFract[i]);
+                        let posVector = new Vector3(
+                            positions[i * 3],
+                            positions[i * 3 + 1],
+                            positions[i * 3 + 2]
+                        ).addInPlace(this._foldVectorFract[i]);
                         positions[i * 3] = posVector.x;
                         positions[i * 3 + 1] = posVector.y;
                         positions[i * 3 + 2] = posVector.z;
@@ -200,15 +242,14 @@ export class PointCloud extends Plot {
                 }
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this._foldCounter += 1;
-            }
-            else {
+            } else {
                 this._folded = false;
                 let positionFunction = function (positions: FloatArray) {
                     let numberOfVertices = positions.length / 3;
                     for (let i = 0; i < numberOfVertices; i++) {
-                        positions[i * 3] = this._coords[i][0];
-                        positions[i * 3 + 1] = this._coords[i][2];
-                        positions[i * 3 + 2] = this._coords[i][1];
+                        positions[i * 3] = this._coords[i][0] * this.xScale;
+                        positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
+                        positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
                     }
                 }
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);

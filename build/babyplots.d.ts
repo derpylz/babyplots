@@ -34,6 +34,7 @@ export interface LegendData {
     breaks: string[];
     colorScale: string;
     inverted: boolean;
+    position: string;
     customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
@@ -51,7 +52,10 @@ export declare abstract class Plot {
     meshes: Mesh[];
     selection: number[];
     legendData: LegendData;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData);
+    xScale: number;
+    yScale: number;
+    zScale: number;
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
@@ -86,6 +90,9 @@ export declare class Plots {
     private _turned;
     private _capturer;
     private _wasTurning;
+    private _xScale;
+    private _yScale;
+    private _zScale;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -95,7 +102,7 @@ export declare class Plots {
     fixedSize: boolean;
     ymax: number;
     R: boolean;
-    constructor(canvasElement: string, backgroundColor?: string);
+    constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
     private _downloadJson;
@@ -109,6 +116,7 @@ export declare class Plots {
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     private _updateLegend;
+    private _createPlotLegend;
     doRender(): Plots;
     resize(width?: number, height?: number): Plots;
     thumbnail(size: number, saveCallback: (data: string) => void): void;

@@ -8,7 +8,7 @@ declare class Label {
     size: number;
     color: string;
     fixed: boolean;
-    constructor(text: string, position: Vector3, scene: Scene);
+    constructor(text: string, position: Vector3, scene: Scene, color?: string);
     setText(text: string): void;
     update(camera: ArcRotateCamera, scene: Scene): void;
     fix(): void;
@@ -36,6 +36,7 @@ export declare class AnnotationManager {
     update(): void;
     toggleLabelControl(): void;
     private _addLabelBtnClick;
+    addArrow(from: number[], to: number[]): void;
     addLabel(text: string, position?: number[]): number;
     addLabels(labelList: [[number, number, number, string]]): void;
     private _editLabelText;

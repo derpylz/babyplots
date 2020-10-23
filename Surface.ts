@@ -7,16 +7,20 @@ import chroma from "chroma-js";
 
 
 export class Surface extends Plot {
-    scaleColumn: number;
-    scaleRow: number;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, scaleColumn: number, scaleRow: number, legendData: LegendData) {
-        super(scene, coordinates, colorVar, size, legendData);
-        this.scaleColumn = scaleColumn;
-        this.scaleRow = scaleRow;
+    constructor(
+        scene: Scene,
+        coordinates: number[][],
+        colorVar: string[],
+        size: number,
+        legendData: LegendData,
+        xScale: number = 1,
+        yScale: number = 1,
+        zScale: number = 1
+    ) {
+        super(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createSurface();
     }
     private _createSurface(): void {
-        var max = matrixMax(this._coords);
         var surface = new Mesh("surface", this._scene);
         var positions = [];
         var indices = [];
@@ -24,7 +28,11 @@ export class Surface extends Plot {
             const rowCoords = this._coords[row];
             for (let column = 0; column < rowCoords.length; column++) {
                 const coord = rowCoords[column];
-                positions.push(column * this.scaleRow, coord / max * this._size, row * this.scaleColumn);
+                positions.push(
+                    column * this.xScale,
+                    coord * this.yScale,
+                    row * this.zScale
+                );
                 if (row < this._coords.length - 1 && column < rowCoords.length - 1) {
                     indices.push(
                         column + row * rowCoords.length,

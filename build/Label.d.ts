@@ -36,6 +36,7 @@ export declare class AnnotationManager {
     update(): void;
     toggleLabelControl(): void;
     private _addLabelBtnClick;
+    addArrow(from: number[], to: number[]): void;
     addLabel(text: string, position?: number[]): number;
     addLabels(labelList: [[number, number, number, string]]): void;
     private _editLabelText;

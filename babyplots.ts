@@ -72,6 +72,7 @@ export interface LegendData {
     breaks: string[];
     colorScale: string;
     inverted: boolean;
+    position: string;
     customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
@@ -91,13 +92,28 @@ export abstract class Plot {
     meshes: Mesh[];
     selection: number[]; // contains indices of cells in selection cube
     legendData: LegendData;
+    xScale: number;
+    yScale: number;
+    zScale: number;
 
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData) {
+    constructor(
+        scene: Scene,
+        coordinates: number[][],
+        colorVar: string[],
+        size: number,
+        legendData: LegendData,
+        xScale: number = 1,
+        yScale: number = 1,
+        zScale: number = 1
+    ) {
         this._scene = scene;
         this._coords = coordinates;
         this._coordColors = colorVar;
         this._size = size;
         this.legendData = legendData;
+        this.xScale = xScale
+        this.yScale = yScale
+        this.zScale = zScale
     }
 
     updateSize(): void { }
@@ -200,7 +216,7 @@ export class Plots {
     protected _legend: AdvancedDynamicTexture;
     protected _showLegend: boolean = true;
     private _hasAnim: boolean = false;
-    private _axes: Axes;
+    private _axes: Axes[] = [];
     private _downloadObj: {} = {};
     private _buttonBar: HTMLDivElement;
     private _annotationManager: AnnotationManager;
@@ -209,13 +225,16 @@ export class Plots {
     private _turned: number = 0;
     private _capturer: CCapture;
     private _wasTurning: boolean = false;
+    private _xScale: number = 1;
+    private _yScale: number = 1;
+    private _zScale: number = 1;
 
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
     plots: Plot[] = [];
-    turntable: boolean = false;
-    rotationRate: number = 0.01;
+    turntable: boolean;
+    rotationRate: number;
     fixedSize = false;
     ymax: number = 0;
     R: boolean = false;
@@ -225,9 +244,24 @@ export class Plots {
      * @param canvasElement ID of the canvas element in the dom
      * @param backgroundColor Background color of the plot
      */
-    constructor(canvasElement: string, backgroundColor: string = "#ffffffff") {
+    constructor(canvasElement: string, options = {}) {
+        // apply options
+        // default settings
+        let opts = {
+            backgroundColor: "#ffffffff",
+            xScale:  1,
+            yScale: 1,
+            zScale: 1,
+            turntable: false,
+            rotationRate: 0.01
+        }
+        Object.assign(opts, options);
+
+        this.turntable = opts.turntable;
+        this.rotationRate = opts.rotationRate;
+
         // setup enginge and scene
-        this._backgroundColor = backgroundColor;
+        this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new Scene(this._engine);
@@ -240,7 +274,12 @@ export class Plots {
         this.camera.wheelPrecision = 50;
 
         // background color
-        this.scene.clearColor = Color4.FromHexString(backgroundColor);
+        this.scene.clearColor = Color4.FromHexString(opts.backgroundColor);
+
+        // Axis scales
+        this._xScale = opts.xScale;
+        this._yScale = opts.yScale;
+        this._zScale = opts.zScale;
 
         // two lights to illuminate the cells uniformly (top and bottom)
         this._hl1 = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), this.scene);
@@ -269,6 +308,10 @@ export class Plots {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        // prepare download object
+        this._downloadObj = {
+            plots: []
+        };
     }
 
     fromJSON(plotData: {}): void {
@@ -282,62 +325,73 @@ export class Plots {
             this._backgroundColor = plotData["backgroundColor"];
             this.scene.clearColor = Color4.FromHexString(this._backgroundColor);
         }
-        if (plotData["coordinates"] && plotData["plotType"] && plotData["colorBy"]) {
-            console.log(plotData);
-            this.addPlot(
-                plotData["coordinates"],
-                plotData["plotType"],
-                plotData["colorBy"],
-                plotData["colorVar"],
-                {
-                    size: plotData["size"],
-                    scaleColumn: plotData["scaleColumn"],
-                    scaleRow: plotData["scaleRow"],
-                    colorScale: plotData["colorScale"],
-                    customColorScale: plotData["customColorScale"],
-                    colorScaleInverted: plotData["colorScaleInverted"],
-                    sortedCategories: plotData["sortedCategories"],
-                    showLegend: plotData["showLegend"],
-                    fontSize: plotData["fontSize"],
-                    fontColor: plotData["fontColor"],
-                    legendTitle: plotData["legendTitle"],
-                    legendTitleFontSize: plotData["legendTitleFontSize"],
-                    showAxes: plotData["showAxes"],
-                    axisLabels: plotData["axisLabels"],
-                    axisColors: plotData["axisColors"],
-                    tickBreaks: plotData["tickBreaks"],
-                    showTickLines: plotData["showTickLines"],
-                    tickLineColors: plotData["tickLineColors"],
-                    folded: plotData["folded"],
-                    foldedEmbedding: plotData["foldedEmbedding"],
-                    foldAnimDelay: plotData["foldAnimDelay"],
-                    foldAnimDuration: plotData["foldAnimDuration"],
-                    colnames: plotData["colnames"],
-                    rownames: plotData["rownames"]
-                }
-            )
-        } else if (plotData["values"] && plotData["indices"] && plotData["attributes"]) {
-            this.addImgStack(
-                plotData["values"],
-                plotData["indices"],
-                plotData["attributes"],
-                {
-                    size: plotData["size"],
-                    colorScale: plotData["colorScale"],
-                    showLegend: plotData["showLegend"],
-                    fontSize: plotData["fontSize"],
-                    fontColor: plotData["fontColor"],
-                    legendTitle: plotData["legendTitle"],
-                    legendTitleFontSize: plotData["legendTitleFontSize"],
-                    showAxes: plotData["showAxes"],
-                    axisLabels: plotData["axisLabels"],
-                    axisColors: plotData["axisColors"],
-                    tickBreaks: plotData["tickBreaks"],
-                    showTickLines: plotData["showTickLines"],
-                    tickLineColors: plotData["tickLineColors"],
-                    intensityMode: plotData["intensityMode"]
-                }
-            )
+        if (plotData["xScale"] !== undefined) {
+            this._xScale = plotData["xScale"];
+        }
+        if (plotData["yScale"] !== undefined) {
+            this._yScale = plotData["yScale"];
+        }
+        if (plotData["zScale"] !== undefined) {
+            this._zScale = plotData["zScale"];
+        }
+        for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
+            const plot = plotData["plots"][plotIdx];
+            if (plot["plotType"] === "imageStack") {
+                this.addImgStack(
+                    plot["values"],
+                    plot["indices"],
+                    plot["attributes"],
+                    {
+                        size: plot["size"],
+                        colorScale: plot["colorScale"],
+                        showLegend: plot["showLegend"],
+                        fontSize: plot["fontSize"],
+                        fontColor: plot["fontColor"],
+                        legendTitle: plot["legendTitle"],
+                        legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendPosition: plot["legendPosition"],
+                        showAxes: plot["showAxes"],
+                        axisLabels: plot["axisLabels"],
+                        axisColors: plot["axisColors"],
+                        tickBreaks: plot["tickBreaks"],
+                        showTickLines: plot["showTickLines"],
+                        tickLineColors: plot["tickLineColors"],
+                        intensityMode: plot["intensityMode"]
+                    }
+                )
+            } else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+                this.addPlot(
+                    plot["coordinates"],
+                    plot["plotType"],
+                    plot["colorBy"],
+                    plot["colorVar"],
+                    {
+                        size: plot["size"],
+                        colorScale: plot["colorScale"],
+                        customColorScale: plot["customColorScale"],
+                        colorScaleInverted: plot["colorScaleInverted"],
+                        sortedCategories: plot["sortedCategories"],
+                        showLegend: plot["showLegend"],
+                        fontSize: plot["fontSize"],
+                        fontColor: plot["fontColor"],
+                        legendTitle: plot["legendTitle"],
+                        legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendPosition: plot["legendPosition"],
+                        showAxes: plot["showAxes"],
+                        axisLabels: plot["axisLabels"],
+                        axisColors: plot["axisColors"],
+                        tickBreaks: plot["tickBreaks"],
+                        showTickLines: plot["showTickLines"],
+                        tickLineColors: plot["tickLineColors"],
+                        folded: plot["folded"],
+                        foldedEmbedding: plot["foldedEmbedding"],
+                        foldAnimDelay: plot["foldAnimDelay"],
+                        foldAnimDuration: plot["foldAnimDuration"],
+                        colnames: plot["colnames"],
+                        rownames: plot["rownames"]
+                    }
+                )
+            }
         }
         if (plotData["labels"]) {
             this._annotationManager.fixedLabels = true;
@@ -355,6 +409,15 @@ export class Plots {
                     }
                 }
             }
+        }
+        if (plotData["cameraAlpha"] !== undefined) {
+            this.camera.alpha = plotData["cameraAlpha"];
+        }
+        if (plotData["cameraBeta"] !== undefined) {
+            this.camera.beta = plotData["cameraBeta"];
+        }
+        if (plotData["cameraRadius"] !== undefined) {
+            this.camera.radius = plotData["cameraRadius"];
         }
     }
 
@@ -384,7 +447,19 @@ export class Plots {
 
     private _downloadJson() {
         let dlElement = document.createElement("a");
+        this._downloadObj["turntable"] = this.turntable;
+        this._downloadObj["rotationRate"] = this.rotationRate;
+        this._downloadObj["backgroundColor"] = this._backgroundColor;
+        this._downloadObj["xScale"] = this._xScale;
+        this._downloadObj["yScale"] = this._yScale;
+        this._downloadObj["zScale"] = this._zScale;
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         this._downloadObj["labels"] = this._annotationManager.exportLabels();
+        this._downloadObj["cameraAlpha"] = this.camera.alpha;
+        this._downloadObj["cameraBeta"] = this.camera.beta;
+        this._downloadObj["cameraRadius"] = this.camera.radius;
         let dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -410,8 +485,8 @@ export class Plots {
             boundingBox.minimumWorld.z,
             boundingBox.maximumWorld.z
         ]
-        this._axes.axisData.range = [rangeX, rangeY, rangeZ]
-        this._axes.update(this.camera, true);
+        this._axes[0].axisData.range = [rangeX, rangeY, rangeZ]
+        this._axes[0].update(this.camera, true);
     }
 
     private _startRecording() {
@@ -443,13 +518,15 @@ export class Plots {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ]
-                this._axes.axisData.range = [rangeX, rangeY, rangeZ]
-                this._axes.update(this.camera, true);
+                this._axes[0].axisData.range = [rangeX, rangeY, rangeZ]
+                this._axes[0].update(this.camera, true);
             }
         }
         // update axis drawing
         if (this._axes) {
-            this._axes.update(this.camera);
+            for (let i = 0; i < this._axes.length; i++) {
+                this._axes[i].update(this.camera);
+            }
         }
 
         // update labels
@@ -470,9 +547,7 @@ export class Plots {
         // }
     }
 
-    /**
-     * Currently not used
-     */
+
     private _afterRender(): void {
         if (this._recording) {
             // start recording:
@@ -574,11 +649,12 @@ export class Plots {
         let opts = {
             size: 1,
             colorScale: null,
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -590,7 +666,8 @@ export class Plots {
         // apply user options
         Object.assign(opts, options);
         // prepare object for download as json button
-        this._downloadObj = {
+        this._downloadObj["plots"].push({
+            plotType: "imageStack",
             values: values,
             indices: indices,
             attributes: attributes,
@@ -601,31 +678,41 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
-            labels: [],
-            backgroundColor: this._backgroundColor,
             intensityMode: opts.intensityMode
-        }
+        })
         let legendData: LegendData = {
             showLegend: false,
             discrete: false,
             breaks: [],
             colorScale: "",
-            inverted: false
+            inverted: false,
+            position: opts.legendPosition
         }
         legendData.fontSize = opts.fontSize;
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
 
-        let plot = new ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode);
+        let plot = new ImgStack(
+            this.scene,
+            values,
+            indices,
+            attributes,
+            legendData,
+            opts.size,
+            this._backgroundColor,
+            opts.intensityMode,
+            this._xScale,
+            this._yScale,
+            this._zScale
+        );
         this.plots.push(plot);
         this._updateLegend();
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
@@ -643,17 +730,19 @@ export class Plots {
         // default options
         let opts = {
             size: 1,
-            scaleColumn: 1,
-            scaleRow: 1,
+            xScale: 1,
+            yScale: 1,
+            zScale: 1,
             colorScale: "Oranges",
             customColorScale: [],
             colorScaleInverted: false,
             sortedCategories: [],
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -669,16 +758,13 @@ export class Plots {
         }
         // apply user options
         Object.assign(opts, options);
-        console.log(opts);
         // create plot data object for download as json button
-        this._downloadObj = {
-            coordinates: coordinates,
+        this._downloadObj["plots"].push({
             plotType: plotType,
+            coordinates: coordinates,
             colorBy: colorBy,
             colorVar: colorVar,
             size: opts.size,
-            scaleColumn: opts.scaleColumn,
-            scaleRow: opts.scaleRow,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
             colorScaleInverted: opts.colorScaleInverted,
@@ -688,6 +774,7 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -698,13 +785,9 @@ export class Plots {
             foldedEmbedding: opts.foldedEmbedding,
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
-            turntable: this.turntable,
-            rotationRate: this.rotationRate,
             colnames: opts.colnames,
-            rownames: opts.rownames,
-            labels: [],
-            backgroundColor: this._backgroundColor
-        }
+            rownames: opts.rownames
+        })
 
         let coordColors: string[] = [];
         var legendData: LegendData;
@@ -780,7 +863,8 @@ export class Plots {
                     breaks: uniqueGroups,
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 }
                 break;
             case "values":
@@ -826,7 +910,8 @@ export class Plots {
                     breaks: [min.toString(), max.toString()],
                     colorScale: opts.colorScale,
                     customColorScale: opts.customColorScale,
-                    inverted: opts.colorScaleInverted
+                    inverted: opts.colorScaleInverted,
+                    position: opts.legendPosition
                 }
                 break;
             case "direct":
@@ -846,7 +931,8 @@ export class Plots {
                     breaks: [],
                     colorScale: "",
                     customColorScale: opts.customColorScale,
-                    inverted: false
+                    inverted: false,
+                    position: opts.legendPosition
                 }
                 break;
         }
@@ -860,7 +946,20 @@ export class Plots {
         let scale: number[];
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration);
+                plot = new PointCloud(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.size,
+                    legendData,
+                    opts.folded,
+                    opts.foldedEmbedding,
+                    opts.foldAnimDelay,
+                    opts.foldAnimDuration,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale
+                );
                 let boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -874,28 +973,50 @@ export class Plots {
                     boundingBox.minimumWorld.z,
                     boundingBox.maximumWorld.z
                 ]
-                scale = [1, 1, 1]
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ]
                 break;
             case "surface":
-                plot = new Surface(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new Surface(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.size,
+                    legendData,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale
+                );
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ]
                 break
             case "heatMap":
-                plot = new HeatMap(this.scene, coordinates, coordColors, opts.size, opts.scaleColumn, opts.scaleRow, legendData);
-                rangeX = [0, coordinates.length * opts.scaleColumn];
-                rangeZ = [0, coordinates[0].length * opts.scaleRow];
+                plot = new HeatMap(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.size,
+                    legendData,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale
+                );
+                rangeX = [0, coordinates.length * this._xScale];
+                rangeZ = [0, coordinates[0].length * this._zScale];
                 rangeY = [0, opts.size];
                 scale = [
-                    opts.scaleColumn,
-                    opts.size / matrixMax(coordinates),
-                    opts.scaleRow
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
                 ]
                 break
         }
@@ -918,214 +1039,270 @@ export class Plots {
             colnames: opts.colnames,
             rownames: opts.rownames
         }
-        this._axes = new Axes(axisData, this.scene, plotType == "heatMap");
+        this._axes.push(new Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this
     }
 
     /**
-     * Creates a color legend for the plot
+     * Creates a color legend for the plots
      */
     private _updateLegend(): void {
         if (this._legend) { this._legend.dispose(); }
-        let legendData = this.plots[0].legendData;
+
+        // create fullscreen GUI texture
+        let uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+        let rightFree = true;
+        let leftFree = true;
+        for (let i = 0; i < this.plots.length; i++) {
+            const plot = this.plots[i];
+            let legendData = plot.legendData;
+            if (["right", "left"].indexOf(legendData.position) === -1) {
+                legendData.position = null;
+            }
+            if (legendData.showLegend) {
+                if (legendData.position === null) {
+                    if (rightFree) {
+                        legendData.position = "right";
+                        rightFree = false;
+                    } else if (leftFree) {
+                        legendData.position = "left";
+                        leftFree = false;
+                    } else {
+                        legendData.showLegend = false;
+                    }
+                } else {
+                    if (legendData.position === "right") {
+                        rightFree = false;
+                    } else {
+                        leftFree = false;
+                    }
+                }
+                uiLayer = this._createPlotLegend(legendData, uiLayer);
+            }
+        }
+        this._legend = uiLayer;
+    }
+
+    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
+        if (!legendData.showLegend) {
+            return uiLayer;
+        }
         let n: number;
         let breakN = 20;
-        if (legendData.showLegend) {
+        // create grid for placing legend in correct position
+        let grid = new Grid();
+        uiLayer.addControl(grid);
 
-            // create fullscreen GUI texture
-            let advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-            // create grid for placing legend in correct position
-            let grid = new Grid();
-            advancedTexture.addControl(grid);
+        // main position of legend (right middle)
+        let legendWidth = 0.2;
 
-            // main position of legend (right middle)
+        if (legendData.discrete) {
+            // number of clusters
+            n = legendData.breaks.length;
 
-            let legendWidth = 0.2;
-
-            if (legendData.discrete) {
-                // number of clusters
-                n = legendData.breaks.length;
-
-                if (n > breakN * 2) {
-                    legendWidth = 0.4;
-                } else if (n > breakN) {
-                    legendWidth = 0.3;
-                }
+            if (n > breakN * 2) {
+                legendWidth = 0.4;
             }
+            else if (n > breakN) {
+                legendWidth = 0.3;
+            }
+        }
 
+        let legendColumn = 1;
+        if (legendData.position === "right") {
             grid.addColumnDefinition(1 - legendWidth);
             grid.addColumnDefinition(legendWidth);
-            if (legendData.legendTitle && legendData.legendTitle !== "") {
-                grid.addRowDefinition(0.1);
-                grid.addRowDefinition(0.85);
-                grid.addRowDefinition(0.05)
-            } else {
-                grid.addRowDefinition(0.05);
-                grid.addRowDefinition(0.9);
-                grid.addRowDefinition(0.05);
-            }
+        } else {
+            grid.addColumnDefinition(legendWidth);
+            grid.addColumnDefinition(1 - legendWidth);
+            legendColumn = 0;
+        }
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
+            grid.addRowDefinition(0.1);
+            grid.addRowDefinition(0.85);
+            grid.addRowDefinition(0.05);
+        }
+        else {
+            grid.addRowDefinition(0.05);
+            grid.addRowDefinition(0.9);
+            grid.addRowDefinition(0.05);
+        }
 
-            if (legendData.legendTitle) {
-                let legendTitle = new TextBlock();
-                legendTitle.text = legendData.legendTitle;
-                legendTitle.color = legendData.fontColor;
-                legendTitle.fontWeight = "bold";
-                if (legendData.legendTitleFontSize) {
-                    legendTitle.fontSize = legendData.legendTitleFontSize + "px";
-                } else {
-                    legendTitle.fontSize = "20px";
+        if (legendData.legendTitle) {
+            let legendTitle = new TextBlock();
+            legendTitle.text = legendData.legendTitle;
+            legendTitle.color = legendData.fontColor;
+            legendTitle.fontWeight = "bold";
+            if (legendData.legendTitleFontSize) {
+                legendTitle.fontSize = legendData.legendTitleFontSize + "px";
+            }
+            else {
+                legendTitle.fontSize = "20px";
+            }
+            legendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+            legendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+            grid.addControl(legendTitle, 0, legendColumn);
+        }
+
+        // for continuous measures display color bar and max and min values.
+        if (!legendData.discrete) {
+
+            let innerGrid = new Grid();
+            innerGrid.addColumnDefinition(0.2);
+            innerGrid.addColumnDefinition(0.8);
+            grid.addControl(innerGrid, 1, legendColumn);
+
+            let nBreaks = 115;
+            let labelSpace = 0.15;
+            if (this.canvas.height < 70) {
+                nBreaks = 10;
+                labelSpace = 0.45;
+                innerGrid.addRowDefinition(1);
+            }
+            else if (this.canvas.height < 130) {
+                nBreaks = 50;
+                labelSpace = 0.3;
+                innerGrid.addRowDefinition(1);
+            }
+            else {
+                let padding = (this.canvas.height - 115) / 2;
+                innerGrid.addRowDefinition(padding, true);
+                innerGrid.addRowDefinition(115, true);
+                innerGrid.addRowDefinition(padding, true);
+            }
+            // color bar
+            let colors: string[];
+            if (legendData.colorScale === "custom") {
+                colors = chroma.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
+            }
+            else {
+                colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
+            }
+            let scaleGrid = new Grid();
+            for (let i = 0; i < nBreaks; i++) {
+                scaleGrid.addRowDefinition(1 / nBreaks);
+                let legendColor = new Rectangle();
+                if (legendData.inverted) {
+                    legendColor.background = colors[i];
                 }
-                legendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-                legendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                grid.addControl(legendTitle, 0, 1);
+                else {
+                    legendColor.background = colors[colors.length - i - 1];
+                }
+                legendColor.thickness = 0;
+                legendColor.width = 0.5;
+                legendColor.height = 1;
+                scaleGrid.addControl(legendColor, i, 0);
             }
 
-            // for continuous measures display color bar and max and min values.
-            if (!legendData.discrete) {
+            // label text
+            let labelGrid = new Grid();
+            labelGrid.addColumnDefinition(1);
+            labelGrid.addRowDefinition(labelSpace);
+            labelGrid.addRowDefinition(1 - labelSpace * 2);
+            labelGrid.addRowDefinition(labelSpace);
 
-                let innerGrid = new Grid();
+            if (this.canvas.height < 130) {
+                innerGrid.addControl(scaleGrid, 0, 0);
+                innerGrid.addControl(labelGrid, 0, 1);
+            }
+            else {
+                innerGrid.addControl(scaleGrid, 1, 0);
+                innerGrid.addControl(labelGrid, 1, 1);
+            }
+
+            let minText = new TextBlock();
+            minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
+            minText.color = legendData.fontColor;
+            minText.fontSize = legendData.fontSize + "px";
+            minText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(minText, 2, 0);
+
+            let maxText = new TextBlock();
+            maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
+            maxText.color = legendData.fontColor;
+            maxText.fontSize = legendData.fontSize + "px";
+            maxText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+            labelGrid.addControl(maxText, 0, 0);
+        }
+        else {
+            // inner Grid contains legend rows and columns for color and text
+            var innerGrid = new Grid();
+            // two legend columns when more than 15 colors
+            if (n > breakN * 2) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else if (n > breakN) {
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.4);
+            }
+            else {
                 innerGrid.addColumnDefinition(0.2);
                 innerGrid.addColumnDefinition(0.8);
-                grid.addControl(innerGrid, 1, 1);
-                
-                let nBreaks = 115;
-                let labelSpace = 0.15;
-                if (this.canvas.height < 70) {
-                    nBreaks = 10;
-                    labelSpace = 0.45;
-                    innerGrid.addRowDefinition(1);
-                } else if (this.canvas.height < 130) {
-                    nBreaks = 50;
-                    labelSpace = 0.3;
-                    innerGrid.addRowDefinition(1);
-                } else {
-                    let padding = (this.canvas.height - 115) / 2
-                    innerGrid.addRowDefinition(padding, true);
-                    innerGrid.addRowDefinition(115, true);
-                    innerGrid.addRowDefinition(padding, true);
+            }
+            for (let i = 0; i < n && i < breakN; i++) {
+                if (n > breakN) {
+                    innerGrid.addRowDefinition(1 / breakN);
                 }
-                // color bar
-                let colors: string[];
-                if (legendData.colorScale === "custom") {
-                    colors = chroma.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
-                } else {
-                    colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(nBreaks);
-                }
-                let scaleGrid = new Grid();
-                for (let i = 0; i < nBreaks; i++) {
-                    scaleGrid.addRowDefinition(1 / nBreaks);
-                    let legendColor = new Rectangle();
-                    if (legendData.inverted) {
-                        legendColor.background = colors[i];
-                    } else {
-                        legendColor.background = colors[colors.length - i - 1];
-                    }
-                    legendColor.thickness = 0;
-                    legendColor.width = 0.5;
-                    legendColor.height = 1;
-                    scaleGrid.addControl(legendColor, i, 0);
-                }
-                
-                // label text
-                let labelGrid = new Grid();
-                labelGrid.addColumnDefinition(1);
-                labelGrid.addRowDefinition(labelSpace);
-                labelGrid.addRowDefinition(1 - labelSpace * 2);
-                labelGrid.addRowDefinition(labelSpace);
-                
-                if (this.canvas.height < 130) {
-                    innerGrid.addControl(scaleGrid, 0, 0);
-                    innerGrid.addControl(labelGrid, 0, 1);
-                } else {
-                    innerGrid.addControl(scaleGrid, 1, 0);
-                    innerGrid.addControl(labelGrid, 1, 1);
-                }
-
-                let minText = new TextBlock();
-                minText.text = parseFloat(legendData.breaks[0]).toFixed(2);
-                minText.color = legendData.fontColor;
-                minText.fontSize = legendData.fontSize + "px";
-                minText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(minText, 2, 0);
-
-                let maxText = new TextBlock();
-                maxText.text = parseFloat(legendData.breaks[1]).toFixed(2);
-                maxText.color = legendData.fontColor;
-                maxText.fontSize = legendData.fontSize + "px";
-                maxText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                labelGrid.addControl(maxText, 0, 0);
-            } else {
-                // inner Grid contains legend rows and columns for color and text
-                var innerGrid = new Grid();
-                // two legend columns when more than 15 colors
-                if (n > breakN * 2) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                } else if (n > breakN) {
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                    innerGrid.addColumnDefinition(0.1);
-                    innerGrid.addColumnDefinition(0.4);
-                } else {
-                    innerGrid.addColumnDefinition(0.2);
-                    innerGrid.addColumnDefinition(0.8);
-                }
-                for (let i = 0; i < n && i < breakN; i++) {
-                    if (n > breakN) {
-                        innerGrid.addRowDefinition(1 / breakN);
-                    } else {
-                        innerGrid.addRowDefinition(1 / n);
-                    }
-                }
-                grid.addControl(innerGrid, 1, 1);
-
-                let colors: string[];
-                if (legendData.colorScale === "custom") {
-                    colors = chroma.scale(legendData.customColorScale).mode('lch').colors(n);
-                } else {
-                    colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(n);
-                }
-
-                // add color box and legend text
-                for (let i = 0; i < n; i++) {
-                    // color
-                    var legendColor = new Rectangle();
-                    legendColor.background = colors[i];
-                    legendColor.thickness = 0;
-                    legendColor.width = legendData.fontSize + "px";
-                    legendColor.height = legendData.fontSize + "px";
-                    // use second column for many entries
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendColor, i - breakN * 2, 4);
-                    } else if (i > breakN - 1) {
-                        innerGrid.addControl(legendColor, i - breakN, 2);
-                    } else {
-                        innerGrid.addControl(legendColor, i, 0);
-                    }
-                    // text
-                    var legendText = new TextBlock();
-                    legendText.text = legendData.breaks[i].toString();
-                    legendText.color = legendData.fontColor;
-                    legendText.fontSize = legendData.fontSize + "px";
-                    legendText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                    // use second column for many entries
-                    if (i > breakN * 2 - 1) {
-                        innerGrid.addControl(legendText, i - breakN * 2, 5);
-                    }
-                    if (i > breakN - 1) {
-                        innerGrid.addControl(legendText, i - breakN, 3);
-                    } else {
-                        innerGrid.addControl(legendText, i, 1);
-                    }
+                else {
+                    innerGrid.addRowDefinition(1 / n);
                 }
             }
-            this._legend = advancedTexture;
+            grid.addControl(innerGrid, 1, legendColumn);
+
+            let colors: string[];
+            if (legendData.colorScale === "custom") {
+                colors = chroma.scale(legendData.customColorScale).mode('lch').colors(n);
+            }
+            else {
+                colors = chroma.scale(chroma.brewer[legendData.colorScale]).mode('lch').colors(n);
+            }
+
+            // add color box and legend text
+            for (let i = 0; i < n; i++) {
+                // color
+                var legendColor = new Rectangle();
+                legendColor.background = colors[i];
+                legendColor.thickness = 0;
+                legendColor.width = legendData.fontSize + "px";
+                legendColor.height = legendData.fontSize + "px";
+                // use second column for many entries
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendColor, i - breakN * 2, 4);
+                }
+                else if (i > breakN - 1) {
+                    innerGrid.addControl(legendColor, i - breakN, 2);
+                }
+                else {
+                    innerGrid.addControl(legendColor, i, 0);
+                }
+                // text
+                var legendText = new TextBlock();
+                legendText.text = legendData.breaks[i].toString();
+                legendText.color = legendData.fontColor;
+                legendText.fontSize = legendData.fontSize + "px";
+                legendText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+                // use second column for many entries
+                if (i > breakN * 2 - 1) {
+                    innerGrid.addControl(legendText, i - breakN * 2, 5);
+                }
+                if (i > breakN - 1) {
+                    innerGrid.addControl(legendText, i - breakN, 3);
+                }
+                else {
+                    innerGrid.addControl(legendText, i, 1);
+                }
+            }
         }
+        return uiLayer;
     }
 
     /**
