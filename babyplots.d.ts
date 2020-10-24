@@ -27,7 +27,6 @@ export declare const buttonSVGs: {
     record: string;
 };
 export declare const styleText: string;
-export declare function matrixMax(matrix: number[][]): number;
 export interface LegendData {
     showLegend: boolean;
     discrete: boolean;
@@ -66,6 +65,8 @@ declare global {
         max(): number;
     }
 }
+export declare function matrixMax(matrix: number[][]): number;
+export declare function matrixMin(matrix: number[][]): number;
 export declare function getUniqueVals(source: string[]): string[];
 export declare const PLOTTYPES: {
     pointCloud: string[];

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.Plot = exports.matrixMax = exports.styleText = exports.buttonSVGs = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.Plot = exports.styleText = exports.buttonSVGs = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -40,12 +40,6 @@ exports.styleText = [
     ".bbp.overlay { position: absolute; z-index: 3; overflow: hidden; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background-color: #fff5; display: flex; justify-content: center; align-items: center;}",
     ".bbp.overlay > h5.loading-message { color: #000; font-family: Verdana, sans-serif;}",
 ].join(" ");
-function matrixMax(matrix) {
-    var maxRow = matrix.map(function (row) { return Math.max.apply(Math, row); });
-    var max = Math.max.apply(null, maxRow);
-    return max;
-}
-exports.matrixMax = matrixMax;
 var Plot = (function () {
     function Plot(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
         if (xScale === void 0) { xScale = 1; }
@@ -89,6 +83,18 @@ Array.prototype.max = function () {
         return Math.max.apply(null, this);
     }
 };
+function matrixMax(matrix) {
+    var maxRow = matrix.map(function (row) { return row.max(); });
+    var max = maxRow.max();
+    return max;
+}
+exports.matrixMax = matrixMax;
+function matrixMin(matrix) {
+    var minRow = matrix.map(function (row) { return row.min(); });
+    var min = minRow.min();
+    return min;
+}
+exports.matrixMin = matrixMin;
 function getUniqueVals(source) {
     var length = source.length;
     var result = [];
@@ -111,36 +117,27 @@ exports.PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
-    'imgStack': ['values', 'indices', 'attributes']
+    'imageStack': ['values', 'indices', 'attributes']
 };
 function isValidPlot(plotData) {
-    if (plotData["plotType"]) {
-        var pltType = plotData["plotType"];
+    for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
+        var plot = plotData["plots"][plotIdx];
+        var pltType = plot["plotType"];
         if (exports.PLOTTYPES.hasOwnProperty(pltType)) {
             for (var i = 0; i < exports.PLOTTYPES[pltType].length; i++) {
                 var prop = exports.PLOTTYPES[pltType][i];
-                if (plotData[prop] === undefined) {
-                    console.log('missing ' + prop);
+                if (plot[prop] === undefined) {
+                    console.log('Plot ' + plotIdx + ' is missing property:' + prop);
                     return false;
                 }
             }
-            return true;
         }
         else {
-            console.log('unrecognized plot type');
+            console.log('Unrecognized plot type');
             return false;
         }
     }
-    else {
-        for (var i = 0; i < exports.PLOTTYPES['imgStack'].length; i++) {
-            var prop = exports.PLOTTYPES['imgStack'][i];
-            if (plotData[prop] === undefined) {
-                console.log('missing ' + prop);
-                return false;
-            }
-        }
-        return true;
-    }
+    return true;
 }
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
@@ -157,8 +154,6 @@ var Plots = (function () {
         this._yScale = 1;
         this._zScale = 1;
         this.plots = [];
-        this.turntable = false;
-        this.rotationRate = 0.01;
         this.fixedSize = false;
         this.ymax = 0;
         this.R = false;
@@ -166,9 +161,13 @@ var Plots = (function () {
             backgroundColor: "#ffffffff",
             xScale: 1,
             yScale: 1,
-            zScale: 1
+            zScale: 1,
+            turntable: false,
+            rotationRate: 0.01
         };
         Object.assign(opts, options);
+        this.turntable = opts.turntable;
+        this.rotationRate = opts.rotationRate;
         this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement);
         this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -223,15 +222,6 @@ var Plots = (function () {
         }
         if (plotData["zScale"] !== undefined) {
             this._zScale = plotData["zScale"];
-        }
-        if (plotData["cameraAlpha"] !== undefined) {
-            this.camera.alpha = plotData["cameraAlpha"];
-        }
-        if (plotData["cameraBeta"] !== undefined) {
-            this.camera.beta = plotData["cameraBeta"];
-        }
-        if (plotData["cameraRadius"] !== undefined) {
-            this.camera.radius = plotData["cameraRadius"];
         }
         for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             var plot = plotData["plots"][plotIdx];
@@ -298,6 +288,15 @@ var Plots = (function () {
                     }
                 }
             }
+        }
+        if (plotData["cameraAlpha"] !== undefined) {
+            this.camera.alpha = plotData["cameraAlpha"];
+        }
+        if (plotData["cameraBeta"] !== undefined) {
+            this.camera.beta = plotData["cameraBeta"];
+        }
+        if (plotData["cameraRadius"] !== undefined) {
+            this.camera.radius = plotData["cameraRadius"];
         }
     };
     Plots.prototype.createButtons = function (whichBtns) {
@@ -486,7 +485,7 @@ var Plots = (function () {
         var opts = {
             size: 1,
             colorScale: null,
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
@@ -552,7 +551,7 @@ var Plots = (function () {
             customColorScale: [],
             colorScaleInverted: false,
             sortedCategories: [],
-            showLegend: true,
+            showLegend: false,
             fontSize: 11,
             fontColor: "black",
             legendTitle: null,
@@ -765,7 +764,10 @@ var Plots = (function () {
                 plot = new Surface_1.Surface(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
-                rangeY = [0, opts.size];
+                rangeY = [
+                    matrixMin(coordinates) * this._yScale,
+                    matrixMax(coordinates) * this._yScale
+                ];
                 scale = [
                     this._xScale,
                     this._yScale,
@@ -776,7 +778,10 @@ var Plots = (function () {
                 plot = new HeatMap_1.HeatMap(this.scene, coordinates, coordColors, opts.size, legendData, this._xScale, this._yScale, this._zScale);
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
-                rangeY = [0, opts.size];
+                rangeY = [
+                    matrixMin(coordinates) * this._yScale,
+                    matrixMax(coordinates) * this._yScale
+                ];
                 scale = [
                     this._xScale,
                     this._yScale,

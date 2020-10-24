@@ -60,12 +60,6 @@ export const styleText = [
     ".bbp.overlay > h5.loading-message { color: #000; font-family: Verdana, sans-serif;}",
 ].join(" ");
 
-export function matrixMax(matrix: number[][]): number {
-    let maxRow = matrix.map(function (row) { return Math.max.apply(Math, row); });
-    let max = Math.max.apply(null, maxRow);
-    return max
-}
-
 export interface LegendData {
     showLegend: boolean;
     discrete: boolean;
@@ -149,6 +143,18 @@ Array.prototype.max = function (): number {
     }
 }
 
+export function matrixMax(matrix: number[][]): number {
+    let maxRow = matrix.map(function (row) { return row.max(); });
+    let max = maxRow.max();
+    return max
+}
+
+export function matrixMin(matrix: number[][]): number {
+    let minRow = matrix.map(function (row) { return row.min(); });
+    let min = minRow.min();
+    return min
+}
+
 export function getUniqueVals(source: string[]): string[] {
     let length = source.length;
     let result: string[] = [];
@@ -174,7 +180,7 @@ export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
-    'imgStack': ['values', 'indices', 'attributes']
+    'imageStack': ['values', 'indices', 'attributes']
 }
 
 /**
@@ -182,31 +188,23 @@ export const PLOTTYPES = {
  * @param plotData Object containing data to be checked for valid plot information
  */
 export function isValidPlot(plotData: {}): boolean {
-    if (plotData["plotType"]) {
-        let pltType = plotData["plotType"]
+    for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
+        const plot = plotData["plots"][plotIdx];
+        let pltType = plot["plotType"]
         if (PLOTTYPES.hasOwnProperty(pltType)) {
             for (let i = 0; i < PLOTTYPES[pltType].length; i++) {
                 const prop = PLOTTYPES[pltType][i];
-                if (plotData[prop] === undefined) {
-                    console.log('missing ' + prop);
+                if (plot[prop] === undefined) {
+                    console.log('Plot ' + plotIdx + ' is missing property:' + prop);
                     return false;
                 }
             }
-            return true;
         } else {
-            console.log('unrecognized plot type')
+            console.log('Unrecognized plot type')
             return false;
         }
-    } else {
-        for (let i = 0; i < PLOTTYPES['imgStack'].length; i++) {
-            const prop = PLOTTYPES['imgStack'][i];
-            if (plotData[prop] === undefined) {
-                console.log('missing ' + prop);
-                return false;
-            }
-        }
-        return true;
     }
+    return true;
 }
 
 export class Plots {
@@ -992,7 +990,10 @@ export class Plots {
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
-                rangeY = [0, opts.size];
+                rangeY = [
+                    matrixMin(coordinates) * this._yScale,
+                    matrixMax(coordinates) * this._yScale
+                ];
                 scale = [
                     this._xScale,
                     this._yScale,
@@ -1012,7 +1013,10 @@ export class Plots {
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
-                rangeY = [0, opts.size];
+                rangeY = [
+                    matrixMin(coordinates) * this._yScale,
+                    matrixMax(coordinates) * this._yScale
+                ];
                 scale = [
                     this._xScale,
                     this._yScale,
