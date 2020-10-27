@@ -8,8 +8,8 @@
             "preLaunchTask": "npm: debug",
             "type": "pwa-msedge",
             "request": "launch",
-            "name": "Open index.html",
-            "file": "e:\\Dokumente\\repos\\babyplots_lib\\index.html"
+            "name": "Edge: Open index.html",
+            "file": "${workspaceFolder}/index.html"
         }
     ]
 }

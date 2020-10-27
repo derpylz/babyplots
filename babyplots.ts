@@ -226,6 +226,7 @@ export class Plots {
     private _xScale: number = 1;
     private _yScale: number = 1;
     private _zScale: number = 1;
+    private _publishFormOverlay: HTMLDivElement;
 
     canvas: HTMLCanvasElement;
     scene: Scene;
@@ -441,6 +442,13 @@ export class Plots {
             recordBtn.innerHTML = buttonSVGs.record;
             this._buttonBar.appendChild(recordBtn);
         }
+        if (whichBtns.indexOf("publish") !== -1) {
+            let publishBtn = document.createElement("div");
+            publishBtn.className = "button";
+            publishBtn.onclick = this._createPublishForm.bind(this);
+            publishBtn.innerHTML = buttonSVGs.publish;
+            this._buttonBar.appendChild(publishBtn);
+        }
     }
 
     private _downloadJson() {
@@ -465,6 +473,69 @@ export class Plots {
         document.body.appendChild(dlElement);
         dlElement.click();
         document.body.removeChild(dlElement);
+    }
+
+    private _createPublishForm() {
+        let formOverlay = document.createElement("div");
+        
+        formOverlay.id = "publishOverlay";
+        formOverlay.style.position = "absolute";
+        formOverlay.style.top = this.canvas.clientTop + "px";
+        formOverlay.style.left = this.canvas.clientLeft + "px";
+        formOverlay.style.width = this.canvas.clientWidth + "px";
+        formOverlay.style.height = this.canvas.clientHeight + "px";
+        formOverlay.style.backgroundColor = "#ffffff66";
+
+        let formBox = document.createElement("div");
+        formBox.style.width = "400px";
+        formBox.style.margin = "20px auto";
+        formBox.style.backgroundColor = "white";
+        formBox.style.padding = "5px 10px";
+        formBox.style.borderRadius = "10px";
+        formBox.style.boxShadow = "0 0 10px #0003";
+        formOverlay.appendChild(formBox);
+        // Inputs and their labels
+        let usernameLabel = document.createElement("label");
+        usernameLabel.innerText = "Username:";
+        let usernameInput = document.createElement("input");
+        usernameInput.type = "text";
+        usernameInput.id = "publishUsername";
+        let passwordLabel = document.createElement("label");
+        passwordLabel.innerText = "Password:"
+        let passwordInput = document.createElement("input");
+        passwordInput.type = "password";
+        passwordInput.id = "publishPassword";
+        let titleLabel = document.createElement("label");
+        titleLabel.innerText = "Plot title:";
+        let titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.id = "publishTitle";
+        // Buttons
+        let publishBtn = document.createElement("button");
+        publishBtn.onclick = this._tryPublish.bind(this);
+        publishBtn.innerText = "Login and publish";
+        let cancelBtn = document.createElement("button");
+        cancelBtn.onclick = this._cancelPublish.bind(this);
+        cancelBtn.innerText = "Cancel"
+        // Add all form elements to the form
+        formBox.appendChild(usernameLabel);
+        formBox.appendChild(usernameInput);
+        formBox.appendChild(passwordLabel);
+        formBox.appendChild(passwordInput);
+        formBox.appendChild(titleLabel);
+        formBox.appendChild(titleInput);
+        formBox.appendChild(publishBtn);
+        formBox.appendChild(cancelBtn);
+        this._publishFormOverlay = formOverlay;
+    }
+
+    private _tryPublish() {
+
+    }
+
+    private _cancelPublish() {
+        this._publishFormOverlay.remove();
+        this._publishFormOverlay = undefined;
     }
 
     private _resetAnimation() {
