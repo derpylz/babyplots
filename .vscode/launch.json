@@ -5,10 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Chrome: Open index.html",
+            "request": "launch",
+            "type": "pwa-chrome",
+            "file": "${workspaceFolder}/index.html"
+        },
+        {
             "type": "pwa-msedge",
             "request": "launch",
-            "name": "Open index.html",
-            "file": "e:\\Dokumente\\repos\\babyplots_lib\\index.html"
+            "name": "Edge: Open index.html",
+            "file": "${workspaceFolder}/index.html"
         }
     ]
 }
