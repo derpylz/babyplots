@@ -1,4 +1,100 @@
 "use strict";
+/*!
+ * babyplots - Easy, fast, interactive 3D visualizations
+ *
+ * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ---------------------------------------------
+ *
+ * babyplots includes CCapture.js, released under the following license:
+ *
+ * CCapture - A library to capture canvas-based animations
+ *
+ * The MIT License
+ *
+ * Copyright (c) 2012 Jaume Sanchez Elias
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ---------------------------------------------
+ *
+ * babyplots includes axios, released under the following license:
+ *
+ * Copyright (c) 2014-present Matt Zabriskie
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ---------------------------------------------
+ *
+ * babyplots includes uuid, released under the following license:
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2010-2020 Robert Kieffer and other contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,6 +111,8 @@ var controls_1 = require("@babylonjs/gui/2D/controls");
 var screenshotTools_1 = require("@babylonjs/core/Misc/screenshotTools");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var downloadjs_1 = __importDefault(require("downloadjs"));
+var uuid_1 = require("uuid");
+var axios = require('axios').default;
 var Label_1 = require("./Label");
 var Axes_1 = require("./Axes");
 exports.buttonSVGs = {
@@ -39,6 +137,16 @@ exports.styleText = [
     ".bbp.label-control .label-form > button:hover { background-color: #ddd; }",
     ".bbp.overlay { position: absolute; z-index: 3; overflow: hidden; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background-color: #fff5; display: flex; justify-content: center; align-items: center;}",
     ".bbp.overlay > h5.loading-message { color: #000; font-family: Verdana, sans-serif;}",
+    ".bbp.publish-form > label { display: block; text-align: left; font-family: Verdana, sans-serif; }",
+    ".bbp.publish-form > input { width: 100%; margin-bottom: 15px; box-sizing: border-box; }",
+    ".bbp.publish-form > .publish-btn { border: none; font-weight: bold; background-color: #e95420; color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
+    ".bbp.publish-form > .publish-btn:hover { background-color: #ca491a }",
+    ".bbp.publish-form > .close-btn, .bbp.publish-form > .cancel-btn { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
+    ".bbp.publish-form > .close-btn:hover, .bbp.publish-form > .cancel-btn:hover { background-color: #ddd }",
+    ".bbp.publish-form > p.form-info { font-size: 8pt; font-family: Verdana, sans-serif; }",
+    ".bbp.publish-form > p.message { font-size: 10pt; font-family: Verdana, sans-serif; }",
+    ".bbp.publish-form > p.message.warning { color: red; margin-top: 0px; }",
+    ".bbp.publish-form > p.message.success { color: green; }",
 ].join(" ");
 var Plot = (function () {
     function Plot(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
@@ -157,6 +265,7 @@ var Plots = (function () {
         this.fixedSize = false;
         this.ymax = 0;
         this.R = false;
+        this._uniqID = uuid_1.v4();
         var opts = {
             backgroundColor: "#ffffffff",
             xScale: 1,
@@ -322,9 +431,15 @@ var Plots = (function () {
             recordBtn.innerHTML = exports.buttonSVGs.record;
             this._buttonBar.appendChild(recordBtn);
         }
+        if (whichBtns.indexOf("publish") !== -1) {
+            var publishBtn = document.createElement("div");
+            publishBtn.className = "button";
+            publishBtn.onclick = this._createPublishForm.bind(this);
+            publishBtn.innerHTML = exports.buttonSVGs.publish;
+            this._buttonBar.appendChild(publishBtn);
+        }
     };
-    Plots.prototype._downloadJson = function () {
-        var dlElement = document.createElement("a");
+    Plots.prototype._prepDownloadObj = function () {
         this._downloadObj["turntable"] = this.turntable;
         this._downloadObj["rotationRate"] = this.rotationRate;
         this._downloadObj["backgroundColor"] = this._backgroundColor;
@@ -338,6 +453,10 @@ var Plots = (function () {
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
+    };
+    Plots.prototype._downloadJson = function () {
+        var dlElement = document.createElement("a");
+        this._prepDownloadObj();
         var dlContent = encodeURIComponent(JSON.stringify(this._downloadObj));
         dlElement.setAttribute("href", "data:text/plain;charset=utf-8," + dlContent);
         dlElement.setAttribute("download", "babyplots_export.json");
@@ -345,6 +464,134 @@ var Plots = (function () {
         document.body.appendChild(dlElement);
         dlElement.click();
         document.body.removeChild(dlElement);
+    };
+    Plots.prototype._createPublishForm = function () {
+        if (this._publishFormOverlay !== undefined) {
+            return;
+        }
+        var formOverlay = document.createElement("div");
+        formOverlay.id = "publishOverlay_" + this._uniqID;
+        formOverlay.style.position = "absolute";
+        var r = this.canvas.getBoundingClientRect();
+        formOverlay.style.top = r.y + "px";
+        formOverlay.style.left = r.x + "px";
+        formOverlay.style.width = r.width + "px";
+        formOverlay.style.height = r.height + "px";
+        formOverlay.style.backgroundColor = "#ffffff66";
+        var formBox = document.createElement("div");
+        formBox.style.width = "180px";
+        formBox.style.margin = "20px auto";
+        formBox.style.backgroundColor = "white";
+        formBox.style.padding = "15px 30px";
+        formBox.style.borderRadius = "10px";
+        formBox.style.boxShadow = "0 0 10px #0003";
+        formBox.className = "bbp publish-form";
+        formOverlay.appendChild(formBox);
+        var formInfo = document.createElement("p");
+        formInfo.innerText = "Upload the plot to your account on https://bp.bleb.li. Only you will be able to see it. You can change the access settings in your account.";
+        formInfo.className = "form-info";
+        formBox.appendChild(formInfo);
+        var usernameLabel = document.createElement("label");
+        usernameLabel.id = "publishUsernameLabel_" + this._uniqID;
+        usernameLabel.innerText = "Username:";
+        var usernameInput = document.createElement("input");
+        usernameInput.type = "text";
+        usernameInput.id = "publishUsername_" + this._uniqID;
+        var passwordLabel = document.createElement("label");
+        passwordLabel.id = "publishPasswordLabel_" + this._uniqID;
+        passwordLabel.innerText = "Password:";
+        var passwordInput = document.createElement("input");
+        passwordInput.type = "password";
+        passwordInput.id = "publishPassword_" + this._uniqID;
+        var titleLabel = document.createElement("label");
+        titleLabel.id = "publishTitleLabel_" + this._uniqID;
+        titleLabel.innerText = "Plot title:";
+        var titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.id = "publishTitle_" + this._uniqID;
+        var msg = document.createElement("p");
+        msg.id = "publishMessage_" + this._uniqID;
+        var publishBtn = document.createElement("button");
+        publishBtn.className = "publish-btn";
+        publishBtn.id = "publishBtn_" + this._uniqID;
+        publishBtn.onclick = this._tryPublish.bind(this);
+        publishBtn.innerText = "Login and publish";
+        var cancelBtn = document.createElement("button");
+        cancelBtn.className = "cancel-btn";
+        cancelBtn.id = "cancelBtn_" + this._uniqID;
+        cancelBtn.onclick = this._cancelPublish.bind(this);
+        cancelBtn.innerText = "Cancel";
+        var closeBtn = document.createElement("button");
+        closeBtn.className = "close-btn";
+        closeBtn.id = "closeBtn_" + this._uniqID;
+        closeBtn.onclick = this._cancelPublish.bind(this);
+        closeBtn.innerText = "Close";
+        closeBtn.style.display = "none";
+        formBox.appendChild(usernameLabel);
+        formBox.appendChild(usernameInput);
+        formBox.appendChild(passwordLabel);
+        formBox.appendChild(passwordInput);
+        formBox.appendChild(titleLabel);
+        formBox.appendChild(titleInput);
+        formBox.appendChild(msg);
+        formBox.appendChild(publishBtn);
+        formBox.appendChild(cancelBtn);
+        formBox.appendChild(closeBtn);
+        this._publishFormOverlay = formOverlay;
+        this.canvas.parentNode.appendChild(formOverlay);
+    };
+    Plots.prototype._resizePublishOverlay = function () {
+        var r = this.canvas.getBoundingClientRect();
+        this._publishFormOverlay.style.left = r.x + "px";
+        this._publishFormOverlay.style.top = r.y + "px";
+        this._publishFormOverlay.style.width = r.width + "px";
+        this._publishFormOverlay.style.height = r.height + "px";
+    };
+    Plots.prototype._tryPublish = function () {
+        this.thumbnail(80, (function (thumb_data) {
+            this._prepDownloadObj();
+            axios({
+                method: 'post',
+                url: 'http://127.0.0.1:5000/api/publish',
+                headers: {
+                    'Content-Type': "application/json;charset=UTF-8"
+                },
+                data: {
+                    username: document.getElementById("publishUsername_" + this._uniqID).value,
+                    password: document.getElementById("publishPassword_" + this._uniqID).value,
+                    plotData: JSON.stringify(this._downloadObj),
+                    plotName: document.getElementById("publishTitle_" + this._uniqID).value,
+                    thumb: thumb_data
+                },
+            })
+                .then((function (response) {
+                var msg = document.getElementById("publishMessage_" + this._uniqID);
+                msg.innerText = "Successfully published plot!";
+                msg.className = "message success";
+                document.getElementById("publishUsername_" + this._uniqID).style.display = "none";
+                document.getElementById("publishUsernameLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishPassword_" + this._uniqID).style.display = "none";
+                document.getElementById("publishPasswordLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishTitle_" + this._uniqID).style.display = "none";
+                document.getElementById("publishTitleLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishBtn_" + this._uniqID).style.display = "none";
+                document.getElementById("cancelBtn_" + this._uniqID).style.display = "none";
+                document.getElementById("closeBtn_" + this._uniqID).style.display = "block";
+            }).bind(this))
+                .catch((function (response) {
+                if (response.response.data["status"] === "not authorized") {
+                    console.log("wrong credentials");
+                    var msg = document.getElementById("publishMessage_" + this._uniqID);
+                    msg.innerText = "Invalid username or password.";
+                    msg.className = "message warning";
+                }
+                console.log(response);
+            }).bind(this));
+        }).bind(this));
+    };
+    Plots.prototype._cancelPublish = function () {
+        this._publishFormOverlay.remove();
+        this._publishFormOverlay = undefined;
     };
     Plots.prototype._resetAnimation = function () {
         this._hasAnim = true;
@@ -424,11 +671,11 @@ var Plots = (function () {
                 }
                 var loadingOverlay = document.createElement("div");
                 loadingOverlay.className = "bbp overlay";
-                loadingOverlay.id = "GIFloadingOverlay";
+                loadingOverlay.id = "GIFloadingOverlay_" + this._uniqID;
                 var loadingText = document.createElement("h5");
                 loadingText.className = ".loading-message";
                 loadingText.innerText = "Recording GIF...";
-                loadingText.id = "GIFloadingText";
+                loadingText.id = "GIFloadingText_" + this._uniqID;
                 loadingOverlay.appendChild(loadingText);
                 this.canvas.parentNode.appendChild(loadingOverlay);
             }
@@ -439,12 +686,12 @@ var Plots = (function () {
             else {
                 this._recording = false;
                 this._capturer.stop();
-                var loadingText = document.getElementById("GIFloadingText");
+                var loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
                 loadingText.innerText = "Saving GIF...";
                 this._capturer.save(function (blob) {
                     downloadjs_1.default(blob, "babyplots.gif", 'image/gif');
-                    document.getElementById("GIFloadingText").remove();
-                    document.getElementById("GIFloadingOverlay").remove();
+                    document.getElementById("GIFloadingText_" + this._uniqID).remove();
+                    document.getElementById("GIFloadingOverlay_" + this._uniqID).remove();
                 });
                 this._turned = 0;
                 this.rotationRate = 0.01;
@@ -1064,6 +1311,7 @@ var Plots = (function () {
             }
         }
         this._updateLegend();
+        this._resizePublishOverlay();
         this._engine.resize();
         return this;
     };
