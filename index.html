@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Babyplot Test</title>
+    <script src="dist/CCapture.all.min.js"></script>
+    <script src="gif.worker.js"></script>
     <script src="dist/examples/surface.js"></script>
     <script src="dist/examples/heatMap.js"></script>
     <script src="dist/examples/pointCloud.js"></script>
@@ -31,12 +33,12 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {xScale: 0.1, yScale: 0.01, zScale: 0.1, turntable: false});
-      // vis.fromJSON(surfaceData);
-      var surfaceCoordinates = surfaceData["plots"][0]["coordinates"];
-      var surfaceCoordinatesFlipped = surfaceData["plots"][1]["coordinates"];
-      vis.addPlot(surfaceCoordinates, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: true, colorScale: "Viridis", showAxes: [true, true, true], tickBreaks: [10, 50, 10]})
-      vis.addPlot(surfaceCoordinatesFlipped, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: false, colorScale: "Viridis", showAxes: [false, true, false], tickBreaks: [10, 50, 10]})
-      vis.createButtons(["json", "label"]);
+      vis.fromJSON(iStackData);
+      // var surfaceCoordinates = surfaceData["plots"][0]["coordinates"];
+      // var surfaceCoordinatesFlipped = surfaceData["plots"][1]["coordinates"];
+      // vis.addPlot(surfaceCoordinates, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: true, colorScale: "Viridis", showAxes: [true, true, true], tickBreaks: [10, 50, 10]})
+      // vis.addPlot(surfaceCoordinatesFlipped, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: false, colorScale: "Viridis", showAxes: [false, true, false], tickBreaks: [10, 50, 10]})
+      vis.createButtons(["json", "label", "record"]);
       vis.doRender();
       window.onresize = function () {
         vis.resize();

@@ -72,7 +72,7 @@ export declare const PLOTTYPES: {
     pointCloud: string[];
     surface: string[];
     heatMap: string[];
-    imgStack: string[];
+    imageStack: string[];
 };
 export declare function isValidPlot(plotData: {}): boolean;
 export declare class Plots {
