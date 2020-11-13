@@ -79,6 +79,10 @@ To create the minified distribution file do:
 npm run dist
 ```
 
+## Support, Questions, Feedback, ...
+
+Join our [Discord server](https://discord.gg/bbWxP8q), or submit an issue here in the repository!
+
 ## Also see:
 
 Libraries used in babyplots:
