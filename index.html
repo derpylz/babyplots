@@ -37,7 +37,6 @@
       // var surfaceCoordinatesFlipped = surfaceData["plots"][1]["coordinates"];
       // vis.addPlot(surfaceCoordinates, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: true, colorScale: "Viridis", showAxes: [true, true, true], tickBreaks: [10, 50, 10]})
       // vis.addPlot(surfaceCoordinatesFlipped, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: false, colorScale: "Viridis", showAxes: [false, true, false], tickBreaks: [10, 50, 10]})
-      vis.createButtons(["json", "label", "record", "publish"]);
       vis.doRender();
       window.onresize = function () {
         vis.resize();
