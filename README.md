@@ -53,6 +53,8 @@ In conclusion, here is a minimal example of how to create a babyplots visualizat
 </html>
 ```
 
+You can see an example in action here: [minimal example](https://derpylz.github.io/babyplots/), and of course on the babyplots homepage: [bp.blebli.de](https://bp.blebli.de).
+
 For more information, head to the complete documentation: [https://bp.bleb.li/documentation/js](https://bp.bleb.li/documentation/js).
 
 ## Build instructions
