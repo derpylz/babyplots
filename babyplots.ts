@@ -679,6 +679,9 @@ export class Plots {
     }
 
     private _resizePublishOverlay() {
+        if (this._publishFormOverlay === undefined) {
+            return
+        }
         let r = this.canvas.getBoundingClientRect();
         this._publishFormOverlay.style.left = r.x + "px";
         this._publishFormOverlay.style.top = r.y + "px";

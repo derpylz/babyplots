@@ -480,7 +480,7 @@ var Plots = (function () {
         formOverlay.style.backgroundColor = "#ffffff66";
         var formBox = document.createElement("div");
         formBox.style.width = "180px";
-        formBox.style.margin = "20px auto";
+        formBox.style.margin = "42px auto";
         formBox.style.backgroundColor = "white";
         formBox.style.padding = "15px 30px";
         formBox.style.borderRadius = "10px";
@@ -541,6 +541,9 @@ var Plots = (function () {
         this.canvas.parentNode.appendChild(formOverlay);
     };
     Plots.prototype._resizePublishOverlay = function () {
+        if (this._publishFormOverlay === undefined) {
+            return;
+        }
         var r = this.canvas.getBoundingClientRect();
         this._publishFormOverlay.style.left = r.x + "px";
         this._publishFormOverlay.style.top = r.y + "px";
@@ -552,7 +555,7 @@ var Plots = (function () {
             this._prepDownloadObj();
             axios({
                 method: 'post',
-                url: 'http://127.0.0.1:5000/api/publish',
+                url: 'https://bp.bleb.li/api/publish',
                 headers: {
                     'Content-Type': "application/json;charset=UTF-8"
                 },
