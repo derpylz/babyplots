@@ -1,7 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Plot, LegendData } from "./babyplots";
 export declare class PointCloud extends Plot {
-    private _SPS;
     private _pointPicking;
     private _selectionCallback;
     private _folded;
@@ -15,6 +14,4 @@ export declare class PointCloud extends Plot {
     private _createPointCloud;
     resetAnimation(): void;
     update(): boolean;
-    private _pointPicker;
-    updateSize(): void;
 }

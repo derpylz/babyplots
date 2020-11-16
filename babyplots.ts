@@ -282,9 +282,11 @@ export function getUniqueVals(source: string[]): string[] {
 }
 
 import { ImgStack } from "./ImgStack";
+import { ShapeCloud } from "./ShapeCloud";
 import { PointCloud } from "./PointCloud";
 import { Surface } from "./Surface";
 import { HeatMap } from "./HeatMap";
+import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -351,8 +353,9 @@ export class Plots {
 
     /**
      * Initialize the 3d visualization
-     * @param canvasElement ID of the canvas element in the dom
-     * @param backgroundColor Background color of the plot
+     * 
+     * @param canvasElement ID of the canvas element in the DOM
+     * @param options Object with general options. See a list of possible options [here](https://bp.bleb.li/documentation/js#plotsObject).
      */
     constructor(canvasElement: string, options = {}) {
         // create unique id, needed if multiple babyplots canvases are on the same page.
@@ -383,7 +386,7 @@ export class Plots {
         this.camera = new ArcRotateCamera("Camera", 0, 0, 10, Vector3.Zero(), this.scene);
         this.camera.attachControl(this.canvas, true);
         this.scene.activeCamera = this.camera;
-        this.camera.inputs.attached.keyboard.detachControl(this.canvas);
+        this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
 
         // background color
@@ -427,6 +430,11 @@ export class Plots {
         };
     }
 
+    /**
+     * Load a visualization from a saved JSON object. The R, JavaScript and Python implementations of babyplots as well as the NPC allow the export of visualizations as JSON files. Loading of a saved visualization using fromJSON() overwrites previously set properties of the Plots object.
+     * 
+     * @param plotData Javascript Object with plot data.
+     */
     fromJSON(plotData: {}): void {
         if (plotData["turntable"] !== undefined) {
             this.turntable = plotData["turntable"];
@@ -472,7 +480,7 @@ export class Plots {
                         intensityMode: plot["intensityMode"]
                     }
                 )
-            } else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+            } else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(
                     plot["coordinates"],
                     plot["plotType"],
@@ -501,7 +509,8 @@ export class Plots {
                         foldAnimDelay: plot["foldAnimDelay"],
                         foldAnimDuration: plot["foldAnimDuration"],
                         colnames: plot["colnames"],
-                        rownames: plot["rownames"]
+                        rownames: plot["rownames"],
+                        shape: plot["shape"]
                     }
                 )
             }
@@ -534,6 +543,19 @@ export class Plots {
         }
     }
 
+    /**
+     * Create UI buttons to control certain babyplots features.
+     * 
+     * @param whichBtns Array of buttons to create. Any combination of ["json", "label", "publish", "record"] is allowed.
+     * 
+     * "json": creates a button that triggers the download of the plot data in .json file format.
+     * 
+     * "label": creates a button that opens the label manager that allows creation and editing of labels.
+     * 
+     * "publish": creates a button that opens the publish to bp.bleb.li form.
+     * 
+     * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
+     */
     createButtons(whichBtns = ["json", "label", "publish", "record"]): void {
         if (whichBtns.indexOf("json") !== -1) {
             let jsonBtn = document.createElement("div");
@@ -662,7 +684,7 @@ export class Plots {
         closeBtn.onclick = this._cancelPublish.bind(this);
         closeBtn.innerText = "Close";
         closeBtn.style.display = "none";
-        
+
         // Add all form elements to the form
         formBox.appendChild(usernameLabel);
         formBox.appendChild(usernameInput);
@@ -909,6 +931,16 @@ export class Plots {
         this.ymax = yRange[1];
     }
 
+    /**
+     * Creates a 3-dimensional visualization of an RGB image stack, as generated from e.g. a fluorescent microscope, and adds it to the Plots object to visualize it in a canvas. The data must be in a special format for this function which is optimized for size. The easiest way to create this visualization is using the R implementation of babyplots, which includes a function to directly read .tif files.
+     * 
+     * @param values An array of intensity values. Currently only 8-bit images are supported (0-255).
+     * @param indices Indices of the values in the original image.
+     * @param attributes Image attributes. Only a "dim" attribute is needed containing the dimensions (x, y, c, z) of the image.
+     * @param options An object with options to customize the visualization.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addImgStack).
+     */
     addImgStack(
         values: number[],
         indices: number[],
@@ -990,6 +1022,17 @@ export class Plots {
         return this;
     }
 
+    /**
+     * Creates a plot and adds it to the Plots object to visualize it in a canvas. The plot types section below enumerates the different kinds of visualizations that can be created using this method.
+     * 
+     * @param coordinates An array of arrays with coordinates of data points.
+     * @param plotType The name of one of the plot types. Either "pointCloud", "heatMap", or "surface".
+     * @param colorBy How to interpret the colorVar parameter, either "direct", "categories", or "values". If colorVar is an array of hex strings, colorBy should be "direct". If colorVar is an array of discrete values (e.g. category names), colorBy should be "categories". If colorVar is an array of continuous values, colorBy should be "values".
+     * @param colorVar an array of hex strings, category names, or values, corresponding to the data points in the coordinates parameter.
+     * @param options An object with general and plot type specific options.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addPlot).
+     */
     addPlot(
         coordinates: number[][],
         plotType: string,
@@ -1024,7 +1067,9 @@ export class Plots {
             foldAnimDelay: null,
             foldAnimDuration: null,
             colnames: null,
-            rownames: null
+            rownames: null,
+            shape: null,
+            shading: true
         }
         // apply user options
         Object.assign(opts, options);
@@ -1056,7 +1101,9 @@ export class Plots {
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
             colnames: opts.colnames,
-            rownames: opts.rownames
+            rownames: opts.rownames,
+            shape: opts.shape,
+            shading: opts.shading
         })
 
         let coordColors: string[] = [];
@@ -1214,6 +1261,7 @@ export class Plots {
 
         let plot: Plot;
         let scale: number[];
+        let boundingBox: BoundingBox;
         switch (plotType) {
             case "pointCloud":
                 plot = new PointCloud(
@@ -1230,7 +1278,7 @@ export class Plots {
                     this._yScale,
                     this._zScale
                 );
-                let boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
                     boundingBox.maximumWorld.x
@@ -1272,6 +1320,38 @@ export class Plots {
                     this._zScale,
                 ]
                 break
+            case "shapeCloud":
+                plot = new ShapeCloud(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.shape,
+                    opts.shading,
+                    opts.size,
+                    legendData,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale
+                );
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                rangeX = [
+                    boundingBox.minimumWorld.x,
+                    boundingBox.maximumWorld.x
+                ]
+                rangeY = [
+                    boundingBox.minimumWorld.y,
+                    boundingBox.maximumWorld.y
+                ]
+                rangeZ = [
+                    boundingBox.minimumWorld.z,
+                    boundingBox.maximumWorld.z
+                ]
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ]
+                break;
             case "heatMap":
                 plot = new HeatMap(
                     this.scene,
@@ -1591,6 +1671,12 @@ export class Plots {
         return this;
     }
 
+    /**
+     * Resizes the visualization to the current size of the canvas. This method should be bound to a resize event of the canvas. It is also recommended to call the resize() method once after the doRender() call.
+     * 
+     * @param width Optional: Width of the canvas
+     * @param height Optional: Height of the canvas
+     */
     resize(width?: number, height?: number): Plots {
         if (width !== undefined && height !== undefined) {
             if (this.R) {
@@ -1608,10 +1694,19 @@ export class Plots {
         return this
     }
 
+    /**
+     * Saves a screenshot of the visualization.
+     * 
+     * @param size Width and height of square thumbnail in pixels
+     * @param saveCallback Function that takes the created screenshot as base64 encoded string.
+     */
     thumbnail(size: number, saveCallback: (data: string) => void): void {
         ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
     }
 
+    /**
+     * Releases all held resources of the Plots visualization. Useful to clear memory, after a visualization is no longer needed.
+     */
     dispose(): void {
         this.scene.dispose();
         this._engine.dispose();

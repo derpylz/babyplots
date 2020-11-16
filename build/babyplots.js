@@ -148,7 +148,7 @@ exports.styleText = [
     ".bbp.publish-form > p.message.warning { color: red; margin-top: 0px; }",
     ".bbp.publish-form > p.message.success { color: green; }",
 ].join(" ");
-var Plot = (function () {
+var Plot = /** @class */ (function () {
     function Plot(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
@@ -218,6 +218,7 @@ function getUniqueVals(source) {
 }
 exports.getUniqueVals = getUniqueVals;
 var ImgStack_1 = require("./ImgStack");
+var ShapeCloud_1 = require("./ShapeCloud");
 var PointCloud_1 = require("./PointCloud");
 var Surface_1 = require("./Surface");
 var HeatMap_1 = require("./HeatMap");
@@ -227,6 +228,10 @@ exports.PLOTTYPES = {
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
     'imageStack': ['values', 'indices', 'attributes']
 };
+/**
+ * Takes a reasonable guess if a plot can be created from the provided object
+ * @param plotData Object containing data to be checked for valid plot information
+ */
 function isValidPlot(plotData) {
     for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
         var plot = plotData["plots"][plotIdx];
@@ -248,7 +253,13 @@ function isValidPlot(plotData) {
     return true;
 }
 exports.isValidPlot = isValidPlot;
-var Plots = (function () {
+var Plots = /** @class */ (function () {
+    /**
+     * Initialize the 3d visualization
+     *
+     * @param canvasElement ID of the canvas element in the DOM
+     * @param options Object with general options. See a list of possible options [here](https://bp.bleb.li/documentation/js#plotsObject).
+     */
     function Plots(canvasElement, options) {
         if (options === void 0) { options = {}; }
         this._showLegend = true;
@@ -265,7 +276,10 @@ var Plots = (function () {
         this.fixedSize = false;
         this.ymax = 0;
         this.R = false;
+        // create unique id, needed if multiple babyplots canvases are on the same page.
         this._uniqID = uuid_1.v4();
+        // apply options
+        // default settings
         var opts = {
             backgroundColor: "#ffffffff",
             xScale: 1,
@@ -277,41 +291,56 @@ var Plots = (function () {
         Object.assign(opts, options);
         this.turntable = opts.turntable;
         this.rotationRate = opts.rotationRate;
+        // setup enginge and scene
         this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement);
         this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
         this.scene = new scene_1.Scene(this._engine);
+        // camera
         this.camera = new arcRotateCamera_1.ArcRotateCamera("Camera", 0, 0, 10, math_1.Vector3.Zero(), this.scene);
         this.camera.attachControl(this.canvas, true);
         this.scene.activeCamera = this.camera;
-        this.camera.inputs.attached.keyboard.detachControl(this.canvas);
+        this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
+        // background color
         this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
+        // Axis scales
         this._xScale = opts.xScale;
         this._yScale = opts.yScale;
         this._zScale = opts.zScale;
+        // two lights to illuminate the cells uniformly (top and bottom)
         this._hl1 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new math_1.Color3(1, 1, 1);
         this._hl1.specular = new math_1.Color3(0, 0, 0);
+        // bottom light slightly weaker for better depth perception and orientation
         this._hl2 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new math_1.Color3(0, 0, 0);
         this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
         this.scene.registerAfterRender(this._afterRender.bind(this));
+        // create container for buttons
+        // create css style
         var styleElem = document.createElement("style");
         styleElem.appendChild(document.createTextNode(exports.styleText));
         document.getElementsByTagName('head')[0].appendChild(styleElem);
+        // create ui elements
         var buttonBar = document.createElement("div");
         buttonBar.className = "bbp button-bar";
         buttonBar.style.top = this.canvas.clientTop + 5 + "px";
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        // prepare download object
         this._downloadObj = {
             plots: []
         };
     }
+    /**
+     * Load a visualization from a saved JSON object. The R, JavaScript and Python implementations of babyplots as well as the NPC allow the export of visualizations as JSON files. Loading of a saved visualization using fromJSON() overwrites previously set properties of the Plots object.
+     *
+     * @param plotData Javascript Object with plot data.
+     */
     Plots.prototype.fromJSON = function (plotData) {
         if (plotData["turntable"] !== undefined) {
             this.turntable = plotData["turntable"];
@@ -353,7 +382,7 @@ var Plots = (function () {
                     intensityMode: plot["intensityMode"]
                 });
             }
-            else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+            else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(plot["coordinates"], plot["plotType"], plot["colorBy"], plot["colorVar"], {
                     size: plot["size"],
                     colorScale: plot["colorScale"],
@@ -377,7 +406,8 @@ var Plots = (function () {
                     foldAnimDelay: plot["foldAnimDelay"],
                     foldAnimDuration: plot["foldAnimDuration"],
                     colnames: plot["colnames"],
-                    rownames: plot["rownames"]
+                    rownames: plot["rownames"],
+                    shape: plot["shape"]
                 });
             }
         }
@@ -389,6 +419,7 @@ var Plots = (function () {
                     this._annotationManager.addLabels(labelData);
                 }
                 else {
+                    // legacy label saving
                     for (var i = 0; i < labelData.length; i++) {
                         var label = labelData[i];
                         if (label["text"] && label["position"]) {
@@ -408,6 +439,19 @@ var Plots = (function () {
             this.camera.radius = plotData["cameraRadius"];
         }
     };
+    /**
+     * Create UI buttons to control certain babyplots features.
+     *
+     * @param whichBtns Array of buttons to create. Any combination of ["json", "label", "publish", "record"] is allowed.
+     *
+     * "json": creates a button that triggers the download of the plot data in .json file format.
+     *
+     * "label": creates a button that opens the label manager that allows creation and editing of labels.
+     *
+     * "publish": creates a button that opens the publish to bp.bleb.li form.
+     *
+     * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
+     */
     Plots.prototype.createButtons = function (whichBtns) {
         if (whichBtns === void 0) { whichBtns = ["json", "label", "publish", "record"]; }
         if (whichBtns.indexOf("json") !== -1) {
@@ -487,10 +531,12 @@ var Plots = (function () {
         formBox.style.boxShadow = "0 0 10px #0003";
         formBox.className = "bbp publish-form";
         formOverlay.appendChild(formBox);
+        // Upload description text
         var formInfo = document.createElement("p");
         formInfo.innerText = "Upload the plot to your account on https://bp.bleb.li. Only you will be able to see it. You can change the access settings in your account.";
         formInfo.className = "form-info";
         formBox.appendChild(formInfo);
+        // Inputs and their labels
         var usernameLabel = document.createElement("label");
         usernameLabel.id = "publishUsernameLabel_" + this._uniqID;
         usernameLabel.innerText = "Username:";
@@ -509,8 +555,10 @@ var Plots = (function () {
         var titleInput = document.createElement("input");
         titleInput.type = "text";
         titleInput.id = "publishTitle_" + this._uniqID;
+        // message placeholder
         var msg = document.createElement("p");
         msg.id = "publishMessage_" + this._uniqID;
+        // Buttons
         var publishBtn = document.createElement("button");
         publishBtn.className = "publish-btn";
         publishBtn.id = "publishBtn_" + this._uniqID;
@@ -527,6 +575,7 @@ var Plots = (function () {
         closeBtn.onclick = this._cancelPublish.bind(this);
         closeBtn.innerText = "Close";
         closeBtn.style.display = "none";
+        // Add all form elements to the form
         formBox.appendChild(usernameLabel);
         formBox.appendChild(usernameInput);
         formBox.appendChild(passwordLabel);
@@ -618,10 +667,15 @@ var Plots = (function () {
     Plots.prototype._startRecording = function () {
         this._recording = true;
     };
+    /**
+     * Register before render
+     */
     Plots.prototype._prepRender = function () {
+        // rotate camera around plot if turntable is true
         if (this.turntable) {
             this.camera.alpha += this.rotationRate;
         }
+        // update plots with animations
         if (this._hasAnim) {
             this._hasAnim = this.plots[0].update();
             if (!this._hasAnim) {
@@ -642,15 +696,31 @@ var Plots = (function () {
                 this._axes[0].update(this.camera, true);
             }
         }
+        // update axis drawing
         if (this._axes) {
             for (var i = 0; i < this._axes.length; i++) {
                 this._axes[i].update(this.camera);
             }
         }
+        // update labels
         this._annotationManager.update();
+        // for (let pltIdx = 0; pltIdx < this.plots.length; pltIdx++) {
+        //     const plot = this.plots[pltIdx];
+        //     plot.update();          
+        // }
+        // if (this._mouseOverCheck) {
+        //     const pickResult = this._scene.pick(this._scene.pointerX, this._scene.pointerY);
+        //     const faceId = pickResult.faceId;
+        //     if (faceId == -1) {
+        //         return;
+        //     }
+        //     const idx = this._SPS.pickedParticles[faceId].idx;
+        //     this._mouseOverCallback(idx);
+        // }
     };
     Plots.prototype._afterRender = function () {
         if (this._recording) {
+            // start recording:
             if (this._turned === 0) {
                 var worker = "./";
                 if (this.R) {
@@ -664,8 +734,10 @@ var Plots = (function () {
                     quality: 50,
                     workersPath: worker
                 });
+                // create capturer, enable turning
                 this._capturer.start();
                 this.rotationRate = 0.02;
+                // to return turntable option to its initial state after recording
                 if (this.turntable) {
                     this._wasTurning = true;
                 }
@@ -682,11 +754,14 @@ var Plots = (function () {
                 loadingOverlay.appendChild(loadingText);
                 this.canvas.parentNode.appendChild(loadingOverlay);
             }
+            // recording in progress:
             if (this._turned < 2 * Math.PI) {
+                // while recording, count rotation and capture screenshots
                 this._turned += this.rotationRate;
                 this._capturer.capture(this.canvas);
             }
             else {
+                // after capturing 360°, stop capturing and save gif
                 this._recording = false;
                 this._capturer.stop();
                 var loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
@@ -705,6 +780,9 @@ var Plots = (function () {
             }
         }
     };
+    /**
+     * Zoom camera to fit the complete SPS into the field of view
+     */
     Plots.prototype._cameraFitPlot = function (xRange, yRange, zRange) {
         var xSize = xRange[1] - xRange[0];
         var ySize = yRange[1] - yRange[0];
@@ -728,10 +806,21 @@ var Plots = (function () {
         this.camera.radius = viewRadius;
         box.dispose();
         this.camera.alpha = 0;
-        this.camera.beta = 1;
+        this.camera.beta = 1; // 0 is top view, Pi is bottom
         this.ymax = yRange[1];
     };
+    /**
+     * Creates a 3-dimensional visualization of an RGB image stack, as generated from e.g. a fluorescent microscope, and adds it to the Plots object to visualize it in a canvas. The data must be in a special format for this function which is optimized for size. The easiest way to create this visualization is using the R implementation of babyplots, which includes a function to directly read .tif files.
+     *
+     * @param values An array of intensity values. Currently only 8-bit images are supported (0-255).
+     * @param indices Indices of the values in the original image.
+     * @param attributes Image attributes. Only a "dim" attribute is needed containing the dimensions (x, y, c, z) of the image.
+     * @param options An object with options to customize the visualization.
+     *
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addImgStack).
+     */
     Plots.prototype.addImgStack = function (values, indices, attributes, options) {
+        // default options
         var opts = {
             size: 1,
             colorScale: null,
@@ -749,7 +838,9 @@ var Plots = (function () {
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
             intensityMode: "alpha"
         };
+        // apply user options
         Object.assign(opts, options);
+        // prepare object for download as json button
         this._downloadObj["plots"].push({
             plotType: "imageStack",
             values: values,
@@ -790,8 +881,20 @@ var Plots = (function () {
         this.camera.wheelPrecision = 1;
         return this;
     };
+    /**
+     * Creates a plot and adds it to the Plots object to visualize it in a canvas. The plot types section below enumerates the different kinds of visualizations that can be created using this method.
+     *
+     * @param coordinates An array of arrays with coordinates of data points.
+     * @param plotType The name of one of the plot types. Either "pointCloud", "heatMap", or "surface".
+     * @param colorBy How to interpret the colorVar parameter, either "direct", "categories", or "values". If colorVar is an array of hex strings, colorBy should be "direct". If colorVar is an array of discrete values (e.g. category names), colorBy should be "categories". If colorVar is an array of continuous values, colorBy should be "values".
+     * @param colorVar an array of hex strings, category names, or values, corresponding to the data points in the coordinates parameter.
+     * @param options An object with general and plot type specific options.
+     *
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addPlot).
+     */
     Plots.prototype.addPlot = function (coordinates, plotType, colorBy, colorVar, options) {
         if (options === void 0) { options = {}; }
+        // default options
         var opts = {
             size: 1,
             xScale: 1,
@@ -818,9 +921,13 @@ var Plots = (function () {
             foldAnimDelay: null,
             foldAnimDuration: null,
             colnames: null,
-            rownames: null
+            rownames: null,
+            shape: null,
+            shading: true
         };
+        // apply user options
         Object.assign(opts, options);
+        // create plot data object for download as json button
         this._downloadObj["plots"].push({
             plotType: plotType,
             coordinates: coordinates,
@@ -848,7 +955,9 @@ var Plots = (function () {
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
             colnames: opts.colnames,
-            rownames: opts.rownames
+            rownames: opts.rownames,
+            shape: opts.shape,
+            shading: opts.shading
         });
         var coordColors = [];
         var legendData;
@@ -865,18 +974,25 @@ var Plots = (function () {
         }
         switch (colorBy) {
             case "categories":
+                // color plot by discrete categories
                 var groups = colorVar;
                 var uniqueGroups = getUniqueVals(groups);
+                // sortedCategories can contain an array of category names to order the groups for coloring.
+                // sortedCategories must be of same length as unique groups in colorVar.
+                // if no custom ordering is performed through sortedCategories, groups will be sorted alphabetically.
                 uniqueGroups.sort();
                 if (opts.sortedCategories) {
                     if (uniqueGroups.length === opts.sortedCategories.length) {
+                        // sortedCategories must contain the same category names as those present in colorVar.
                         if (JSON.stringify(uniqueGroups) === JSON.stringify(opts.sortedCategories.slice(0).sort())) {
                             uniqueGroups = opts.sortedCategories;
                         }
                     }
                 }
                 var nColors = uniqueGroups.length;
+                // Paired is default color scale for discrete variable coloring
                 var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
+                // check if color scale should be custom
                 if (opts.colorScale === "custom") {
                     if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
                         if (opts.colorScaleInverted) {
@@ -887,10 +1003,12 @@ var Plots = (function () {
                         }
                     }
                     else {
+                        // set colorScale variable to default for legend if custom color scale is invalid
                         opts.colorScale = "Paired";
                     }
                 }
                 else {
+                    // check if user selected color scale is a valid chromajs color brewer name
                     if (opts.colorScale && chroma_js_1.default.brewer.hasOwnProperty(opts.colorScale)) {
                         if (opts.colorScaleInverted) {
                             colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
@@ -900,16 +1018,19 @@ var Plots = (function () {
                         }
                     }
                     else {
+                        // set colorScale variable to default for legend if user selected is not valid
                         opts.colorScale = "Paired";
                     }
                 }
                 for (var i = 0; i < nColors; i++) {
                     colors[i] += "ff";
                 }
+                // apply colors to plot points
                 for (var i = 0; i < colorVar.length; i++) {
                     var colorIndex = uniqueGroups.indexOf(groups[i]);
                     coordColors.push(colors[colorIndex]);
                 }
+                // prepare object for legend drawing
                 legendData = {
                     showLegend: opts.showLegend,
                     discrete: true,
@@ -921,10 +1042,14 @@ var Plots = (function () {
                 };
                 break;
             case "values":
+                // color by a continuous variable
                 var min_1 = colorVar.min();
                 var max_1 = colorVar.max();
+                // Oranges is default color scale for continuous variable coloring
                 var colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer.Oranges).mode('lch');
+                // check if color scale should be custom
                 if (opts.colorScale === "custom") {
+                    // check if custom color scale is valid
                     if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
                         if (opts.colorScaleInverted) {
                             colorfunc_1 = chroma_js_1.default.scale(opts.customColorScale).domain([1, 0]).mode('lch');
@@ -934,10 +1059,12 @@ var Plots = (function () {
                         }
                     }
                     else {
+                        // set colorScale variable to default for legend if custom color scale is invalid
                         opts.colorScale = "Oranges";
                     }
                 }
                 else {
+                    // check if user selected color scale is a valid chromajs color brewer name
                     if (opts.colorScale && chroma_js_1.default.brewer.hasOwnProperty(opts.colorScale)) {
                         if (opts.colorScaleInverted) {
                             colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).domain([1, 0]).mode('lch');
@@ -947,11 +1074,15 @@ var Plots = (function () {
                         }
                     }
                     else {
+                        // set colorScale variable to default for legend if user selected is not valid
                         opts.colorScale = "Oranges";
                     }
                 }
+                // normalize the values to 0-1 range
                 var norm = colorVar.slice().map(function (v) { return (v - min_1) / (max_1 - min_1); });
+                // apply colors to plot points
                 coordColors = norm.map(function (v) { return colorfunc_1(v).alpha(1).hex("rgba"); });
+                // prepare object for legend drawing
                 legendData = {
                     showLegend: opts.showLegend,
                     discrete: false,
@@ -963,6 +1094,7 @@ var Plots = (function () {
                 };
                 break;
             case "direct":
+                // color by color hex strings in colorVar
                 for (var i = 0; i < colorVar.length; i++) {
                     var cl = colorVar[i];
                     cl = chroma_js_1.default(cl).hex();
@@ -971,6 +1103,7 @@ var Plots = (function () {
                     }
                     coordColors.push(cl);
                 }
+                // prepare object for legend drawing
                 legendData = {
                     showLegend: false,
                     discrete: false,
@@ -982,16 +1115,18 @@ var Plots = (function () {
                 };
                 break;
         }
+        // add remaining properties to legend object
         legendData.fontSize = opts.fontSize;
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
         var plot;
         var scale;
+        var boundingBox;
         switch (plotType) {
             case "pointCloud":
                 plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration, this._xScale, this._yScale, this._zScale);
-                var boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
                     boundingBox.maximumWorld.x
@@ -1017,6 +1152,27 @@ var Plots = (function () {
                 rangeY = [
                     matrixMin(coordinates) * this._yScale,
                     matrixMax(coordinates) * this._yScale
+                ];
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ];
+                break;
+            case "shapeCloud":
+                plot = new ShapeCloud_1.ShapeCloud(this.scene, coordinates, coordColors, opts.shape, opts.shading, opts.size, legendData, this._xScale, this._yScale, this._zScale);
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                rangeX = [
+                    boundingBox.minimumWorld.x,
+                    boundingBox.maximumWorld.x
+                ];
+                rangeY = [
+                    boundingBox.minimumWorld.y,
+                    boundingBox.maximumWorld.y
+                ];
+                rangeZ = [
+                    boundingBox.minimumWorld.z,
+                    boundingBox.maximumWorld.z
                 ];
                 scale = [
                     this._xScale,
@@ -1061,10 +1217,14 @@ var Plots = (function () {
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this;
     };
+    /**
+     * Creates a color legend for the plots
+     */
     Plots.prototype._updateLegend = function () {
         if (this._legend) {
             this._legend.dispose();
         }
+        // create fullscreen GUI texture
         var uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
         var rightFree = true;
         var leftFree = true;
@@ -1107,10 +1267,13 @@ var Plots = (function () {
         }
         var n;
         var breakN = 20;
+        // create grid for placing legend in correct position
         var grid = new controls_1.Grid();
         uiLayer.addControl(grid);
+        // main position of legend (right middle)
         var legendWidth = 0.2;
         if (legendData.discrete) {
+            // number of clusters
             n = legendData.breaks.length;
             if (n > breakN * 2) {
                 legendWidth = 0.4;
@@ -1154,6 +1317,7 @@ var Plots = (function () {
             legendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
             grid.addControl(legendTitle, 0, legendColumn);
         }
+        // for continuous measures display color bar and max and min values.
         if (!legendData.discrete) {
             var innerGrid_1 = new controls_1.Grid();
             innerGrid_1.addColumnDefinition(0.2);
@@ -1177,6 +1341,7 @@ var Plots = (function () {
                 innerGrid_1.addRowDefinition(115, true);
                 innerGrid_1.addRowDefinition(padding, true);
             }
+            // color bar
             var colors = void 0;
             if (legendData.colorScale === "custom") {
                 colors = chroma_js_1.default.scale(legendData.customColorScale).mode('lch').colors(nBreaks);
@@ -1199,6 +1364,7 @@ var Plots = (function () {
                 legendColor_1.height = 1;
                 scaleGrid.addControl(legendColor_1, i, 0);
             }
+            // label text
             var labelGrid = new controls_1.Grid();
             labelGrid.addColumnDefinition(1);
             labelGrid.addRowDefinition(labelSpace);
@@ -1226,7 +1392,9 @@ var Plots = (function () {
             labelGrid.addControl(maxText, 0, 0);
         }
         else {
+            // inner Grid contains legend rows and columns for color and text
             var innerGrid = new controls_1.Grid();
+            // two legend columns when more than 15 colors
             if (n > breakN * 2) {
                 innerGrid.addColumnDefinition(0.1);
                 innerGrid.addColumnDefinition(0.4);
@@ -1261,12 +1429,15 @@ var Plots = (function () {
             else {
                 colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[legendData.colorScale]).mode('lch').colors(n);
             }
+            // add color box and legend text
             for (var i = 0; i < n; i++) {
+                // color
                 var legendColor = new controls_1.Rectangle();
                 legendColor.background = colors[i];
                 legendColor.thickness = 0;
                 legendColor.width = legendData.fontSize + "px";
                 legendColor.height = legendData.fontSize + "px";
+                // use second column for many entries
                 if (i > breakN * 2 - 1) {
                     innerGrid.addControl(legendColor, i - breakN * 2, 4);
                 }
@@ -1276,11 +1447,13 @@ var Plots = (function () {
                 else {
                     innerGrid.addControl(legendColor, i, 0);
                 }
+                // text
                 var legendText = new controls_1.TextBlock();
                 legendText.text = legendData.breaks[i].toString();
                 legendText.color = legendData.fontColor;
                 legendText.fontSize = legendData.fontSize + "px";
                 legendText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+                // use second column for many entries
                 if (i > breakN * 2 - 1) {
                     innerGrid.addControl(legendText, i - breakN * 2, 5);
                 }
@@ -1294,6 +1467,9 @@ var Plots = (function () {
         }
         return uiLayer;
     };
+    /**
+     * Start rendering the scene
+     */
     Plots.prototype.doRender = function () {
         var _this = this;
         this._engine.runRenderLoop(function () {
@@ -1301,6 +1477,12 @@ var Plots = (function () {
         });
         return this;
     };
+    /**
+     * Resizes the visualization to the current size of the canvas. This method should be bound to a resize event of the canvas. It is also recommended to call the resize() method once after the doRender() call.
+     *
+     * @param width Optional: Width of the canvas
+     * @param height Optional: Height of the canvas
+     */
     Plots.prototype.resize = function (width, height) {
         if (width !== undefined && height !== undefined) {
             if (this.R) {
@@ -1318,13 +1500,27 @@ var Plots = (function () {
         this._engine.resize();
         return this;
     };
+    /**
+     * Saves a screenshot of the visualization.
+     *
+     * @param size Width and height of square thumbnail in pixels
+     * @param saveCallback Function that takes the created screenshot as base64 encoded string.
+     */
     Plots.prototype.thumbnail = function (size, saveCallback) {
         screenshotTools_1.ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
     };
+    /**
+     * Releases all held resources of the Plots visualization. Useful to clear memory, after a visualization is no longer needed.
+     */
     Plots.prototype.dispose = function () {
         this.scene.dispose();
         this._engine.dispose();
     };
+    /**
+     * Add labels from a list of labels.
+     *
+     * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
+     */
     Plots.prototype.addLabels = function (labelList) {
         this._annotationManager.addLabels(labelList);
     };

@@ -8,6 +8,7 @@
     <script src="dist/examples/surface.js"></script>
     <script src="dist/examples/heatMap.js"></script>
     <script src="dist/examples/pointCloud.js"></script>
+    <script src="dist/examples/shapeCloud.js"></script>
     <script src="dist/examples/imagestack.js"></script>
     <script src="dist/babyplots.js"></script>
     <style>
@@ -32,11 +33,8 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      vis.fromJSON(iStackData);
-      // var surfaceCoordinates = surfaceData["plots"][0]["coordinates"];
-      // var surfaceCoordinatesFlipped = surfaceData["plots"][1]["coordinates"];
-      // vis.addPlot(surfaceCoordinates, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: true, colorScale: "Viridis", showAxes: [true, true, true], tickBreaks: [10, 50, 10]})
-      // vis.addPlot(surfaceCoordinatesFlipped, "surface", "values", surfaceData["plots"][0]["colorVar"], {size: 1, showLegend: false, colorScale: "Viridis", showAxes: [false, true, false], tickBreaks: [10, 50, 10]})
+      vis.fromJSON(shapeCloudData);
+      vis.turntable = true;
       vis.doRender();
       window.onresize = function () {
         vis.resize();

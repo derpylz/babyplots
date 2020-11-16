@@ -1,4 +1,22 @@
 "use strict";
+/**
+ * Babyplots - Easy, fast, interactive 3D visualizations
+ *
+ * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnnotationManager = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
@@ -8,7 +26,7 @@ var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture
 var controls_1 = require("@babylonjs/gui/2D/controls");
 var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
 var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder");
-var Arrow = (function () {
+var Arrow = /** @class */ (function () {
     function Arrow(from, to, scene, color) {
         this.size = 1;
         var lines = linesBuilder_1.LinesBuilder.CreateLineSystem('ls', {
@@ -29,7 +47,7 @@ var Arrow = (function () {
     }
     return Arrow;
 }());
-var Label = (function () {
+var Label = /** @class */ (function () {
     function Label(text, position, scene, color) {
         this.size = 100;
         this.color = "black";
@@ -63,11 +81,13 @@ var Label = (function () {
         this._text.text = text;
     };
     Label.prototype.update = function (camera, scene) {
+        // draw 3d labels in plot
         var axis1 = math_1.Vector3.Cross(camera.position, math_1.Axis.Y);
         var axis2 = math_1.Vector3.Cross(axis1, camera.position);
         var axis3 = math_1.Vector3.Cross(axis1, axis2);
         this._label.rotation = math_1.Vector3.RotationFromAxis(axis1, axis2, axis3);
         if (!this.fixed) {
+            // highlighting label under mouse cursor
             var meshUnderPointer = scene.meshUnderPointer;
             if (this._label === meshUnderPointer) {
                 this._background.alpha = 1;
@@ -100,7 +120,7 @@ var Label = (function () {
     };
     return Label;
 }());
-var AnnotationManager = (function () {
+var AnnotationManager = /** @class */ (function () {
     function AnnotationManager(canvas, scene, ymax, camera) {
         this._editLabelForms = [];
         this._showLabels = false;
@@ -172,6 +192,11 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype.addArrow = function (from, to) {
         this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
+    /**
+     * Add a 3d label to the plot
+     * @param text Label title
+     * @param [moveCallback] On dragging of label in 3d plot, the final position will be passed to this function
+     */
     AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";
         var labelIdx = this.labels.length;
@@ -208,6 +233,11 @@ var AnnotationManager = (function () {
         this._showLabels = true;
         return labelIdx;
     };
+    /**
+     * Add multiple labels from a list of labels.
+     *
+     * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
+     */
     AnnotationManager.prototype.addLabels = function (labelList) {
         for (var i = 0; i < labelList.length; i++) {
             var label = labelList[i];
