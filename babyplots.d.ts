@@ -123,18 +123,23 @@ export declare const buttonSVGs: {
     record: string;
 };
 export declare const styleText: string;
-export interface LegendData {
+export interface PlotLegendData {
     showLegend: boolean;
     discrete: boolean;
     breaks: string[];
     colorScale: string;
     inverted: boolean;
     position: string;
+    showShape?: boolean;
     customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;
     legendTitleFontSize?: number;
+    legendTitleFontColor?: string;
+    legendShapeTitle?: string;
+    legendShapeTitleFontSize?: number;
+    legendShowTitleFontColor?: string;
 }
 export declare abstract class Plot {
     protected _coords: number[][];
@@ -146,11 +151,11 @@ export declare abstract class Plot {
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[];
-    legendData: LegendData;
+    legendData: PlotLegendData;
     xScale: number;
     yScale: number;
     zScale: number;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: PlotLegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
@@ -201,6 +206,7 @@ export declare class Plots {
     fixedSize: boolean;
     ymax: number;
     R: boolean;
+    legendData: {};
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;

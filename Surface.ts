@@ -21,7 +21,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, LegendData, matrixMax } from "./babyplots";
+import { Plot, PlotLegendData, matrixMax } from "./babyplots";
 import chroma from "chroma-js";
 
 
@@ -31,7 +31,7 @@ export class Surface extends Plot {
         coordinates: number[][],
         colorVar: string[],
         size: number,
-        legendData: LegendData,
+        legendData: PlotLegendData,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1

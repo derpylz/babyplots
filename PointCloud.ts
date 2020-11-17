@@ -24,7 +24,7 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { FloatArray } from "@babylonjs/core/types";
 import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
-import { Plot, LegendData } from "./babyplots";
+import { Plot, PlotLegendData } from "./babyplots";
 
 export class PointCloud extends Plot {
     private _pointPicking: boolean = false;
@@ -41,7 +41,7 @@ export class PointCloud extends Plot {
         coordinates: number[][],
         colorVar: string[],
         size: number,
-        legendData: LegendData,
+        legendData: PlotLegendData,
         folded?: boolean,
         foldedEmbedding?: number[][],
         foldAnimDelay?: number,

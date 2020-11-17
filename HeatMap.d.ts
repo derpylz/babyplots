@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Plot, LegendData } from "./babyplots";
+import { Plot, PlotLegendData } from "./babyplots";
 export declare class HeatMap extends Plot {
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: PlotLegendData, xScale?: number, yScale?: number, zScale?: number);
     private _createHeatMap;
 }

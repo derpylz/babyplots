@@ -170,18 +170,42 @@ export const styleText = [
     ".bbp.publish-form > p.message.success { color: green; }",
 ].join(" ");
 
-export interface LegendData {
+/**
+ * Per plot legend information.
+ */
+export interface PlotLegendData {
+    /** Show or hide plot legend. */
     showLegend: boolean;
+    /** Discrete or continuous color scale. */
     discrete: boolean;
+    /** Categories if discrete, min and max values if continuous color scale. */
     breaks: string[];
+    /** Name of the color scale. */
     colorScale: string;
+    /** Is the color scale flipped? */
     inverted: boolean;
+    /** Left or right position of this legend. If undefined, right is default. */
     position: string;
+    /** Display shape/plot type in legend */
+    showShape?: boolean;
+    /** If color scale is not a colorbrewer palette, provide colors to construct the palette here. */
     customColorScale?: string[];
+    /** Font size of the legend text. */
     fontSize?: number;
+    /** Color of the legend text. */
     fontColor?: string;
+    /** Title for the color legend. */
     legendTitle?: string;
+    /** Font size of the color legend title. */
     legendTitleFontSize?: number;
+    /** Color of the color legend title. */
+    legendTitleFontColor?: string;
+    /** Title for the shape legend. */
+    legendShapeTitle?: string;
+    /** Font size of the shape legend title. */
+    legendShapeTitleFontSize?: number;
+    /** Color of the shape legend title. */
+    legendShowTitleFontColor?: string;
 }
 
 export abstract class Plot {
@@ -195,7 +219,7 @@ export abstract class Plot {
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[]; // contains indices of cells in selection cube
-    legendData: LegendData;
+    legendData: PlotLegendData;
     xScale: number;
     yScale: number;
     zScale: number;
@@ -205,7 +229,7 @@ export abstract class Plot {
         coordinates: number[][],
         colorVar: string[],
         size: number,
-        legendData: LegendData,
+        legendData: PlotLegendData,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1
@@ -350,6 +374,8 @@ export class Plots {
     fixedSize = false;
     ymax: number = 0;
     R: boolean = false;
+    legendData = {};
+
 
     /**
      * Initialize the 3d visualization
@@ -956,6 +982,7 @@ export class Plots {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendTitleFontColor: "black",
             legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
@@ -980,6 +1007,7 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendTitleFontColor: opts.legendTitleFontColor,
             legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
@@ -989,7 +1017,7 @@ export class Plots {
             tickLineColors: opts.tickLineColors,
             intensityMode: opts.intensityMode
         })
-        let legendData: LegendData = {
+        let legendData: PlotLegendData = {
             showLegend: false,
             discrete: false,
             breaks: [],
@@ -1001,6 +1029,7 @@ export class Plots {
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
+        legendData.legendTitleFontColor = opts.legendTitleFontColor;
 
         let plot = new ImgStack(
             this.scene,
@@ -1055,7 +1084,12 @@ export class Plots {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendTitleFontColor: "black",
             legendPosition: null,
+            legendShowShape: false,
+            legendShapeTitle: null,
+            legendShapeFontSize: 16,
+            legendShapeTitleFontColor: "black",
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -1089,7 +1123,12 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendTitleFontColor: opts.legendTitleFontColor,
             legendPosition: opts.legendPosition,
+            showShape: opts.legendShowShape,
+            legendShapeTitle: opts.legendShapeTitle,
+            legendShapeTitleFontSize: opts.legendShapeFontSize,
+            legendShowTitleFontColor: opts.legendShapeTitleFontColor,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -1107,7 +1146,7 @@ export class Plots {
         })
 
         let coordColors: string[] = [];
-        var legendData: LegendData;
+        var legendData: PlotLegendData;
         let rangeX: number[];
         let rangeY: number[];
         let rangeZ: number[];
@@ -1258,6 +1297,11 @@ export class Plots {
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
+        legendData.legendTitleFontColor = opts.legendTitleFontColor;
+        legendData.showShape = opts.legendShowShape;
+        legendData.legendShapeTitle = opts.legendShapeTitle;
+        legendData.legendShapeTitleFontSize = opts.legendShapeFontSize;
+        legendData.legendShowTitleFontColor = opts.legendShapeTitleFontColor;
 
         let plot: Plot;
         let scale: number[];
@@ -1441,12 +1485,18 @@ export class Plots {
         this._legend = uiLayer;
     }
 
-    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
+    private _createPlotLegend(legendData: PlotLegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
         if (!legendData.showLegend) {
             return uiLayer;
         }
         let n: number;
-        let breakN = 20;
+        let breakN = 15;
+        if (this.canvas.height > 220) {
+            breakN = 20;
+        }
+        if (this.canvas.height > 650) {
+            breakN = 40;
+        }
         // create grid for placing legend in correct position
         let grid = new Grid();
         uiLayer.addControl(grid);
@@ -1489,7 +1539,7 @@ export class Plots {
         if (legendData.legendTitle) {
             let legendTitle = new TextBlock();
             legendTitle.text = legendData.legendTitle;
-            legendTitle.color = legendData.fontColor;
+            legendTitle.color = legendData.legendTitleFontColor;
             legendTitle.fontWeight = "bold";
             if (legendData.legendTitleFontSize) {
                 legendTitle.fontSize = legendData.legendTitleFontSize + "px";
@@ -1601,8 +1651,8 @@ export class Plots {
                 innerGrid.addColumnDefinition(0.4);
             }
             else {
-                innerGrid.addColumnDefinition(0.2);
-                innerGrid.addColumnDefinition(0.8);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.9);
             }
             for (let i = 0; i < n && i < breakN; i++) {
                 if (n > breakN) {

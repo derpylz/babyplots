@@ -26,11 +26,13 @@ import { TorusBuilder } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { Color3, Color4, Matrix } from "@babylonjs/core/Maths/math";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, LegendData } from "./babyplots";
+import { Plot, PlotLegendData } from "./babyplots";
 
 export class ShapeCloud extends Plot {
-    private _shape: string;
     private _shading: boolean;
+    
+    shape: string;
+    
     constructor(
         scene: Scene,
         coordinates: number[][],
@@ -38,13 +40,13 @@ export class ShapeCloud extends Plot {
         shape: string,
         shading: boolean,
         size: number,
-        legendData: LegendData,
+        legendData: PlotLegendData,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1
     ) {
         super(scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale);
-        this._shape = shape;
+        this.shape = shape;
         this._shading = shading;
         this._createShapeCloud();
     }
@@ -74,7 +76,7 @@ export class ShapeCloud extends Plot {
 
         let origMesh: Mesh;
 
-        switch (this._shape) {
+        switch (this.shape) {
             case "box":
                 origMesh = BoxBuilder.CreateBox("root", { size: this._size });
                 break;
