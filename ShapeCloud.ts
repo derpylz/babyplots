@@ -26,7 +26,7 @@ import { TorusBuilder } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { Color3, Color4, Matrix } from "@babylonjs/core/Maths/math";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, PlotLegendData } from "./babyplots";
+import { Plot, LegendData } from "./babyplots";
 
 export class ShapeCloud extends Plot {
     private _shading: boolean;
@@ -40,7 +40,7 @@ export class ShapeCloud extends Plot {
         shape: string,
         shading: boolean,
         size: number,
-        legendData: PlotLegendData,
+        legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1

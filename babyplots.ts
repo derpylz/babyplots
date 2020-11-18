@@ -138,7 +138,7 @@ import { Axes } from "./Axes";
 /**
  * Per plot legend information.
  */
-export interface PlotLegendData {
+export interface LegendData {
     /** Show or hide plot legend. */
     showLegend: boolean;
     /** Discrete or continuous color scale. */
@@ -184,7 +184,7 @@ export abstract class Plot {
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[]; // contains indices of cells in selection cube
-    legendData: PlotLegendData;
+    legendData: LegendData;
     xScale: number;
     yScale: number;
     zScale: number;
@@ -194,7 +194,7 @@ export abstract class Plot {
         coordinates: number[][],
         colorVar: string[],
         size: number,
-        legendData: PlotLegendData,
+        legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1
@@ -332,16 +332,22 @@ export class Plots {
     private _publishFormOverlay: HTMLDivElement;
     private _uniqID: string;
 
+    /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
+    /** Babylonjs scene object. */
     scene: Scene;
+    /** Camera of the visualization */
     camera: ArcRotateCamera;
+    /** Array of plots in this visualization. */
     plots: Plot[] = [];
+    /** Turn the camera around the plots. */
     turntable: boolean;
+    /** Rotation speed of the turntable camera. */
     rotationRate: number;
-    fixedSize = false;
+    /** Highest point on the y axis of any plot. Used for positioning the camera and labels. */
     ymax: number = 0;
+    /** This variable should be exclusively set by the babyplots R package. It controls some specific options for babyplots behavior in the RStudio viewer. */
     R: boolean = false;
-    legendData = {};
 
 
     /**
@@ -984,7 +990,7 @@ export class Plots {
             tickLineColors: opts.tickLineColors,
             intensityMode: opts.intensityMode
         })
-        let legendData: PlotLegendData = {
+        let legendData: LegendData = {
             showLegend: false,
             discrete: false,
             breaks: [],
@@ -1113,7 +1119,7 @@ export class Plots {
         })
 
         let coordColors: string[] = [];
-        var legendData: PlotLegendData;
+        var legendData: LegendData;
         let rangeX: number[];
         let rangeY: number[];
         let rangeZ: number[];
@@ -1452,7 +1458,7 @@ export class Plots {
         this._legend = uiLayer;
     }
 
-    private _createPlotLegend(legendData: PlotLegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
+    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
         if (!legendData.showLegend) {
             return uiLayer;
         }

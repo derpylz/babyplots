@@ -22,7 +22,7 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Color3 } from "@babylonjs/core/Maths/math";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, PlotLegendData } from "./babyplots";
+import { Plot, LegendData } from "./babyplots";
 import chroma from "chroma-js";
 
 
@@ -37,7 +37,7 @@ export class ImgStack extends Plot {
         values: number[],
         indices: number[],
         attributes: { dim: number[] },
-        legendData: PlotLegendData,
+        legendData: LegendData,
         size: number,
         backgroundColor: string,
         intensityMode: string,

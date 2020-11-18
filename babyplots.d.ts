@@ -114,16 +114,7 @@ export interface AxisData {
     colnames: string[];
     rownames: string[];
 }
-export declare const buttonSVGs: {
-    logo: string;
-    toJson: string;
-    labels: string;
-    publish: string;
-    replay: string;
-    record: string;
-};
-export declare const styleText: string;
-export interface PlotLegendData {
+export interface LegendData {
     showLegend: boolean;
     discrete: boolean;
     breaks: string[];
@@ -151,11 +142,11 @@ export declare abstract class Plot {
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[];
-    legendData: PlotLegendData;
+    legendData: LegendData;
     xScale: number;
     yScale: number;
     zScale: number;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: PlotLegendData, xScale?: number, yScale?: number, zScale?: number);
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
@@ -203,10 +194,8 @@ export declare class Plots {
     plots: Plot[];
     turntable: boolean;
     rotationRate: number;
-    fixedSize: boolean;
     ymax: number;
     R: boolean;
-    legendData: {};
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;

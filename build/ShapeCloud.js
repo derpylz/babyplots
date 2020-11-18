@@ -47,7 +47,7 @@ var ShapeCloud = /** @class */ (function (_super) {
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         var _this = _super.call(this, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale) || this;
-        _this._shape = shape;
+        _this.shape = shape;
         _this._shading = shading;
         _this._createShapeCloud();
         return _this;
@@ -67,7 +67,7 @@ var ShapeCloud = /** @class */ (function (_super) {
             colorData.set(col.asArray(), i * 4);
         }
         var origMesh;
-        switch (this._shape) {
+        switch (this.shape) {
             case "box":
                 origMesh = boxBuilder_1.BoxBuilder.CreateBox("root", { size: this._size });
                 break;

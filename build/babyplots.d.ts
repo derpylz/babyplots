@@ -117,27 +117,42 @@ export interface AxisData {
     colnames: string[];
     rownames: string[];
 }
-export declare const buttonSVGs: {
-    logo: string;
-    toJson: string;
-    labels: string;
-    publish: string;
-    replay: string;
-    record: string;
-};
-export declare const styleText: string;
+/**
+ * Per plot legend information.
+ */
 export interface LegendData {
+    /** Show or hide plot legend. */
     showLegend: boolean;
+    /** Discrete or continuous color scale. */
     discrete: boolean;
+    /** Categories if discrete, min and max values if continuous color scale. */
     breaks: string[];
+    /** Name of the color scale. */
     colorScale: string;
+    /** Is the color scale flipped? */
     inverted: boolean;
+    /** Left or right position of this legend. If undefined, right is default. */
     position: string;
+    /** Display shape/plot type in legend */
+    showShape?: boolean;
+    /** If color scale is not a colorbrewer palette, provide colors to construct the palette here. */
     customColorScale?: string[];
+    /** Font size of the legend text. */
     fontSize?: number;
+    /** Color of the legend text. */
     fontColor?: string;
+    /** Title for the color legend. */
     legendTitle?: string;
+    /** Font size of the color legend title. */
     legendTitleFontSize?: number;
+    /** Color of the color legend title. */
+    legendTitleFontColor?: string;
+    /** Title for the shape legend. */
+    legendShapeTitle?: string;
+    /** Font size of the shape legend title. */
+    legendShapeTitleFontSize?: number;
+    /** Color of the shape legend title. */
+    legendShowTitleFontColor?: string;
 }
 export declare abstract class Plot {
     protected _coords: number[][];
@@ -199,14 +214,21 @@ export declare class Plots {
     private _zScale;
     private _publishFormOverlay;
     private _uniqID;
+    /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
+    /** Babylonjs scene object. */
     scene: Scene;
+    /** Camera of the visualization */
     camera: ArcRotateCamera;
+    /** Array of plots in this visualization. */
     plots: Plot[];
+    /** Turn the camera around the plots. */
     turntable: boolean;
+    /** Rotation speed of the turntable camera. */
     rotationRate: number;
-    fixedSize: boolean;
+    /** Highest point on the y axis of any plot. Used for positioning the camera and labels. */
     ymax: number;
+    /** This variable should be exclusively set by the babyplots R package. It controls some specific options for babyplots behavior in the RStudio viewer. */
     R: boolean;
     /**
      * Initialize the 3d visualization
