@@ -379,12 +379,13 @@ export class Plots {
             zScale: 1,
             turntable: false,
             rotationRate: 0.01,
-            shapeLegendTitle: null
+            shapeLegendTitle: ""
         }
         Object.assign(opts, options);
 
         this.turntable = opts.turntable;
         this.rotationRate = opts.rotationRate;
+        this.shapeLegendTitle = opts.shapeLegendTitle;
 
         // setup enginge and scene
         this._backgroundColor = opts.backgroundColor;
