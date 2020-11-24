@@ -103,7 +103,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
-import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
+import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import chroma from "chroma-js";
 import download from "downloadjs";
@@ -135,6 +135,12 @@ export interface AxisData {
 
 import { Axes } from "./Axes";
 
+export interface shapeLegendData {
+    title: string;
+    spacing: number;
+    shapes: string[][];
+}
+
 /**
  * Per plot legend information.
  */
@@ -165,12 +171,6 @@ export interface LegendData {
     legendTitleFontSize?: number;
     /** Color of the color legend title. */
     legendTitleFontColor?: string;
-    /** Title for the shape legend. */
-    legendShapeTitle?: string;
-    /** Font size of the shape legend title. */
-    legendShapeTitleFontSize?: number;
-    /** Color of the shape legend title. */
-    legendShowTitleFontColor?: string;
 }
 
 export abstract class Plot {
@@ -181,6 +181,8 @@ export abstract class Plot {
     protected _size: number = 1;
     protected _scene: Scene;
 
+    name: string;
+    shape: string;
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[]; // contains indices of cells in selection cube
@@ -190,6 +192,8 @@ export abstract class Plot {
     zScale: number;
 
     constructor(
+        name: string,
+        shape: string,
         scene: Scene,
         coordinates: number[][],
         colorVar: string[],
@@ -197,8 +201,10 @@ export abstract class Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
     ) {
+        this.name = name;
+        this.shape = shape;
         this._scene = scene;
         this._coords = coordinates;
         this._coordColors = colorVar;
@@ -278,6 +284,7 @@ import { HeatMap } from "./HeatMap";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./styleText";
 import { buttonSVGs, legendSVGs } from "./SVGs";
+import { GUI3DManager } from "babylonjs-gui";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -331,6 +338,7 @@ export class Plots {
     private _zScale: number = 1;
     private _publishFormOverlay: HTMLDivElement;
     private _uniqID: string;
+    private _shapeLegendPosition: string;
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -348,6 +356,8 @@ export class Plots {
     ymax: number = 0;
     /** This variable should be exclusively set by the babyplots R package. It controls some specific options for babyplots behavior in the RStudio viewer. */
     R: boolean = false;
+    /** Title of the legend showing the names and plot types of multiple plots, if at least one plot has showShape enabled. */
+    shapeLegendTitle: string = "";
 
 
     /**
@@ -368,7 +378,8 @@ export class Plots {
             yScale: 1,
             zScale: 1,
             turntable: false,
-            rotationRate: 0.01
+            rotationRate: 0.01,
+            shapeLegendTitle: null
         }
         Object.assign(opts, options);
 
@@ -454,6 +465,9 @@ export class Plots {
         if (plotData["zScale"] !== undefined) {
             this._zScale = plotData["zScale"];
         }
+        if (plotData["shapeLegendTitle"] !== undefined) {
+            this.shapeLegendTitle = plotData["shapeLegendTitle"];
+        }
         for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             const plot = plotData["plots"][plotIdx];
             if (plot["plotType"] === "imageStack") {
@@ -462,6 +476,7 @@ export class Plots {
                     plot["indices"],
                     plot["attributes"],
                     {
+                        name: plot["name"],
                         size: plot["size"],
                         colorScale: plot["colorScale"],
                         showLegend: plot["showLegend"],
@@ -469,6 +484,7 @@ export class Plots {
                         fontColor: plot["fontColor"],
                         legendTitle: plot["legendTitle"],
                         legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendTitleFontColor: plot["legendTitleFontColor"],
                         legendPosition: plot["legendPosition"],
                         showAxes: plot["showAxes"],
                         axisLabels: plot["axisLabels"],
@@ -486,16 +502,19 @@ export class Plots {
                     plot["colorBy"],
                     plot["colorVar"],
                     {
+                        name: plot["name"],
                         size: plot["size"],
                         colorScale: plot["colorScale"],
                         customColorScale: plot["customColorScale"],
                         colorScaleInverted: plot["colorScaleInverted"],
                         sortedCategories: plot["sortedCategories"],
                         showLegend: plot["showLegend"],
+                        legendShowShape: plot["legendShowShape"],
                         fontSize: plot["fontSize"],
                         fontColor: plot["fontColor"],
                         legendTitle: plot["legendTitle"],
                         legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendTitleFontColor: plot["legendTitleFontColor"],
                         legendPosition: plot["legendPosition"],
                         showAxes: plot["showAxes"],
                         axisLabels: plot["axisLabels"],
@@ -1044,6 +1063,7 @@ export class Plots {
     ): Plots {
         // default options
         let opts = {
+            name: null,
             size: 1,
             xScale: 1,
             yScale: 1,
@@ -1060,9 +1080,6 @@ export class Plots {
             legendTitleFontColor: "black",
             legendPosition: null,
             legendShowShape: false,
-            legendShapeTitle: null,
-            legendShapeFontSize: 16,
-            legendShapeTitleFontColor: "black",
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -1086,6 +1103,7 @@ export class Plots {
             coordinates: coordinates,
             colorBy: colorBy,
             colorVar: colorVar,
+            name: opts.name,
             size: opts.size,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
@@ -1098,10 +1116,7 @@ export class Plots {
             legendTitleFontSize: opts.legendTitleFontSize,
             legendTitleFontColor: opts.legendTitleFontColor,
             legendPosition: opts.legendPosition,
-            showShape: opts.legendShowShape,
-            legendShapeTitle: opts.legendShapeTitle,
-            legendShapeTitleFontSize: opts.legendShapeFontSize,
-            legendShowTitleFontColor: opts.legendShapeTitleFontColor,
+            legendShowShape: opts.legendShowShape,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -1272,9 +1287,6 @@ export class Plots {
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
         legendData.legendTitleFontColor = opts.legendTitleFontColor;
         legendData.showShape = opts.legendShowShape;
-        legendData.legendShapeTitle = opts.legendShapeTitle;
-        legendData.legendShapeTitleFontSize = opts.legendShapeFontSize;
-        legendData.legendShowTitleFontColor = opts.legendShapeTitleFontColor;
 
         let plot: Plot;
         let scale: number[];
@@ -1293,7 +1305,8 @@ export class Plots {
                     opts.foldAnimDuration,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
@@ -1323,7 +1336,8 @@ export class Plots {
                     legendData,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
@@ -1348,7 +1362,8 @@ export class Plots {
                     legendData,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
@@ -1378,7 +1393,8 @@ export class Plots {
                     legendData,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
@@ -1428,65 +1444,153 @@ export class Plots {
 
         let rightFree = true;
         let leftFree = true;
+        let spaceLeft: number;
+        let spaceRight: number;
+        let shapeSpace = 0;
+        let shapes = [];
         for (let i = 0; i < this.plots.length; i++) {
             const plot = this.plots[i];
             let legendData = plot.legendData;
+            if (!legendData.legendTitleFontSize) {
+                legendData.legendTitleFontSize = 16;
+            }
+            if (!legendData.fontSize) {
+                legendData.fontSize = 12;
+            }
             if (["right", "left"].indexOf(legendData.position) === -1) {
                 legendData.position = null;
+            }
+            if (legendData.showShape) {
+                shapeSpace += legendData.fontSize + 5;
+                shapes.push([plot.name, plot.shape]);
             }
             if (legendData.showLegend) {
                 if (legendData.position === null) {
                     if (rightFree) {
                         legendData.position = "right";
                         rightFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     } else if (leftFree) {
                         legendData.position = "left";
                         leftFree = false;
+                        if (legendData.discrete) {
+                            spaceLeft = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceLeft = 115;
+                        }
                     } else {
                         legendData.showLegend = false;
                     }
                 } else {
                     if (legendData.position === "right") {
                         rightFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     } else {
                         leftFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     }
                 }
-                uiLayer = this._createPlotLegend(legendData, uiLayer);
             }
         }
+
+        // if shape legend is requested, decide on which side it should be placed:
+        if (this._shapeLegendPosition === undefined) {
+            if (shapeSpace > 0) {
+                if (this.shapeLegendTitle && this.shapeLegendTitle !== "") {
+                    shapeSpace += 100;
+                }
+                if (rightFree) {
+                    this._shapeLegendPosition = "right";
+                } else if (leftFree) {
+                    this._shapeLegendPosition = "left";
+                } else {
+                    if (spaceRight <= spaceLeft) {
+                        this._shapeLegendPosition = "right";
+                    } else {
+                        this._shapeLegendPosition = "left";
+                    }
+                }
+            }
+        }
+
+
+        let shapeLegendData: shapeLegendData = {
+            title: this.shapeLegendTitle,
+            spacing: shapeSpace,
+            shapes: shapes
+        }
+
+        for (let i = 0; i < this.plots.length; i++) {
+            const lgndData = this.plots[i].legendData;
+            if (lgndData.position === this._shapeLegendPosition) {
+                uiLayer = this._createPlotLegend(lgndData, uiLayer, shapeLegendData);
+            } else {
+                uiLayer = this._createPlotLegend(lgndData, uiLayer);
+            }
+        }
+
         this._legend = uiLayer;
     }
 
-    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
+    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture, shapeLegendData?: shapeLegendData): AdvancedDynamicTexture {
         if (!legendData.showLegend) {
             return uiLayer;
-        }
-        let n: number;
-        let breakN = 15;
-        if (this.canvas.height > 220) {
-            breakN = 20;
-        }
-        if (this.canvas.height > 650) {
-            breakN = 40;
         }
         // create grid for placing legend in correct position
         let grid = new Grid();
         uiLayer.addControl(grid);
 
-        // main position of legend (right middle)
+        let n = legendData.breaks.length;
+        let breakN: number;
         let legendWidth = 0.2;
+        let nCols = 1;
+
+        let legendBodyHeight = 0.9;
+        let legendMinPixels: number;
+        if (legendData.discrete) {
+            legendMinPixels = legendData.breaks.length * (legendData.fontSize + 2);
+        } else {
+            legendMinPixels = 115;
+        }
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
+            legendMinPixels += legendData.legendTitleFontSize + 5;
+        }
+
+        // main position of legend (right middle)
+        if (shapeLegendData !== undefined) {
+            grid.addRowDefinition(0.05);
+            let totalReqPixels = legendMinPixels + shapeLegendData.spacing;
+            legendBodyHeight = legendMinPixels / totalReqPixels;
+            let shapeBodyHeight = shapeLegendData.spacing / totalReqPixels;
+            grid.addRowDefinition(legendBodyHeight - 0.05);
+            grid.addRowDefinition(shapeBodyHeight - 0.05);
+            grid.addRowDefinition(0.05);
+        }
+        else {
+            grid.addRowDefinition(0.05);
+            grid.addRowDefinition(legendBodyHeight);
+            grid.addRowDefinition(0.05);
+        }
 
         if (legendData.discrete) {
-            // number of clusters
-            n = legendData.breaks.length;
+            legendData.fontSize;
+            nCols = Math.ceil(((legendData.fontSize + 2) * n) / (legendBodyHeight * this.canvas.height * 0.7));
 
-            if (n > breakN * 2) {
-                legendWidth = 0.4;
-            }
-            else if (n > breakN) {
-                legendWidth = 0.3;
-            }
+            breakN = Math.ceil(n / nCols);
+
+            legendWidth = 0.1 + (0.1 * nCols);
         }
 
         let legendColumn = 1;
@@ -1498,31 +1602,93 @@ export class Plots {
             grid.addColumnDefinition(1 - legendWidth);
             legendColumn = 0;
         }
-        if (legendData.legendTitle && legendData.legendTitle !== "") {
-            grid.addRowDefinition(0.1);
-            grid.addRowDefinition(0.85);
-            grid.addRowDefinition(0.05);
-        }
-        else {
-            grid.addRowDefinition(0.05);
-            grid.addRowDefinition(0.9);
-            grid.addRowDefinition(0.05);
+
+        // create shape legend
+
+        if (shapeLegendData) {
+
+            let shapeLegendGrid = new Grid();
+            if (shapeLegendData.title && shapeLegendData.title !== "") {
+                shapeLegendGrid.paddingLeftInPixels = 10;
+                shapeLegendGrid.paddingRightInPixels = 10;
+                shapeLegendGrid.addRowDefinition(legendData.legendTitleFontSize + 5, true);
+                shapeLegendGrid.addRowDefinition(0.75);
+                shapeLegendGrid.addRowDefinition(0.05);
+                // shape legend title
+                let shapeLegendTitle = new TextBlock();
+                shapeLegendTitle.text = shapeLegendData.title;
+                shapeLegendTitle.color = legendData.legendTitleFontColor;
+                shapeLegendTitle.fontWeight = "bold";
+                if (legendData.legendTitleFontSize) {
+                    shapeLegendTitle.fontSize = legendData.legendTitleFontSize + "px";
+                }
+                else {
+                    shapeLegendTitle.fontSize = "16px";
+                }
+                shapeLegendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+                shapeLegendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+                shapeLegendTitle.textWrapping = true;
+                shapeLegendGrid.addControl(shapeLegendTitle, 0, 0);
+            } else {
+                shapeLegendGrid.addRowDefinition(0.05);
+                shapeLegendGrid.addRowDefinition(0.9);
+                shapeLegendGrid.addRowDefinition(0.05);
+            }
+
+            let shapeLegendBody = new Grid();
+            shapeLegendBody.addColumnDefinition(legendData.fontSize + 6, true);
+            shapeLegendBody.addColumnDefinition(0.9);
+            let rowHeight = 1 / shapeLegendData.shapes.length;
+            for (let i = 0; i < shapeLegendData.shapes.length; i++) {
+                const shapeDef = shapeLegendData.shapes[i];
+                shapeLegendBody.addRowDefinition(rowHeight);
+                // shape
+                let url = "data:image/svg+xml;base64," + window.btoa(legendSVGs[shapeDef[1]]);
+                let shapeIcon = new Image(shapeDef[0], url);
+                shapeIcon.width = legendData.fontSize + 2 + "px";
+                shapeIcon.height = legendData.fontSize + 2 + "px";
+
+                let column = Math.floor(i / breakN);
+                let row = i - column * breakN;
+
+                shapeLegendBody.addControl(shapeIcon, i, 0);
+
+                // text
+                let shapeText = new TextBlock();
+                shapeText.text = shapeDef[0];
+                shapeText.color = legendData.fontColor;
+                shapeText.fontSize = legendData.fontSize + "px";
+                shapeText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+
+                shapeLegendBody.addControl(shapeText, i, 1);
+            }
+
+            shapeLegendGrid.addControl(shapeLegendBody, 1, 0);
+
+            grid.addControl(shapeLegendGrid, 2, legendColumn);
         }
 
-        if (legendData.legendTitle) {
+        let legendBody = new Grid();
+
+        legendBody.paddingLeftInPixels = 10;
+        legendBody.paddingRightInPixels = 10;
+
+        legendBody.addRowDefinition(0.2);
+        legendBody.addRowDefinition(0.7);
+        legendBody.addRowDefinition(0.1);
+
+        grid.addControl(legendBody, 1, legendColumn);
+
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
             let legendTitle = new TextBlock();
             legendTitle.text = legendData.legendTitle;
             legendTitle.color = legendData.legendTitleFontColor;
             legendTitle.fontWeight = "bold";
-            if (legendData.legendTitleFontSize) {
-                legendTitle.fontSize = legendData.legendTitleFontSize + "px";
-            }
-            else {
-                legendTitle.fontSize = "20px";
-            }
+            legendTitle.fontSize = legendData.legendTitleFontSize + "px";
             legendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
             legendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-            grid.addControl(legendTitle, 0, legendColumn);
+            legendTitle.textWrapping = true;
+            legendBody.addControl(legendTitle, 0, legendColumn);
         }
 
         // for continuous measures display color bar and max and min values.
@@ -1531,22 +1697,22 @@ export class Plots {
             let innerGrid = new Grid();
             innerGrid.addColumnDefinition(0.2);
             innerGrid.addColumnDefinition(0.8);
-            grid.addControl(innerGrid, 1, legendColumn);
+            legendBody.addControl(innerGrid, 1, 0);
 
             let nBreaks = 115;
             let labelSpace = 0.15;
-            if (this.canvas.height < 70) {
+            if (legendBodyHeight * this.canvas.height * 0.7 < 100) {
                 nBreaks = 10;
                 labelSpace = 0.45;
                 innerGrid.addRowDefinition(1);
             }
-            else if (this.canvas.height < 130) {
+            else if (legendBodyHeight * this.canvas.height * 0.7 < 150) {
                 nBreaks = 50;
                 labelSpace = 0.3;
                 innerGrid.addRowDefinition(1);
             }
             else {
-                let padding = (this.canvas.height - 115) / 2;
+                let padding = ((legendBodyHeight * this.canvas.height * 0.7) - 115) / 2;
                 innerGrid.addRowDefinition(padding, true);
                 innerGrid.addRowDefinition(115, true);
                 innerGrid.addRowDefinition(padding, true);
@@ -1607,21 +1773,13 @@ export class Plots {
         }
         else {
             // inner Grid contains legend rows and columns for color and text
-            var innerGrid = new Grid();
-            // two legend columns when more than 15 colors
-            if (n > breakN * 2) {
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-            }
-            else if (n > breakN) {
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
+            let innerGrid = new Grid();
+            // define number of columns by the number of categories.
+            if (nCols > 1) {
+                for (let i = 0; i < nCols; i++) {
+                    innerGrid.addColumnDefinition(0.1);
+                    innerGrid.addColumnDefinition(0.4);
+                }
             }
             else {
                 innerGrid.addColumnDefinition(0.1);
@@ -1635,7 +1793,7 @@ export class Plots {
                     innerGrid.addRowDefinition(1 / n);
                 }
             }
-            grid.addControl(innerGrid, 1, legendColumn);
+            legendBody.addControl(innerGrid, 1, 0);
 
             let colors: string[];
             if (legendData.colorScale === "custom") {
@@ -1648,37 +1806,25 @@ export class Plots {
             // add color box and legend text
             for (let i = 0; i < n; i++) {
                 // color
-                var legendColor = new Rectangle();
+                let legendColor = new Rectangle();
                 legendColor.background = colors[i];
                 legendColor.thickness = 0;
                 legendColor.width = legendData.fontSize + "px";
                 legendColor.height = legendData.fontSize + "px";
-                // use second column for many entries
-                if (i > breakN * 2 - 1) {
-                    innerGrid.addControl(legendColor, i - breakN * 2, 4);
-                }
-                else if (i > breakN - 1) {
-                    innerGrid.addControl(legendColor, i - breakN, 2);
-                }
-                else {
-                    innerGrid.addControl(legendColor, i, 0);
-                }
+
+                let column = Math.floor(i / breakN);
+                let row = i - column * breakN;
+
+                innerGrid.addControl(legendColor, row, column * 2);
+
                 // text
-                var legendText = new TextBlock();
+                let legendText = new TextBlock();
                 legendText.text = legendData.breaks[i].toString();
                 legendText.color = legendData.fontColor;
                 legendText.fontSize = legendData.fontSize + "px";
                 legendText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                // use second column for many entries
-                if (i > breakN * 2 - 1) {
-                    innerGrid.addControl(legendText, i - breakN * 2, 5);
-                }
-                if (i > breakN - 1) {
-                    innerGrid.addControl(legendText, i - breakN, 3);
-                }
-                else {
-                    innerGrid.addControl(legendText, i, 1);
-                }
+
+                innerGrid.addControl(legendText, row, column * 2 + 1);
             }
         }
         return uiLayer;

@@ -30,8 +30,8 @@ import { Plot, LegendData } from "./babyplots";
 
 export class ShapeCloud extends Plot {
     private _shading: boolean;
+    private _shape: string;
     
-    shape: string;
     
     constructor(
         scene: Scene,
@@ -43,10 +43,11 @@ export class ShapeCloud extends Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
+        name: string = "shape cloud",
     ) {
-        super(scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale);
-        this.shape = shape;
+        super(name, "shape_" + shape, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale);
+        this._shape = shape;
         this._shading = shading;
         this._createShapeCloud();
     }
@@ -76,7 +77,7 @@ export class ShapeCloud extends Plot {
 
         let origMesh: Mesh;
 
-        switch (this.shape) {
+        switch (this._shape) {
             case "box":
                 origMesh = BoxBuilder.CreateBox("root", { size: this._size });
                 break;

@@ -52,6 +52,7 @@ class Arrow {
             tessellation: 36
         }, scene);
         tip.position = to;
+        this._tip = tip;
 
     }
 }

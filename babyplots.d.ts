@@ -114,6 +114,11 @@ export interface AxisData {
     colnames: string[];
     rownames: string[];
 }
+export interface shapeLegendData {
+    title: string;
+    spacing: number;
+    shapes: string[][];
+}
 export interface LegendData {
     showLegend: boolean;
     discrete: boolean;
@@ -128,9 +133,6 @@ export interface LegendData {
     legendTitle?: string;
     legendTitleFontSize?: number;
     legendTitleFontColor?: string;
-    legendShapeTitle?: string;
-    legendShapeTitleFontSize?: number;
-    legendShowTitleFontColor?: string;
 }
 export declare abstract class Plot {
     protected _coords: number[][];
@@ -139,6 +141,8 @@ export declare abstract class Plot {
     protected _groupNames: string[];
     protected _size: number;
     protected _scene: Scene;
+    name: string;
+    shape: string;
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[];
@@ -146,7 +150,7 @@ export declare abstract class Plot {
     xScale: number;
     yScale: number;
     zScale: number;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
@@ -188,6 +192,7 @@ export declare class Plots {
     private _zScale;
     private _publishFormOverlay;
     private _uniqID;
+    private _shapeLegendPosition;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -196,6 +201,7 @@ export declare class Plots {
     rotationRate: number;
     ymax: number;
     R: boolean;
+    shapeLegendTitle: string;
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;

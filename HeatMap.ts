@@ -34,9 +34,10 @@ export class HeatMap extends Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
+        name: string = "heat map"
     ) {
-        super(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
+        super(name, "heatmap", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createHeatMap();
     }
     private _createHeatMap(): void {

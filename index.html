@@ -33,7 +33,7 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      vis.fromJSON(pointCloudData);
+      vis.fromJSON(shapeCloudData);
       vis.turntable = true;
       vis.doRender();
       window.onresize = function () {

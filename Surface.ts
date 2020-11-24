@@ -34,9 +34,10 @@ export class Surface extends Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
+        name: string = "surface"
     ) {
-        super(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
+        super(name, "surface", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createSurface();
     }
     private _createSurface(): void {

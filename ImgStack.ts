@@ -43,7 +43,8 @@ export class ImgStack extends Plot {
         intensityMode: string,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
+        name: string = "image stack"
     ) {
         let colSize = attributes.dim[0];
         let rowSize = attributes.dim[1];
@@ -72,7 +73,7 @@ export class ImgStack extends Plot {
             ]);
             Intensities[channel].push(values[i]);
         }
-        super(scene, [], [], size, legendData, xScale, yScale, zScale);
+        super(name, "surface", scene, [], [], size, legendData, xScale, yScale, zScale);
         this._channelCoords = coords;
         this._channelCoordIntensities = Intensities;
         this._backgroundColor = backgroundColor;

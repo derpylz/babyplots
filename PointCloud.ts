@@ -48,9 +48,10 @@ export class PointCloud extends Plot {
         foldAnimDuration?: number,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
+        name: string = "point cloud"
     ) {
-        super(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
+        super(name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._folded = folded;
         if (foldAnimDelay) {
             this._foldDelay = foldAnimDelay;
