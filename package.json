@@ -1,6 +1,6 @@
 {
   "name": "babyplots",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Easy interactive 3d plots.",
   "main": "build/babyplots.js",
   "scripts": {
@@ -14,7 +14,6 @@
     "@types/ccapture.js": "^1.1.0",
     "@types/chroma-js": "^2.1.1",
     "@types/downloadjs": "^1.4.2",
-    "@types/pako": "^1.0.1",
     "@types/uuid": "^8.3.0",
     "axios": "^0.21.0",
     "babylonjs": "^4.2.0",
@@ -31,12 +30,12 @@
     "@babylonjs/gui": "^4.2.0",
     "terser-webpack-plugin": "^4.2.3",
     "ts-loader": "^8.0.11",
-    "typescript": "^4.0.5",
+    "typescript": "^4.0.3",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/derpylz/babyplots_lib.git"
+    "url": "https://github.com/derpylz/babyplots.git"
   }
 }

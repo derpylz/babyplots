@@ -284,7 +284,6 @@ import { HeatMap } from "./HeatMap";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./styleText";
 import { buttonSVGs, legendSVGs } from "./SVGs";
-import { GUI3DManager } from "babylonjs-gui";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
