@@ -103,7 +103,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
-import { Rectangle, TextBlock, Grid, Control } from "@babylonjs/gui/2D/controls";
+import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import chroma from "chroma-js";
 import download from "downloadjs";
@@ -135,53 +135,42 @@ export interface AxisData {
 
 import { Axes } from "./Axes";
 
-export const buttonSVGs = {
-    logo: '<svg id="logo_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><style>.cls-1{fill:#752a10;}.cls-2{fill:#a33b16;}.cls-3{fill:#e95420;}</style></defs><path d="M16,6A10,10,0,1,1,6,16,10,10,0,0,1,16,6m0-5A15,15,0,1,0,31,16,15,15,0,0,0,16,1Z"/><path d="M16.52,27a5.65,5.65,0,0,1-2.83-.68,5.06,5.06,0,0,1-1.91-1.93v2.35H8V7.11h4.31V15a5.09,5.09,0,0,1,1.87-1.9A5.33,5.33,0,0,1,17,12.36a5.42,5.42,0,0,1,2.48.58,6,6,0,0,1,1.94,1.58,7.51,7.51,0,0,1,1.27,2.36,9.11,9.11,0,0,1,.45,2.89,8.2,8.2,0,0,1-.49,2.87A7.39,7.39,0,0,1,21.24,25,6.29,6.29,0,0,1,16.52,27Zm-1.21-3.63a3.47,3.47,0,0,0,1.38-.28,3.4,3.4,0,0,0,1.06-.77,3.62,3.62,0,0,0,.7-1.15,4,4,0,0,0,.26-1.44,4.12,4.12,0,0,0-.25-1.44,3.86,3.86,0,0,0-.66-1.2,3,3,0,0,0-1-.81,2.88,2.88,0,0,0-3.14.41,4.57,4.57,0,0,0-1.3,1.75v3a3.31,3.31,0,0,0,1.25,1.44A3.15,3.15,0,0,0,15.31,23.41Z"/><path class="cls-1" d="M17.83,26A5.6,5.6,0,0,1,15,25.31a5.06,5.06,0,0,1-1.92-1.92v2.34H9.34V6.06h4.31V13.9A5.17,5.17,0,0,1,15.52,12a5.43,5.43,0,0,1,2.76-.68,5.3,5.3,0,0,1,2.48.58,5.9,5.9,0,0,1,1.94,1.57A7.62,7.62,0,0,1,24,15.83a9.16,9.16,0,0,1,.46,2.89,8.12,8.12,0,0,1-.5,2.87,7.28,7.28,0,0,1-1.39,2.32,6.28,6.28,0,0,1-2.1,1.54A6.36,6.36,0,0,1,17.83,26Zm-1.22-3.64A3.27,3.27,0,0,0,18,22.08a3.4,3.4,0,0,0,1.06-.77,3.47,3.47,0,0,0,.7-1.14A4,4,0,0,0,20,18.72a4.12,4.12,0,0,0-.25-1.44,3.93,3.93,0,0,0-.66-1.19,2.85,2.85,0,0,0-1-.81,2.72,2.72,0,0,0-1.26-.3,2.85,2.85,0,0,0-1.87.7,4.57,4.57,0,0,0-1.31,1.75v3a3.37,3.37,0,0,0,1.25,1.44A3.14,3.14,0,0,0,16.61,22.36Z"/><path class="cls-2" d="M18.83,25A5.6,5.6,0,0,1,16,24.31a5.06,5.06,0,0,1-1.92-1.92v2.34H10.34V5.06h4.31V12.9A5.17,5.17,0,0,1,16.52,11a5.43,5.43,0,0,1,2.76-.68,5.3,5.3,0,0,1,2.48.58,5.9,5.9,0,0,1,1.94,1.57A7.62,7.62,0,0,1,25,14.83a9.16,9.16,0,0,1,.46,2.89,8.12,8.12,0,0,1-.5,2.87,7.28,7.28,0,0,1-1.39,2.32,6.28,6.28,0,0,1-2.1,1.54A6.36,6.36,0,0,1,18.83,25Zm-1.22-3.64A3.27,3.27,0,0,0,19,21.08a3.4,3.4,0,0,0,1.06-.77,3.47,3.47,0,0,0,.7-1.14A4,4,0,0,0,21,17.72a4.12,4.12,0,0,0-.25-1.44,3.93,3.93,0,0,0-.66-1.19,2.85,2.85,0,0,0-1-.81,2.72,2.72,0,0,0-1.26-.3,2.85,2.85,0,0,0-1.87.7,4.57,4.57,0,0,0-1.31,1.75v3a3.37,3.37,0,0,0,1.25,1.44A3.14,3.14,0,0,0,17.61,21.36Z"/><path class="cls-3" d="M19.83,24A5.6,5.6,0,0,1,17,23.31a5.06,5.06,0,0,1-1.92-1.92v2.34H11.34V4.06h4.31V11.9A5.17,5.17,0,0,1,17.52,10a5.43,5.43,0,0,1,2.76-.68,5.3,5.3,0,0,1,2.48.58,5.9,5.9,0,0,1,1.94,1.57A7.62,7.62,0,0,1,26,13.83a9.17,9.17,0,0,1,.45,2.9,8.11,8.11,0,0,1-.49,2.86,7.28,7.28,0,0,1-1.39,2.32,6.28,6.28,0,0,1-2.1,1.54A6.36,6.36,0,0,1,19.83,24Zm-1.22-3.64A3.27,3.27,0,0,0,20,20.08a3.4,3.4,0,0,0,1.06-.77,3.47,3.47,0,0,0,.7-1.14A4,4,0,0,0,22,16.73a4.13,4.13,0,0,0-.25-1.45,3.93,3.93,0,0,0-.66-1.19,2.85,2.85,0,0,0-1-.81,2.72,2.72,0,0,0-1.26-.3,2.85,2.85,0,0,0-1.87.7,4.57,4.57,0,0,0-1.31,1.75v3a3.37,3.37,0,0,0,1.25,1.44A3.14,3.14,0,0,0,18.61,20.36Z"/></svg>',
-    toJson: '<svg id="toJSON_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><defs><style>.cls-1{fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:16px;}</style></defs><path d="M19.15,23.18V36.45a5.1,5.1,0,0,1-.3,1.53,3.51,3.51,0,0,1-1.15,1.63,3.42,3.42,0,0,1,1.15,1.65,5.29,5.29,0,0,1,.3,1.5V56.59h2.94v2.9h-5a1.31,1.31,0,0,1-.83-.33,1.52,1.52,0,0,1-.4-1.2V43.67a3.43,3.43,0,0,0-.53-1.85,2,2,0,0,0-1.55-.94V38.23a1.5,1.5,0,0,0,.93-.3,3,3,0,0,0,.67-.71,2.82,2.82,0,0,0,.38-.89,3.92,3.92,0,0,0,.1-.79V21.81c0-.65.16-1.06.48-1.25a1.8,1.8,0,0,1,.75-.28h5v2.9Z"/><path d="M68.32,23.18v-2.9h5a1.84,1.84,0,0,1,.75.28c.32.19.48.6.48,1.25V35.54a3.92,3.92,0,0,0,.1.79,3,3,0,0,0,.35.89,2.78,2.78,0,0,0,.62.71,1.47,1.47,0,0,0,1,.3v2.65a1.92,1.92,0,0,0-1.53.94,3.59,3.59,0,0,0-.5,1.85V58a1.52,1.52,0,0,1-.4,1.2,1.31,1.31,0,0,1-.83.33h-5v-2.9h2.94V42.76a5.81,5.81,0,0,1,.27-1.5,3.29,3.29,0,0,1,1.12-1.65A3.37,3.37,0,0,1,71.53,38a5.6,5.6,0,0,1-.27-1.53V23.18Z"/><path d="M83,57.91v-5h3.15v5Z"/><path d="M89.44,67.12a11.53,11.53,0,0,1-3.32-.46,7.35,7.35,0,0,1-2.78-1.52l1.77-2.34a4.7,4.7,0,0,0,1.87,1A8.25,8.25,0,0,0,89,64a4.83,4.83,0,0,0,1.84-.36,5.27,5.27,0,0,0,1.58-1,4.91,4.91,0,0,0,1.12-1.5A4.15,4.15,0,0,0,94,59.29V31.42h3.63V59.08a7.62,7.62,0,0,1-.69,3.26,8.24,8.24,0,0,1-1.84,2.54,8.42,8.42,0,0,1-2.62,1.65A8.12,8.12,0,0,1,89.44,67.12ZM94,25.88V20.79h3.63v5.09Z"/><path d="M114.88,58.42a20.44,20.44,0,0,1-6.36-1,15.51,15.51,0,0,1-5.35-2.95l1.66-2.34a18.34,18.34,0,0,0,4.78,2.74,14.73,14.73,0,0,0,5.22.92,9.75,9.75,0,0,0,5.37-1.3,4.14,4.14,0,0,0,2-3.69,3.11,3.11,0,0,0-.53-1.85,4.56,4.56,0,0,0-1.58-1.3,12.89,12.89,0,0,0-2.62-1c-1-.29-2.27-.58-3.66-.89-1.6-.37-3-.75-4.17-1.12a12.91,12.91,0,0,1-2.91-1.27A4.61,4.61,0,0,1,105,41.62a5.43,5.43,0,0,1-.56-2.62,7.07,7.07,0,0,1,3.07-6,10.46,10.46,0,0,1,3.31-1.5,15.53,15.53,0,0,1,4-.51,16.4,16.4,0,0,1,5.83,1,11.68,11.68,0,0,1,4.22,2.62l-1.76,2a10,10,0,0,0-3.77-2.29,14.1,14.1,0,0,0-4.63-.77,12.43,12.43,0,0,0-2.67.28,6.93,6.93,0,0,0-2.17.89,4.57,4.57,0,0,0-1.47,1.56,4.43,4.43,0,0,0-.53,2.21,3.5,3.5,0,0,0,.37,1.73,3.11,3.11,0,0,0,1.23,1.14,10.85,10.85,0,0,0,2.17.87q1.3.38,3.18.78c1.78.41,3.35.82,4.7,1.22a15.38,15.38,0,0,1,3.4,1.43,5.77,5.77,0,0,1,2.06,2,5.52,5.52,0,0,1,.69,2.85,6.81,6.81,0,0,1-2.94,5.8A13.22,13.22,0,0,1,114.88,58.42Z"/><path d="M143.53,58.42a13.58,13.58,0,0,1-9.92-4.07A13.41,13.41,0,0,1,130.75,50a13.88,13.88,0,0,1-1-5.24,13.71,13.71,0,0,1,3.93-9.66,14.19,14.19,0,0,1,4.35-3,14.16,14.16,0,0,1,11,0,14.14,14.14,0,0,1,4.39,3,13.79,13.79,0,0,1,2.88,4.37,13.53,13.53,0,0,1,1,5.29,13.7,13.7,0,0,1-1,5.24,13.41,13.41,0,0,1-2.86,4.37,13.55,13.55,0,0,1-4.38,3A14,14,0,0,1,143.53,58.42Zm-10.1-13.63a10.48,10.48,0,0,0,.8,4.15,11.15,11.15,0,0,0,2.16,3.35,9.7,9.7,0,0,0,7.14,3.08,9.37,9.37,0,0,0,3.93-.84,10.27,10.27,0,0,0,3.23-2.29,11,11,0,0,0,0-15.1,10.27,10.27,0,0,0-3.23-2.29,9.37,9.37,0,0,0-3.93-.84,9.17,9.17,0,0,0-3.9.84,10.3,10.3,0,0,0-3.21,2.32,11,11,0,0,0-3,7.62Z"/><path d="M186.88,57.91h-3.63V43.12q0-4.74-1.47-6.87a5.14,5.14,0,0,0-4.52-2.14,9.78,9.78,0,0,0-3.21.56,11.16,11.16,0,0,0-3,1.58,12.65,12.65,0,0,0-2.43,2.42,9.32,9.32,0,0,0-1.55,3V57.91h-3.63V31.42h3.31v6a12.82,12.82,0,0,1,4.89-4.68A13.92,13.92,0,0,1,178.6,31a8.58,8.58,0,0,1,3.9.81,6.59,6.59,0,0,1,2.56,2.29,10,10,0,0,1,1.39,3.61,23.81,23.81,0,0,1,.43,4.73Z"/><line class="cls-1" x1="45.23" y1="21.5" x2="45.23" y2="41.68"/><polygon points="64.67 39.07 25.8 39.07 45.23 58.5 64.67 39.07"/></svg>',
-    labels: '<svg id="labels_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><path d="M48.8,20.79h3.64V51.91a3.1,3.1,0,0,0,.85,2.32,3.29,3.29,0,0,0,2.41.84,7,7,0,0,0,1.39-.16,9.26,9.26,0,0,0,1.49-.4l.64,2.79a11.19,11.19,0,0,1-2.48.66,15.26,15.26,0,0,1-2.54.26,5.58,5.58,0,0,1-4-1.35,4.94,4.94,0,0,1-1.44-3.79Z"/><path d="M70.18,58.42a10.34,10.34,0,0,1-3.66-.63A9.43,9.43,0,0,1,63.58,56a7.81,7.81,0,0,1-1.95-2.62,7.47,7.47,0,0,1-.7-3.23,6.27,6.27,0,0,1,.86-3.2,7.92,7.92,0,0,1,2.4-2.54,12,12,0,0,1,3.69-1.65,17.86,17.86,0,0,1,4.71-.59,26.72,26.72,0,0,1,4.33.36,19.09,19.09,0,0,1,3.9,1V41.18a7.49,7.49,0,0,0-2.09-5.57A7.86,7.86,0,0,0,73,33.55a12.87,12.87,0,0,0-4.38.82A21.4,21.4,0,0,0,64,36.71l-1.28-2.29A19.41,19.41,0,0,1,73.23,31q5.24,0,8.23,2.8a10,10,0,0,1,3,7.73V53.44c0,1,.45,1.42,1.34,1.42v3a8.37,8.37,0,0,1-1.39.16,3.25,3.25,0,0,1-2.17-.66,2.44,2.44,0,0,1-.82-1.83l-.11-2.09a12.6,12.6,0,0,1-4.84,3.66A15.46,15.46,0,0,1,70.18,58.42ZM71,55.78a13.12,13.12,0,0,0,5.21-1,8.58,8.58,0,0,0,3.61-2.69,3.21,3.21,0,0,0,.72-1,2.39,2.39,0,0,0,.24-1V45.76a23.52,23.52,0,0,0-3.77-1,22.83,22.83,0,0,0-4-.35,11.61,11.61,0,0,0-6.26,1.52,4.61,4.61,0,0,0-2.4,4,5.25,5.25,0,0,0,.51,2.29,5.6,5.6,0,0,0,1.39,1.85,6.32,6.32,0,0,0,2.11,1.25A7.33,7.33,0,0,0,71,55.78Z"/><path d="M105.94,58.42a12.2,12.2,0,0,1-10.37-5.64v5.13H92.31V20.79H96V37a15.6,15.6,0,0,1,4.49-4.35A11.15,11.15,0,0,1,106.53,31a11.53,11.53,0,0,1,5.26,1.17,12.25,12.25,0,0,1,4,3.13,14.4,14.4,0,0,1,2.51,4.42,14.89,14.89,0,0,1,.88,5.06,14,14,0,0,1-1,5.29,13.84,13.84,0,0,1-2.78,4.35,13.23,13.23,0,0,1-4.2,2.95A12.54,12.54,0,0,1,105.94,58.42Zm-.85-3.05a9.63,9.63,0,0,0,4.19-.89,10.12,10.12,0,0,0,3.26-2.39,11.36,11.36,0,0,0,2.14-3.41,10.29,10.29,0,0,0,.78-3.94,11.35,11.35,0,0,0-.73-4,10.9,10.9,0,0,0-2-3.44,9.82,9.82,0,0,0-3.15-2.39,9.23,9.23,0,0,0-4-.89,8.82,8.82,0,0,0-3.1.54A10.48,10.48,0,0,0,99.74,36a11.83,11.83,0,0,0-2.19,2.11A12.67,12.67,0,0,0,96,40.62v8.24a5.49,5.49,0,0,0,1.14,2.57,9.62,9.62,0,0,0,2.25,2.06,12,12,0,0,0,2.83,1.37A9.22,9.22,0,0,0,105.09,55.37Z"/><path d="M137.32,58.42a14,14,0,0,1-5.59-1.09,13.72,13.72,0,0,1-7.32-7.4,13.59,13.59,0,0,1-1-5.34,13.27,13.27,0,0,1,1-5.26A13.61,13.61,0,0,1,127.29,35a13.92,13.92,0,0,1,4.42-3,14.78,14.78,0,0,1,11.14,0,13.51,13.51,0,0,1,4.36,3A13.77,13.77,0,0,1,150,39.35a13.34,13.34,0,0,1,1,5.19v.81a1.79,1.79,0,0,1-.05.56H127.16a10.88,10.88,0,0,0,1,3.94A10.74,10.74,0,0,0,130.48,53,10.07,10.07,0,0,0,133.66,55a9.92,9.92,0,0,0,3.82.74,10.22,10.22,0,0,0,2.67-.36,11.14,11.14,0,0,0,2.46-1,9.12,9.12,0,0,0,2-1.5A6.46,6.46,0,0,0,146,51l3.15.81a8.65,8.65,0,0,1-1.81,2.67,13,13,0,0,1-2.73,2.09,13.67,13.67,0,0,1-3.42,1.37A15.66,15.66,0,0,1,137.32,58.42Zm10.26-15.15a10.27,10.27,0,0,0-1-3.89,10.69,10.69,0,0,0-2.25-3,9.89,9.89,0,0,0-3.15-2,10.13,10.13,0,0,0-3.82-.71,10.33,10.33,0,0,0-3.85.71,9.65,9.65,0,0,0-5.37,5,10.83,10.83,0,0,0-1,3.87Z"/><path d="M156.83,20.79h3.63V51.91a3.1,3.1,0,0,0,.86,2.32,3.28,3.28,0,0,0,2.4.84,6.89,6.89,0,0,0,1.39-.16,9.11,9.11,0,0,0,1.5-.4l.64,2.79a11.34,11.34,0,0,1-2.48.66,15.26,15.26,0,0,1-2.54.26,5.56,5.56,0,0,1-4-1.35,4.94,4.94,0,0,1-1.44-3.79Z"/><path d="M180.45,58.42a20.53,20.53,0,0,1-6.36-1,15.47,15.47,0,0,1-5.34-2.95l1.65-2.34a18.39,18.39,0,0,0,4.79,2.74,14.68,14.68,0,0,0,5.21.92,9.7,9.7,0,0,0,5.37-1.3,4.13,4.13,0,0,0,2-3.69,3,3,0,0,0-.54-1.85,4.52,4.52,0,0,0-1.57-1.3,13.12,13.12,0,0,0-2.62-1c-1.05-.29-2.28-.58-3.67-.89-1.6-.37-3-.75-4.17-1.12a13.32,13.32,0,0,1-2.91-1.27,4.76,4.76,0,0,1-1.71-1.75A5.55,5.55,0,0,1,170,39a7.13,7.13,0,0,1,3.07-6,10.52,10.52,0,0,1,3.32-1.5,15.45,15.45,0,0,1,4-.51,16.4,16.4,0,0,1,5.83,1,11.6,11.6,0,0,1,4.22,2.62l-1.76,2A9.81,9.81,0,0,0,185,34.32a14.08,14.08,0,0,0-4.62-.77,12.46,12.46,0,0,0-2.68.28,6.77,6.77,0,0,0-2.16.89A4.57,4.57,0,0,0,174,36.28a4.33,4.33,0,0,0-.54,2.21,3.49,3.49,0,0,0,.38,1.73,3.11,3.11,0,0,0,1.23,1.14,10.73,10.73,0,0,0,2.16.87q1.32.38,3.18.78c1.79.41,3.35.82,4.71,1.22a15.49,15.49,0,0,1,3.39,1.43,5.69,5.69,0,0,1,2.06,2,5.52,5.52,0,0,1,.69,2.85,6.82,6.82,0,0,1-2.93,5.8A13.25,13.25,0,0,1,180.45,58.42Z"/><rect x="17.72" y="19.19" width="5.75" height="33.16" transform="translate(-16.58 17.83) rotate(-34.3)"/><path d="M28.23,52.06a14,14,0,0,0,7,5.15A14.78,14.78,0,0,0,33,48.82Z"/></svg>',
-    publish: '<svg id="publish_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><path d="M29.14,58.42a11.34,11.34,0,0,1-6.22-1.7,13.88,13.88,0,0,1-4.36-4.3V68.75H14.92V31.42h3.26v5.14a13.3,13.3,0,0,1,4.44-4.05A11.85,11.85,0,0,1,28.55,31a12.1,12.1,0,0,1,5.3,1.15,13.61,13.61,0,0,1,4.17,3,14.16,14.16,0,0,1,2.75,4.4,13.77,13.77,0,0,1,1,5.13A15.2,15.2,0,0,1,40.85,50a13.4,13.4,0,0,1-2.59,4.37,12.44,12.44,0,0,1-4,3A11.83,11.83,0,0,1,29.14,58.42Zm-1-3.05a9.09,9.09,0,0,0,4.09-.91A10,10,0,0,0,35.37,52a10.93,10.93,0,0,0,2-3.41,11.47,11.47,0,0,0,.69-3.94,10.62,10.62,0,0,0-.8-4.07,11.4,11.4,0,0,0-2.19-3.4,10.28,10.28,0,0,0-3.29-2.34A9.72,9.72,0,0,0,27.7,34a8.66,8.66,0,0,0-2.91.54A12.17,12.17,0,0,0,22,36a9.71,9.71,0,0,0-2.24,2.09,5.35,5.35,0,0,0-1.15,2.51v8.14a12,12,0,0,0,1.63,2.64,11.17,11.17,0,0,0,2.24,2.11,10.83,10.83,0,0,0,2.7,1.4A9,9,0,0,0,28.13,55.37Z"/><path d="M56.62,58.42c-3,0-5.29-1-6.76-2.87S47.64,50.78,47.64,47V31.42h3.63V46.37q0,9,6.47,9a10.24,10.24,0,0,0,6-2,12.47,12.47,0,0,0,2.36-2.29,11.51,11.51,0,0,0,1.68-3V31.42h3.63v22c0,1,.43,1.42,1.29,1.42v3a6.94,6.94,0,0,1-1,.11H71.1A3,3,0,0,1,69,57.15a3,3,0,0,1-.8-2.19V51.91a12.71,12.71,0,0,1-4.95,4.81A13.63,13.63,0,0,1,56.62,58.42Z"/><path d="M93.29,58.42a12,12,0,0,1-6.07-1.57,11.87,11.87,0,0,1-4.3-4.07v5.13H79.66V20.79h3.63V37a15.73,15.73,0,0,1,4.49-4.35A11.2,11.2,0,0,1,93.87,31a11.57,11.57,0,0,1,5.27,1.17,12.1,12.1,0,0,1,4,3.13,14.43,14.43,0,0,1,2.52,4.42,14.89,14.89,0,0,1,.88,5.06,13.81,13.81,0,0,1-1,5.29,13.67,13.67,0,0,1-2.78,4.35,13.07,13.07,0,0,1-4.19,2.95A12.54,12.54,0,0,1,93.29,58.42Zm-.86-3.05a9.7,9.7,0,0,0,4.2-.89,10.23,10.23,0,0,0,3.26-2.39A11.36,11.36,0,0,0,102,48.68a10.47,10.47,0,0,0,.77-3.94,11.34,11.34,0,0,0-.72-4,11.09,11.09,0,0,0-2-3.44,10,10,0,0,0-3.16-2.39,9.16,9.16,0,0,0-4-.89,8.74,8.74,0,0,0-3.1.54A10.48,10.48,0,0,0,87.09,36a12.2,12.2,0,0,0-2.2,2.11,13.14,13.14,0,0,0-1.6,2.51v8.24a5.51,5.51,0,0,0,1.15,2.57,9.38,9.38,0,0,0,2.24,2.06,12,12,0,0,0,2.84,1.37A9.11,9.11,0,0,0,92.43,55.37Z"/><path d="M112.8,20.79h3.63V51.91a3.1,3.1,0,0,0,.86,2.32,3.28,3.28,0,0,0,2.4.84,7,7,0,0,0,1.39-.16,9.11,9.11,0,0,0,1.5-.4l.64,2.79a11.44,11.44,0,0,1-2.49.66,15.16,15.16,0,0,1-2.53.26,5.56,5.56,0,0,1-4-1.35,4.94,4.94,0,0,1-1.44-3.79Z"/><path d="M127.17,25.88V20.79h3.64v5.09Zm0,32V31.42h3.64V57.91Z"/><path d="M148.08,58.42a20.55,20.55,0,0,1-6.37-1,15.56,15.56,0,0,1-5.34-2.95L138,52.12a18.18,18.18,0,0,0,4.78,2.74,14.68,14.68,0,0,0,5.21.92,9.7,9.7,0,0,0,5.37-1.3,4.13,4.13,0,0,0,2-3.69,3,3,0,0,0-.54-1.85,4.52,4.52,0,0,0-1.57-1.3,13.12,13.12,0,0,0-2.62-1c-1-.29-2.27-.58-3.66-.89-1.61-.37-3-.75-4.17-1.12a13.21,13.21,0,0,1-2.92-1.27,4.76,4.76,0,0,1-1.71-1.75,5.55,5.55,0,0,1-.56-2.62,7.13,7.13,0,0,1,3.07-6,10.52,10.52,0,0,1,3.32-1.5,15.47,15.47,0,0,1,4-.51,16.34,16.34,0,0,1,5.82,1,11.6,11.6,0,0,1,4.22,2.62l-1.76,2a9.81,9.81,0,0,0-3.77-2.29,14.08,14.08,0,0,0-4.62-.77,12.53,12.53,0,0,0-2.68.28,6.87,6.87,0,0,0-2.16.89,4.57,4.57,0,0,0-1.47,1.56,4.33,4.33,0,0,0-.53,2.21,3.5,3.5,0,0,0,.37,1.73,3.11,3.11,0,0,0,1.23,1.14,10.73,10.73,0,0,0,2.16.87c.88.25,1.94.51,3.19.78,1.78.41,3.34.82,4.7,1.22a15.49,15.49,0,0,1,3.39,1.43,5.69,5.69,0,0,1,2.06,2,5.52,5.52,0,0,1,.7,2.85,6.81,6.81,0,0,1-2.94,5.8A13.22,13.22,0,0,1,148.08,58.42Z"/><path d="M188.27,57.91h-3.63V43.12c0-3-.55-5.28-1.63-6.77a5.56,5.56,0,0,0-4.79-2.24,8.53,8.53,0,0,0-3.07.59,11.52,11.52,0,0,0-5.19,4,10.21,10.21,0,0,0-1.47,3V57.91h-3.63V20.79h3.63V37.42a12.5,12.5,0,0,1,11-6.46,8.87,8.87,0,0,1,4.06.84,7.36,7.36,0,0,1,2.73,2.34,10,10,0,0,1,1.55,3.61,21,21,0,0,1,.48,4.65Z"/></svg>',
-    replay: '<svg id="replay_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><defs><style>.cls-1{fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:2px;}</style></defs><path d="M59.46,34.47a11.82,11.82,0,0,0-6.41,1.93,9.78,9.78,0,0,0-3.85,5V57.91H45.56V31.42H49v6.36A12.26,12.26,0,0,1,53.15,33a10,10,0,0,1,5.62-1.73,3.36,3.36,0,0,1,.69.05Z"/><path d="M75,58.42a13.92,13.92,0,0,1-5.58-1.09,13.58,13.58,0,0,1-4.41-3,13.92,13.92,0,0,1-2.92-4.4,13.78,13.78,0,0,1-1-5.34,13.45,13.45,0,0,1,1-5.26A13.64,13.64,0,0,1,64.94,35a13.87,13.87,0,0,1,4.41-3,14.8,14.8,0,0,1,11.15,0,13.36,13.36,0,0,1,4.35,3,13.79,13.79,0,0,1,2.84,4.32,13.52,13.52,0,0,1,1,5.19v.81a2.18,2.18,0,0,1,0,.56H64.81a10.49,10.49,0,0,0,1,3.94A10.71,10.71,0,0,0,68.12,53,10.3,10.3,0,0,0,71.3,55a10,10,0,0,0,3.82.74,10.35,10.35,0,0,0,2.68-.36,10.87,10.87,0,0,0,2.45-1,9.42,9.42,0,0,0,2-1.5,6.64,6.64,0,0,0,1.39-2l3.15.81A8.86,8.86,0,0,1,85,54.48a12.67,12.67,0,0,1-2.72,2.09,14,14,0,0,1-3.42,1.37A15.69,15.69,0,0,1,75,58.42ZM85.23,43.27a10.28,10.28,0,0,0-1-3.89,10.47,10.47,0,0,0-2.24-3,9.89,9.89,0,0,0-3.15-2A10.18,10.18,0,0,0,75,33.66a10.4,10.4,0,0,0-3.85.71,9.81,9.81,0,0,0-3.18,2,9.94,9.94,0,0,0-2.19,3,11.26,11.26,0,0,0-1,3.87Z"/><path d="M108.53,58.42a11.39,11.39,0,0,1-6.23-1.7A13.85,13.85,0,0,1,98,52.42V68.75H94.31V31.42h3.26v5.14A13.2,13.2,0,0,1,102,32.51,11.82,11.82,0,0,1,107.94,31a12.1,12.1,0,0,1,5.3,1.15,13.45,13.45,0,0,1,4.16,3,14,14,0,0,1,2.76,4.4,13.77,13.77,0,0,1,1,5.13,15.43,15.43,0,0,1-.91,5.29,13.4,13.4,0,0,1-2.59,4.37,12.44,12.44,0,0,1-4,3A11.86,11.86,0,0,1,108.53,58.42Zm-1-3.05a9.09,9.09,0,0,0,4.09-.91A10.28,10.28,0,0,0,114.76,52a10.72,10.72,0,0,0,2-3.41,11.25,11.25,0,0,0,.7-3.94,10.62,10.62,0,0,0-.8-4.07,11.24,11.24,0,0,0-2.2-3.4,10.13,10.13,0,0,0-3.28-2.34,9.72,9.72,0,0,0-4.09-.87,8.76,8.76,0,0,0-2.92.54A12.1,12.1,0,0,0,101.34,36a9.71,9.71,0,0,0-2.24,2.09A5.35,5.35,0,0,0,98,40.57v8.14a12,12,0,0,0,1.63,2.64,11.17,11.17,0,0,0,2.24,2.11,10.83,10.83,0,0,0,2.7,1.4A8.92,8.92,0,0,0,107.52,55.37Z"/><path d="M127.45,20.79h3.64V51.91a3.1,3.1,0,0,0,.85,2.32,3.29,3.29,0,0,0,2.41.84,7,7,0,0,0,1.39-.16,9.26,9.26,0,0,0,1.49-.4l.65,2.79a11.44,11.44,0,0,1-2.49.66,15.26,15.26,0,0,1-2.54.26,5.55,5.55,0,0,1-3.95-1.35,4.91,4.91,0,0,1-1.45-3.79Z"/><path d="M148.83,58.42a10.38,10.38,0,0,1-3.66-.63A9.43,9.43,0,0,1,142.23,56a7.81,7.81,0,0,1-1.95-2.62,7.61,7.61,0,0,1-.69-3.23,6.26,6.26,0,0,1,.85-3.2,7.85,7.85,0,0,1,2.41-2.54,11.79,11.79,0,0,1,3.69-1.65,17.73,17.73,0,0,1,4.7-.59,26.72,26.72,0,0,1,4.33.36,19.09,19.09,0,0,1,3.9,1V41.18a7.48,7.48,0,0,0-2.08-5.57,7.89,7.89,0,0,0-5.78-2.06,12.91,12.91,0,0,0-4.38.82,21.11,21.11,0,0,0-4.54,2.34l-1.29-2.29A19.41,19.41,0,0,1,151.88,31c3.49,0,6.24.93,8.23,2.8a10,10,0,0,1,3,7.73V53.44c0,1,.44,1.42,1.33,1.42v3a8.26,8.26,0,0,1-1.39.16,3.22,3.22,0,0,1-2.16-.66,2.42,2.42,0,0,1-.83-1.83L160,53.49a12.57,12.57,0,0,1-4.83,3.66A15.54,15.54,0,0,1,148.83,58.42Zm.86-2.64a13.09,13.09,0,0,0,5.21-1,8.52,8.52,0,0,0,3.61-2.69,3.21,3.21,0,0,0,.72-1,2.39,2.39,0,0,0,.24-1V45.76a23.52,23.52,0,0,0-3.77-1,22.83,22.83,0,0,0-4-.35,11.54,11.54,0,0,0-6.25,1.52,4.6,4.6,0,0,0-2.41,4,5.25,5.25,0,0,0,.51,2.29A5.74,5.74,0,0,0,145,54.07a6.42,6.42,0,0,0,2.11,1.25A7.33,7.33,0,0,0,149.69,55.78Z"/><path d="M171.87,66.05l.83.08.78,0A3.73,3.73,0,0,0,175,65.9a2.73,2.73,0,0,0,1.1-1.12,19.72,19.72,0,0,0,1.2-2.49c.44-1.09,1.08-2.54,1.9-4.38L167.06,31.42h3.74l10.32,23.29,9.57-23.29h3.47L179.73,65.59a6.17,6.17,0,0,1-1.95,2.57,5.78,5.78,0,0,1-3.72,1.09c-.35,0-.69,0-1,0s-.71-.06-1.18-.13Z"/><polygon points="8.34 44.91 23.84 32.12 23.84 56.55 8.34 44.91"/><polygon points="22.52 44.91 38.02 32.12 38.02 56.55 22.52 44.91"/><line class="cls-1" x1="8.34" y1="56.55" x2="8.34" y2="32.12"/></svg>',
-    record: '<svg id="record_btn_svg" data-name="Ebene 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><path d="M54.46,34.47a11.82,11.82,0,0,0-6.41,1.93,9.78,9.78,0,0,0-3.85,5V57.91H40.56V31.42H44v6.36A12.26,12.26,0,0,1,48.15,33a10,10,0,0,1,5.62-1.73,3.36,3.36,0,0,1,.69.05Z"/><path d="M70,58.42a13.92,13.92,0,0,1-5.58-1.09,13.58,13.58,0,0,1-4.41-3,13.92,13.92,0,0,1-2.92-4.4,13.78,13.78,0,0,1-1-5.34,13.45,13.45,0,0,1,1-5.26A13.64,13.64,0,0,1,59.94,35a13.87,13.87,0,0,1,4.41-3,14.8,14.8,0,0,1,11.15,0,13.36,13.36,0,0,1,4.35,3,13.79,13.79,0,0,1,2.84,4.32,13.52,13.52,0,0,1,1,5.19v.81a2.18,2.18,0,0,1,0,.56H59.81a10.49,10.49,0,0,0,1,3.94A10.71,10.71,0,0,0,63.12,53,10.3,10.3,0,0,0,66.3,55a10,10,0,0,0,3.82.74,10.35,10.35,0,0,0,2.68-.36,10.87,10.87,0,0,0,2.45-1,9.42,9.42,0,0,0,2-1.5,6.64,6.64,0,0,0,1.39-2l3.15.81A8.86,8.86,0,0,1,80,54.48a12.67,12.67,0,0,1-2.72,2.09,14,14,0,0,1-3.42,1.37A15.69,15.69,0,0,1,70,58.42ZM80.23,43.27a10.28,10.28,0,0,0-1-3.89,10.47,10.47,0,0,0-2.24-3,9.89,9.89,0,0,0-3.15-2A10.18,10.18,0,0,0,70,33.66a10.4,10.4,0,0,0-3.85.71,9.81,9.81,0,0,0-3.18,2,9.94,9.94,0,0,0-2.19,3,11.26,11.26,0,0,0-1,3.87Z"/><path d="M87.39,44.59a14,14,0,0,1,1-5.29A13.22,13.22,0,0,1,91.26,35,13.48,13.48,0,0,1,95.67,32,14.65,14.65,0,0,1,101.34,31a13.48,13.48,0,0,1,6.9,1.71,11.08,11.08,0,0,1,4.43,4.6l-3.53,1.06a8.27,8.27,0,0,0-3.28-3.17,10.08,10.08,0,0,0-8.66-.33,10,10,0,0,0-5.35,5.54,11.16,11.16,0,0,0-.77,4.22,11,11,0,0,0,.8,4.22,10.5,10.5,0,0,0,2.19,3.43,10.38,10.38,0,0,0,3.23,2.29,9.37,9.37,0,0,0,3.93.84A10.26,10.26,0,0,0,106.31,54a8.48,8.48,0,0,0,1.93-1.45,4.76,4.76,0,0,0,1.12-1.72l3.58,1a8.46,8.46,0,0,1-1.71,2.62,11.77,11.77,0,0,1-2.65,2.09,13.16,13.16,0,0,1-3.37,1.37,15,15,0,0,1-3.82.48,14.14,14.14,0,0,1-5.61-1.09,13.71,13.71,0,0,1-4.44-3,14.06,14.06,0,0,1-2.91-4.4A13.78,13.78,0,0,1,87.39,44.59Z"/><path d="M130.26,58.42a13.76,13.76,0,0,1-5.56-1.09,13.57,13.57,0,0,1-4.36-3A13.41,13.41,0,0,1,117.48,50a13.88,13.88,0,0,1-1-5.24,13.53,13.53,0,0,1,1-5.29,13.82,13.82,0,0,1,2.89-4.37,14.19,14.19,0,0,1,4.35-3A13.34,13.34,0,0,1,130.26,31a13.5,13.5,0,0,1,5.53,1.12,14.09,14.09,0,0,1,4.38,3,13.71,13.71,0,0,1,3.93,9.66,13.88,13.88,0,0,1-1,5.24,13.42,13.42,0,0,1-7.25,7.35A13.92,13.92,0,0,1,130.26,58.42Zm-10.1-13.63a10.48,10.48,0,0,0,.8,4.15,11,11,0,0,0,2.16,3.35,9.7,9.7,0,0,0,7.14,3.08,9.37,9.37,0,0,0,3.93-.84,10.38,10.38,0,0,0,3.23-2.29,11,11,0,0,0,0-15.1,10.38,10.38,0,0,0-3.23-2.29,9.37,9.37,0,0,0-3.93-.84,9.17,9.17,0,0,0-3.9.84,10.18,10.18,0,0,0-3.21,2.32,11,11,0,0,0-3,7.62Z"/><path d="M164.09,34.47a11.85,11.85,0,0,0-6.41,1.93,9.78,9.78,0,0,0-3.85,5V57.91H150.2V31.42h3.42v6.36A12.1,12.1,0,0,1,157.79,33a9.91,9.91,0,0,1,5.61-1.73,3.3,3.3,0,0,1,.69.05Z"/><path d="M179,58.42a12.56,12.56,0,0,1-5.35-1.14,13.46,13.46,0,0,1-4.22-3,14,14,0,0,1-3.74-9.51,14.79,14.79,0,0,1,1-5.31,13.82,13.82,0,0,1,2.65-4.4,12.54,12.54,0,0,1,4-3A12,12,0,0,1,178.42,31a11.28,11.28,0,0,1,6.25,1.76A13.54,13.54,0,0,1,189,37V20.79h3.64V53.44c0,1,.42,1.42,1.28,1.42v3a6.67,6.67,0,0,1-1.28.16,3.47,3.47,0,0,1-2.25-.79,2.4,2.4,0,0,1-1-1.91V52.78a12,12,0,0,1-4.49,4.12A12.33,12.33,0,0,1,179,58.42Zm.8-3.05a9.06,9.06,0,0,0,2.86-.51,11.68,11.68,0,0,0,2.86-1.4,9.43,9.43,0,0,0,2.27-2.08A5.51,5.51,0,0,0,189,48.81V40.62a9,9,0,0,0-1.55-2.56,12.4,12.4,0,0,0-2.33-2.12,11,11,0,0,0-2.8-1.42,9.1,9.1,0,0,0-2.94-.51,8.88,8.88,0,0,0-4.06.92,10.05,10.05,0,0,0-3.13,2.41,10.85,10.85,0,0,0-2,3.44,11.67,11.67,0,0,0-.69,4,10.59,10.59,0,0,0,.8,4.07,10.94,10.94,0,0,0,2.19,3.38,10.71,10.71,0,0,0,3.29,2.32A9.83,9.83,0,0,0,179.81,55.37Z"/><path d="M34.26,32.12H14V30.29H8.73v1.83H8.3A3.3,3.3,0,0,0,5,35.42v19.2a3.29,3.29,0,0,0,3.3,3.29h26a3.29,3.29,0,0,0,3.29-3.29V35.42A3.29,3.29,0,0,0,34.26,32.12Zm-13,20.7a7.81,7.81,0,1,1,7.8-7.8A7.81,7.81,0,0,1,21.28,52.82Z"/><circle cx="21.28" cy="45.02" r="4.77"/></svg>'
+export interface shapeLegendData {
+    title: string;
+    spacing: number;
+    shapes: string[][];
 }
 
-export const styleText = [
-    ".bbp.button-bar { position: absolute; z-index: 2; overflow: hidden; padding: 0 10px 4px 0; }",
-    ".bbp.button-bar > .button { float: right; width: 75px; height: 30px; cursor: pointer; border-radius: 2px; background-color: #f0f0f0; margin: 0 4px 0 0; }",
-    ".bbp.button-bar > .button:hover { background-color: #ddd; }",
-    ".bbp.button-bar > .button > svg { width: 75px; height: 30px; }",
-    ".bbp.label-control { position: absolute; z-index: 3; font-family: sans-serif; width: 200px; background-color: #f0f0f0; padding: 5px; border-radius: 2px; }",
-    ".bbp.label-control > label { font-size: 11pt; }",
-    ".bbp.label-control > .edit-container { overflow: auto; }",
-    ".bbp.label-control > .edit-container > .label-form { margin-top: 5px; padding-top: 20px; border-top: solid thin #ccc; }",
-    ".bbp.label-control .label-form > input { width: 100%; box-sizing: border-box; }",
-    ".bbp.label-control .label-form > button { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
-    ".bbp.label-control .label-form > button:hover { background-color: #ddd; }",
-    ".bbp.overlay { position: absolute; z-index: 3; overflow: hidden; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background-color: #fff5; display: flex; justify-content: center; align-items: center;}",
-    ".bbp.overlay > h5.loading-message { color: #000; font-family: Verdana, sans-serif;}",
-    ".bbp.publish-form > label { display: block; text-align: left; font-family: Verdana, sans-serif; }",
-    ".bbp.publish-form > input { width: 100%; margin-bottom: 15px; box-sizing: border-box; }",
-    ".bbp.publish-form > .publish-btn { border: none; font-weight: bold; background-color: #e95420; color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
-    ".bbp.publish-form > .publish-btn:hover { background-color: #ca491a }",
-    ".bbp.publish-form > .close-btn, .bbp.publish-form > .cancel-btn { border: none; font-weight: bold; background-color: white; padding: 5px 10px; margin: 5px 0 2px 0; width: 100%; cursor: pointer; }",
-    ".bbp.publish-form > .close-btn:hover, .bbp.publish-form > .cancel-btn:hover { background-color: #ddd }",
-    ".bbp.publish-form > p.form-info { font-size: 8pt; font-family: Verdana, sans-serif; }",
-    ".bbp.publish-form > p.message { font-size: 10pt; font-family: Verdana, sans-serif; }",
-    ".bbp.publish-form > p.message.warning { color: red; margin-top: 0px; }",
-    ".bbp.publish-form > p.message.success { color: green; }",
-].join(" ");
-
+/**
+ * Per plot legend information.
+ */
 export interface LegendData {
+    /** Show or hide plot legend. */
     showLegend: boolean;
+    /** Discrete or continuous color scale. */
     discrete: boolean;
+    /** Categories if discrete, min and max values if continuous color scale. */
     breaks: string[];
+    /** Name of the color scale. */
     colorScale: string;
+    /** Is the color scale flipped? */
     inverted: boolean;
+    /** Left or right position of this legend. If undefined, right is default. */
     position: string;
+    /** Display shape/plot type in legend */
+    showShape?: boolean;
+    /** If color scale is not a colorbrewer palette, provide colors to construct the palette here. */
     customColorScale?: string[];
+    /** Font size of the legend text. */
     fontSize?: number;
+    /** Color of the legend text. */
     fontColor?: string;
+    /** Title for the color legend. */
     legendTitle?: string;
+    /** Font size of the color legend title. */
     legendTitleFontSize?: number;
+    /** Color of the color legend title. */
+    legendTitleFontColor?: string;
 }
 
 export abstract class Plot {
@@ -192,6 +181,8 @@ export abstract class Plot {
     protected _size: number = 1;
     protected _scene: Scene;
 
+    name: string;
+    shape: string;
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[]; // contains indices of cells in selection cube
@@ -201,6 +192,8 @@ export abstract class Plot {
     zScale: number;
 
     constructor(
+        name: string,
+        shape: string,
         scene: Scene,
         coordinates: number[][],
         colorVar: string[],
@@ -208,8 +201,10 @@ export abstract class Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1
+        zScale: number = 1,
     ) {
+        this.name = name;
+        this.shape = shape;
         this._scene = scene;
         this._coords = coordinates;
         this._coordColors = colorVar;
@@ -282,9 +277,13 @@ export function getUniqueVals(source: string[]): string[] {
 }
 
 import { ImgStack } from "./ImgStack";
+import { ShapeCloud } from "./ShapeCloud";
 import { PointCloud } from "./PointCloud";
 import { Surface } from "./Surface";
 import { HeatMap } from "./HeatMap";
+import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
+import { styleText } from "./styleText";
+import { buttonSVGs, legendSVGs } from "./SVGs";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -338,21 +337,33 @@ export class Plots {
     private _zScale: number = 1;
     private _publishFormOverlay: HTMLDivElement;
     private _uniqID: string;
+    private _shapeLegendPosition: string;
 
+    /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
+    /** Babylonjs scene object. */
     scene: Scene;
+    /** Camera of the visualization */
     camera: ArcRotateCamera;
+    /** Array of plots in this visualization. */
     plots: Plot[] = [];
+    /** Turn the camera around the plots. */
     turntable: boolean;
+    /** Rotation speed of the turntable camera. */
     rotationRate: number;
-    fixedSize = false;
+    /** Highest point on the y axis of any plot. Used for positioning the camera and labels. */
     ymax: number = 0;
+    /** This variable should be exclusively set by the babyplots R package. It controls some specific options for babyplots behavior in the RStudio viewer. */
     R: boolean = false;
+    /** Title of the legend showing the names and plot types of multiple plots, if at least one plot has showShape enabled. */
+    shapeLegendTitle: string = "";
+
 
     /**
      * Initialize the 3d visualization
-     * @param canvasElement ID of the canvas element in the dom
-     * @param backgroundColor Background color of the plot
+     * 
+     * @param canvasElement ID of the canvas element in the DOM
+     * @param options Object with general options. See a list of possible options [here](https://bp.bleb.li/documentation/js#plotsObject).
      */
     constructor(canvasElement: string, options = {}) {
         // create unique id, needed if multiple babyplots canvases are on the same page.
@@ -366,12 +377,14 @@ export class Plots {
             yScale: 1,
             zScale: 1,
             turntable: false,
-            rotationRate: 0.01
+            rotationRate: 0.01,
+            shapeLegendTitle: ""
         }
         Object.assign(opts, options);
 
         this.turntable = opts.turntable;
         this.rotationRate = opts.rotationRate;
+        this.shapeLegendTitle = opts.shapeLegendTitle;
 
         // setup enginge and scene
         this._backgroundColor = opts.backgroundColor;
@@ -383,7 +396,7 @@ export class Plots {
         this.camera = new ArcRotateCamera("Camera", 0, 0, 10, Vector3.Zero(), this.scene);
         this.camera.attachControl(this.canvas, true);
         this.scene.activeCamera = this.camera;
-        this.camera.inputs.attached.keyboard.detachControl(this.canvas);
+        this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
 
         // background color
@@ -427,6 +440,11 @@ export class Plots {
         };
     }
 
+    /**
+     * Load a visualization from a saved JSON object. The R, JavaScript and Python implementations of babyplots as well as the NPC allow the export of visualizations as JSON files. Loading of a saved visualization using fromJSON() overwrites previously set properties of the Plots object.
+     * 
+     * @param plotData Javascript Object with plot data.
+     */
     fromJSON(plotData: {}): void {
         if (plotData["turntable"] !== undefined) {
             this.turntable = plotData["turntable"];
@@ -447,6 +465,9 @@ export class Plots {
         if (plotData["zScale"] !== undefined) {
             this._zScale = plotData["zScale"];
         }
+        if (plotData["shapeLegendTitle"] !== undefined) {
+            this.shapeLegendTitle = plotData["shapeLegendTitle"];
+        }
         for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             const plot = plotData["plots"][plotIdx];
             if (plot["plotType"] === "imageStack") {
@@ -455,6 +476,7 @@ export class Plots {
                     plot["indices"],
                     plot["attributes"],
                     {
+                        name: plot["name"],
                         size: plot["size"],
                         colorScale: plot["colorScale"],
                         showLegend: plot["showLegend"],
@@ -462,6 +484,7 @@ export class Plots {
                         fontColor: plot["fontColor"],
                         legendTitle: plot["legendTitle"],
                         legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendTitleFontColor: plot["legendTitleFontColor"],
                         legendPosition: plot["legendPosition"],
                         showAxes: plot["showAxes"],
                         axisLabels: plot["axisLabels"],
@@ -472,23 +495,26 @@ export class Plots {
                         intensityMode: plot["intensityMode"]
                     }
                 )
-            } else if (["pointCloud", "heatMap", "surface"].indexOf(plot["plotType"]) !== -1) {
+            } else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(
                     plot["coordinates"],
                     plot["plotType"],
                     plot["colorBy"],
                     plot["colorVar"],
                     {
+                        name: plot["name"],
                         size: plot["size"],
                         colorScale: plot["colorScale"],
                         customColorScale: plot["customColorScale"],
                         colorScaleInverted: plot["colorScaleInverted"],
                         sortedCategories: plot["sortedCategories"],
                         showLegend: plot["showLegend"],
+                        legendShowShape: plot["legendShowShape"],
                         fontSize: plot["fontSize"],
                         fontColor: plot["fontColor"],
                         legendTitle: plot["legendTitle"],
                         legendTitleFontSize: plot["legendTitleFontSize"],
+                        legendTitleFontColor: plot["legendTitleFontColor"],
                         legendPosition: plot["legendPosition"],
                         showAxes: plot["showAxes"],
                         axisLabels: plot["axisLabels"],
@@ -501,7 +527,8 @@ export class Plots {
                         foldAnimDelay: plot["foldAnimDelay"],
                         foldAnimDuration: plot["foldAnimDuration"],
                         colnames: plot["colnames"],
-                        rownames: plot["rownames"]
+                        rownames: plot["rownames"],
+                        shape: plot["shape"]
                     }
                 )
             }
@@ -534,6 +561,19 @@ export class Plots {
         }
     }
 
+    /**
+     * Create UI buttons to control certain babyplots features.
+     * 
+     * @param whichBtns Array of buttons to create. Any combination of ["json", "label", "publish", "record"] is allowed.
+     * 
+     * "json": creates a button that triggers the download of the plot data in .json file format.
+     * 
+     * "label": creates a button that opens the label manager that allows creation and editing of labels.
+     * 
+     * "publish": creates a button that opens the publish to bp.bleb.li form.
+     * 
+     * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
+     */
     createButtons(whichBtns = ["json", "label", "publish", "record"]): void {
         if (whichBtns.indexOf("json") !== -1) {
             let jsonBtn = document.createElement("div");
@@ -662,7 +702,7 @@ export class Plots {
         closeBtn.onclick = this._cancelPublish.bind(this);
         closeBtn.innerText = "Close";
         closeBtn.style.display = "none";
-        
+
         // Add all form elements to the form
         formBox.appendChild(usernameLabel);
         formBox.appendChild(usernameInput);
@@ -909,6 +949,16 @@ export class Plots {
         this.ymax = yRange[1];
     }
 
+    /**
+     * Creates a 3-dimensional visualization of an RGB image stack, as generated from e.g. a fluorescent microscope, and adds it to the Plots object to visualize it in a canvas. The data must be in a special format for this function which is optimized for size. The easiest way to create this visualization is using the R implementation of babyplots, which includes a function to directly read .tif files.
+     * 
+     * @param values An array of intensity values. Currently only 8-bit images are supported (0-255).
+     * @param indices Indices of the values in the original image.
+     * @param attributes Image attributes. Only a "dim" attribute is needed containing the dimensions (x, y, c, z) of the image.
+     * @param options An object with options to customize the visualization.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addImgStack).
+     */
     addImgStack(
         values: number[],
         indices: number[],
@@ -924,6 +974,7 @@ export class Plots {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendTitleFontColor: "black",
             legendPosition: null,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
@@ -948,6 +999,7 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendTitleFontColor: opts.legendTitleFontColor,
             legendPosition: opts.legendPosition,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
@@ -969,6 +1021,7 @@ export class Plots {
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
+        legendData.legendTitleFontColor = opts.legendTitleFontColor;
 
         let plot = new ImgStack(
             this.scene,
@@ -990,6 +1043,17 @@ export class Plots {
         return this;
     }
 
+    /**
+     * Creates a plot and adds it to the Plots object to visualize it in a canvas. The plot types section below enumerates the different kinds of visualizations that can be created using this method.
+     * 
+     * @param coordinates An array of arrays with coordinates of data points.
+     * @param plotType The name of one of the plot types. Either "pointCloud", "heatMap", or "surface".
+     * @param colorBy How to interpret the colorVar parameter, either "direct", "categories", or "values". If colorVar is an array of hex strings, colorBy should be "direct". If colorVar is an array of discrete values (e.g. category names), colorBy should be "categories". If colorVar is an array of continuous values, colorBy should be "values".
+     * @param colorVar an array of hex strings, category names, or values, corresponding to the data points in the coordinates parameter.
+     * @param options An object with general and plot type specific options.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addPlot).
+     */
     addPlot(
         coordinates: number[][],
         plotType: string,
@@ -999,6 +1063,7 @@ export class Plots {
     ): Plots {
         // default options
         let opts = {
+            name: null,
             size: 1,
             xScale: 1,
             yScale: 1,
@@ -1012,7 +1077,9 @@ export class Plots {
             fontColor: "black",
             legendTitle: null,
             legendTitleFontSize: 16,
+            legendTitleFontColor: "black",
             legendPosition: null,
+            legendShowShape: false,
             showAxes: [false, false, false],
             axisLabels: ["X", "Y", "Z"],
             axisColors: ["#666666", "#666666", "#666666"],
@@ -1024,7 +1091,9 @@ export class Plots {
             foldAnimDelay: null,
             foldAnimDuration: null,
             colnames: null,
-            rownames: null
+            rownames: null,
+            shape: null,
+            shading: true
         }
         // apply user options
         Object.assign(opts, options);
@@ -1034,6 +1103,7 @@ export class Plots {
             coordinates: coordinates,
             colorBy: colorBy,
             colorVar: colorVar,
+            name: opts.name,
             size: opts.size,
             colorScale: opts.colorScale,
             customColorScale: opts.customColorScale,
@@ -1044,7 +1114,9 @@ export class Plots {
             fontColor: opts.fontColor,
             legendTitle: opts.legendTitle,
             legendTitleFontSize: opts.legendTitleFontSize,
+            legendTitleFontColor: opts.legendTitleFontColor,
             legendPosition: opts.legendPosition,
+            legendShowShape: opts.legendShowShape,
             showAxes: opts.showAxes,
             axisLabels: opts.axisLabels,
             axisColors: opts.axisColors,
@@ -1056,7 +1128,9 @@ export class Plots {
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
             colnames: opts.colnames,
-            rownames: opts.rownames
+            rownames: opts.rownames,
+            shape: opts.shape,
+            shading: opts.shading
         })
 
         let coordColors: string[] = [];
@@ -1211,9 +1285,12 @@ export class Plots {
         legendData.fontColor = opts.fontColor;
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
+        legendData.legendTitleFontColor = opts.legendTitleFontColor;
+        legendData.showShape = opts.legendShowShape;
 
         let plot: Plot;
         let scale: number[];
+        let boundingBox: BoundingBox;
         switch (plotType) {
             case "pointCloud":
                 plot = new PointCloud(
@@ -1228,9 +1305,10 @@ export class Plots {
                     opts.foldAnimDuration,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
-                let boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
                     boundingBox.maximumWorld.x
@@ -1258,7 +1336,8 @@ export class Plots {
                     legendData,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
@@ -1272,6 +1351,39 @@ export class Plots {
                     this._zScale,
                 ]
                 break
+            case "shapeCloud":
+                plot = new ShapeCloud(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.shape,
+                    opts.shading,
+                    opts.size,
+                    legendData,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                    opts.name
+                );
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                rangeX = [
+                    boundingBox.minimumWorld.x,
+                    boundingBox.maximumWorld.x
+                ]
+                rangeY = [
+                    boundingBox.minimumWorld.y,
+                    boundingBox.maximumWorld.y
+                ]
+                rangeZ = [
+                    boundingBox.minimumWorld.z,
+                    boundingBox.maximumWorld.z
+                ]
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ]
+                break;
             case "heatMap":
                 plot = new HeatMap(
                     this.scene,
@@ -1281,7 +1393,8 @@ export class Plots {
                     legendData,
                     this._xScale,
                     this._yScale,
-                    this._zScale
+                    this._zScale,
+                    opts.name
                 );
                 rangeX = [0, coordinates.length * this._xScale];
                 rangeZ = [0, coordinates[0].length * this._zScale];
@@ -1331,59 +1444,153 @@ export class Plots {
 
         let rightFree = true;
         let leftFree = true;
+        let spaceLeft: number;
+        let spaceRight: number;
+        let shapeSpace = 0;
+        let shapes = [];
         for (let i = 0; i < this.plots.length; i++) {
             const plot = this.plots[i];
             let legendData = plot.legendData;
+            if (!legendData.legendTitleFontSize) {
+                legendData.legendTitleFontSize = 16;
+            }
+            if (!legendData.fontSize) {
+                legendData.fontSize = 12;
+            }
             if (["right", "left"].indexOf(legendData.position) === -1) {
                 legendData.position = null;
+            }
+            if (legendData.showShape) {
+                shapeSpace += legendData.fontSize + 5;
+                shapes.push([plot.name, plot.shape]);
             }
             if (legendData.showLegend) {
                 if (legendData.position === null) {
                     if (rightFree) {
                         legendData.position = "right";
                         rightFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     } else if (leftFree) {
                         legendData.position = "left";
                         leftFree = false;
+                        if (legendData.discrete) {
+                            spaceLeft = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceLeft = 115;
+                        }
                     } else {
                         legendData.showLegend = false;
                     }
                 } else {
                     if (legendData.position === "right") {
                         rightFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     } else {
                         leftFree = false;
+                        if (legendData.discrete) {
+                            spaceRight = legendData.breaks.length * (legendData.fontSize + 2);
+                        } else {
+                            spaceRight = 115;
+                        }
                     }
                 }
-                uiLayer = this._createPlotLegend(legendData, uiLayer);
             }
         }
+
+        // if shape legend is requested, decide on which side it should be placed:
+        if (this._shapeLegendPosition === undefined) {
+            if (shapeSpace > 0) {
+                if (this.shapeLegendTitle && this.shapeLegendTitle !== "") {
+                    shapeSpace += 100;
+                }
+                if (rightFree) {
+                    this._shapeLegendPosition = "right";
+                } else if (leftFree) {
+                    this._shapeLegendPosition = "left";
+                } else {
+                    if (spaceRight <= spaceLeft) {
+                        this._shapeLegendPosition = "right";
+                    } else {
+                        this._shapeLegendPosition = "left";
+                    }
+                }
+            }
+        }
+
+
+        let shapeLegendData: shapeLegendData = {
+            title: this.shapeLegendTitle,
+            spacing: shapeSpace,
+            shapes: shapes
+        }
+
+        for (let i = 0; i < this.plots.length; i++) {
+            const lgndData = this.plots[i].legendData;
+            if (lgndData.position === this._shapeLegendPosition) {
+                uiLayer = this._createPlotLegend(lgndData, uiLayer, shapeLegendData);
+            } else {
+                uiLayer = this._createPlotLegend(lgndData, uiLayer);
+            }
+        }
+
         this._legend = uiLayer;
     }
 
-    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture): AdvancedDynamicTexture {
+    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture, shapeLegendData?: shapeLegendData): AdvancedDynamicTexture {
         if (!legendData.showLegend) {
             return uiLayer;
         }
-        let n: number;
-        let breakN = 20;
         // create grid for placing legend in correct position
         let grid = new Grid();
         uiLayer.addControl(grid);
 
-        // main position of legend (right middle)
+        let n = legendData.breaks.length;
+        let breakN: number;
         let legendWidth = 0.2;
+        let nCols = 1;
+
+        let legendBodyHeight = 0.9;
+        let legendMinPixels: number;
+        if (legendData.discrete) {
+            legendMinPixels = legendData.breaks.length * (legendData.fontSize + 2);
+        } else {
+            legendMinPixels = 115;
+        }
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
+            legendMinPixels += legendData.legendTitleFontSize + 5;
+        }
+
+        // main position of legend (right middle)
+        if (shapeLegendData !== undefined) {
+            grid.addRowDefinition(0.05);
+            let totalReqPixels = legendMinPixels + shapeLegendData.spacing;
+            legendBodyHeight = legendMinPixels / totalReqPixels;
+            let shapeBodyHeight = shapeLegendData.spacing / totalReqPixels;
+            grid.addRowDefinition(legendBodyHeight - 0.05);
+            grid.addRowDefinition(shapeBodyHeight - 0.05);
+            grid.addRowDefinition(0.05);
+        }
+        else {
+            grid.addRowDefinition(0.05);
+            grid.addRowDefinition(legendBodyHeight);
+            grid.addRowDefinition(0.05);
+        }
 
         if (legendData.discrete) {
-            // number of clusters
-            n = legendData.breaks.length;
+            legendData.fontSize;
+            nCols = Math.ceil(((legendData.fontSize + 2) * n) / (legendBodyHeight * this.canvas.height * 0.7));
 
-            if (n > breakN * 2) {
-                legendWidth = 0.4;
-            }
-            else if (n > breakN) {
-                legendWidth = 0.3;
-            }
+            breakN = Math.ceil(n / nCols);
+
+            legendWidth = 0.1 + (0.1 * nCols);
         }
 
         let legendColumn = 1;
@@ -1395,31 +1602,93 @@ export class Plots {
             grid.addColumnDefinition(1 - legendWidth);
             legendColumn = 0;
         }
-        if (legendData.legendTitle && legendData.legendTitle !== "") {
-            grid.addRowDefinition(0.1);
-            grid.addRowDefinition(0.85);
-            grid.addRowDefinition(0.05);
-        }
-        else {
-            grid.addRowDefinition(0.05);
-            grid.addRowDefinition(0.9);
-            grid.addRowDefinition(0.05);
+
+        // create shape legend
+
+        if (shapeLegendData) {
+
+            let shapeLegendGrid = new Grid();
+            if (shapeLegendData.title && shapeLegendData.title !== "") {
+                shapeLegendGrid.paddingLeftInPixels = 10;
+                shapeLegendGrid.paddingRightInPixels = 10;
+                shapeLegendGrid.addRowDefinition(legendData.legendTitleFontSize + 5, true);
+                shapeLegendGrid.addRowDefinition(0.75);
+                shapeLegendGrid.addRowDefinition(0.05);
+                // shape legend title
+                let shapeLegendTitle = new TextBlock();
+                shapeLegendTitle.text = shapeLegendData.title;
+                shapeLegendTitle.color = legendData.legendTitleFontColor;
+                shapeLegendTitle.fontWeight = "bold";
+                if (legendData.legendTitleFontSize) {
+                    shapeLegendTitle.fontSize = legendData.legendTitleFontSize + "px";
+                }
+                else {
+                    shapeLegendTitle.fontSize = "16px";
+                }
+                shapeLegendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+                shapeLegendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+                shapeLegendTitle.textWrapping = true;
+                shapeLegendGrid.addControl(shapeLegendTitle, 0, 0);
+            } else {
+                shapeLegendGrid.addRowDefinition(0.05);
+                shapeLegendGrid.addRowDefinition(0.9);
+                shapeLegendGrid.addRowDefinition(0.05);
+            }
+
+            let shapeLegendBody = new Grid();
+            shapeLegendBody.addColumnDefinition(legendData.fontSize + 6, true);
+            shapeLegendBody.addColumnDefinition(0.9);
+            let rowHeight = 1 / shapeLegendData.shapes.length;
+            for (let i = 0; i < shapeLegendData.shapes.length; i++) {
+                const shapeDef = shapeLegendData.shapes[i];
+                shapeLegendBody.addRowDefinition(rowHeight);
+                // shape
+                let url = "data:image/svg+xml;base64," + window.btoa(legendSVGs[shapeDef[1]]);
+                let shapeIcon = new Image(shapeDef[0], url);
+                shapeIcon.width = legendData.fontSize + 2 + "px";
+                shapeIcon.height = legendData.fontSize + 2 + "px";
+
+                let column = Math.floor(i / breakN);
+                let row = i - column * breakN;
+
+                shapeLegendBody.addControl(shapeIcon, i, 0);
+
+                // text
+                let shapeText = new TextBlock();
+                shapeText.text = shapeDef[0];
+                shapeText.color = legendData.fontColor;
+                shapeText.fontSize = legendData.fontSize + "px";
+                shapeText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+
+                shapeLegendBody.addControl(shapeText, i, 1);
+            }
+
+            shapeLegendGrid.addControl(shapeLegendBody, 1, 0);
+
+            grid.addControl(shapeLegendGrid, 2, legendColumn);
         }
 
-        if (legendData.legendTitle) {
+        let legendBody = new Grid();
+
+        legendBody.paddingLeftInPixels = 10;
+        legendBody.paddingRightInPixels = 10;
+
+        legendBody.addRowDefinition(0.2);
+        legendBody.addRowDefinition(0.7);
+        legendBody.addRowDefinition(0.1);
+
+        grid.addControl(legendBody, 1, legendColumn);
+
+        if (legendData.legendTitle && legendData.legendTitle !== "") {
             let legendTitle = new TextBlock();
             legendTitle.text = legendData.legendTitle;
-            legendTitle.color = legendData.fontColor;
+            legendTitle.color = legendData.legendTitleFontColor;
             legendTitle.fontWeight = "bold";
-            if (legendData.legendTitleFontSize) {
-                legendTitle.fontSize = legendData.legendTitleFontSize + "px";
-            }
-            else {
-                legendTitle.fontSize = "20px";
-            }
+            legendTitle.fontSize = legendData.legendTitleFontSize + "px";
             legendTitle.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
             legendTitle.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-            grid.addControl(legendTitle, 0, legendColumn);
+            legendTitle.textWrapping = true;
+            legendBody.addControl(legendTitle, 0, legendColumn);
         }
 
         // for continuous measures display color bar and max and min values.
@@ -1428,22 +1697,22 @@ export class Plots {
             let innerGrid = new Grid();
             innerGrid.addColumnDefinition(0.2);
             innerGrid.addColumnDefinition(0.8);
-            grid.addControl(innerGrid, 1, legendColumn);
+            legendBody.addControl(innerGrid, 1, 0);
 
             let nBreaks = 115;
             let labelSpace = 0.15;
-            if (this.canvas.height < 70) {
+            if (legendBodyHeight * this.canvas.height * 0.7 < 100) {
                 nBreaks = 10;
                 labelSpace = 0.45;
                 innerGrid.addRowDefinition(1);
             }
-            else if (this.canvas.height < 130) {
+            else if (legendBodyHeight * this.canvas.height * 0.7 < 150) {
                 nBreaks = 50;
                 labelSpace = 0.3;
                 innerGrid.addRowDefinition(1);
             }
             else {
-                let padding = (this.canvas.height - 115) / 2;
+                let padding = ((legendBodyHeight * this.canvas.height * 0.7) - 115) / 2;
                 innerGrid.addRowDefinition(padding, true);
                 innerGrid.addRowDefinition(115, true);
                 innerGrid.addRowDefinition(padding, true);
@@ -1504,25 +1773,17 @@ export class Plots {
         }
         else {
             // inner Grid contains legend rows and columns for color and text
-            var innerGrid = new Grid();
-            // two legend columns when more than 15 colors
-            if (n > breakN * 2) {
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-            }
-            else if (n > breakN) {
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
-                innerGrid.addColumnDefinition(0.1);
-                innerGrid.addColumnDefinition(0.4);
+            let innerGrid = new Grid();
+            // define number of columns by the number of categories.
+            if (nCols > 1) {
+                for (let i = 0; i < nCols; i++) {
+                    innerGrid.addColumnDefinition(0.1);
+                    innerGrid.addColumnDefinition(0.4);
+                }
             }
             else {
-                innerGrid.addColumnDefinition(0.2);
-                innerGrid.addColumnDefinition(0.8);
+                innerGrid.addColumnDefinition(0.1);
+                innerGrid.addColumnDefinition(0.9);
             }
             for (let i = 0; i < n && i < breakN; i++) {
                 if (n > breakN) {
@@ -1532,7 +1793,7 @@ export class Plots {
                     innerGrid.addRowDefinition(1 / n);
                 }
             }
-            grid.addControl(innerGrid, 1, legendColumn);
+            legendBody.addControl(innerGrid, 1, 0);
 
             let colors: string[];
             if (legendData.colorScale === "custom") {
@@ -1545,37 +1806,25 @@ export class Plots {
             // add color box and legend text
             for (let i = 0; i < n; i++) {
                 // color
-                var legendColor = new Rectangle();
+                let legendColor = new Rectangle();
                 legendColor.background = colors[i];
                 legendColor.thickness = 0;
                 legendColor.width = legendData.fontSize + "px";
                 legendColor.height = legendData.fontSize + "px";
-                // use second column for many entries
-                if (i > breakN * 2 - 1) {
-                    innerGrid.addControl(legendColor, i - breakN * 2, 4);
-                }
-                else if (i > breakN - 1) {
-                    innerGrid.addControl(legendColor, i - breakN, 2);
-                }
-                else {
-                    innerGrid.addControl(legendColor, i, 0);
-                }
+
+                let column = Math.floor(i / breakN);
+                let row = i - column * breakN;
+
+                innerGrid.addControl(legendColor, row, column * 2);
+
                 // text
-                var legendText = new TextBlock();
+                let legendText = new TextBlock();
                 legendText.text = legendData.breaks[i].toString();
                 legendText.color = legendData.fontColor;
                 legendText.fontSize = legendData.fontSize + "px";
                 legendText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-                // use second column for many entries
-                if (i > breakN * 2 - 1) {
-                    innerGrid.addControl(legendText, i - breakN * 2, 5);
-                }
-                if (i > breakN - 1) {
-                    innerGrid.addControl(legendText, i - breakN, 3);
-                }
-                else {
-                    innerGrid.addControl(legendText, i, 1);
-                }
+
+                innerGrid.addControl(legendText, row, column * 2 + 1);
             }
         }
         return uiLayer;
@@ -1591,6 +1840,12 @@ export class Plots {
         return this;
     }
 
+    /**
+     * Resizes the visualization to the current size of the canvas. This method should be bound to a resize event of the canvas. It is also recommended to call the resize() method once after the doRender() call.
+     * 
+     * @param width Optional: Width of the canvas
+     * @param height Optional: Height of the canvas
+     */
     resize(width?: number, height?: number): Plots {
         if (width !== undefined && height !== undefined) {
             if (this.R) {
@@ -1608,10 +1863,19 @@ export class Plots {
         return this
     }
 
+    /**
+     * Saves a screenshot of the visualization.
+     * 
+     * @param size Width and height of square thumbnail in pixels
+     * @param saveCallback Function that takes the created screenshot as base64 encoded string.
+     */
     thumbnail(size: number, saveCallback: (data: string) => void): void {
         ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
     }
 
+    /**
+     * Releases all held resources of the Plots visualization. Useful to clear memory, after a visualization is no longer needed.
+     */
     dispose(): void {
         this.scene.dispose();
         this._engine.dispose();

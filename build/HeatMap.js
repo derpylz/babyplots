@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
@@ -21,11 +21,12 @@ var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
 var HeatMap = (function (_super) {
     __extends(HeatMap, _super);
-    function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+    function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
+        if (name === void 0) { name = "heat map"; }
+        var _this = _super.call(this, name, "heatmap", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createHeatMap();
         return _this;
     }

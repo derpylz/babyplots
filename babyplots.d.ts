@@ -114,15 +114,11 @@ export interface AxisData {
     colnames: string[];
     rownames: string[];
 }
-export declare const buttonSVGs: {
-    logo: string;
-    toJson: string;
-    labels: string;
-    publish: string;
-    replay: string;
-    record: string;
-};
-export declare const styleText: string;
+export interface shapeLegendData {
+    title: string;
+    spacing: number;
+    shapes: string[][];
+}
 export interface LegendData {
     showLegend: boolean;
     discrete: boolean;
@@ -130,11 +126,13 @@ export interface LegendData {
     colorScale: string;
     inverted: boolean;
     position: string;
+    showShape?: boolean;
     customColorScale?: string[];
     fontSize?: number;
     fontColor?: string;
     legendTitle?: string;
     legendTitleFontSize?: number;
+    legendTitleFontColor?: string;
 }
 export declare abstract class Plot {
     protected _coords: number[][];
@@ -143,6 +141,8 @@ export declare abstract class Plot {
     protected _groupNames: string[];
     protected _size: number;
     protected _scene: Scene;
+    name: string;
+    shape: string;
     mesh: Mesh;
     meshes: Mesh[];
     selection: number[];
@@ -150,7 +150,7 @@ export declare abstract class Plot {
     xScale: number;
     yScale: number;
     zScale: number;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
@@ -192,15 +192,16 @@ export declare class Plots {
     private _zScale;
     private _publishFormOverlay;
     private _uniqID;
+    private _shapeLegendPosition;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
     plots: Plot[];
     turntable: boolean;
     rotationRate: number;
-    fixedSize: boolean;
     ymax: number;
     R: boolean;
+    shapeLegendTitle: string;
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;

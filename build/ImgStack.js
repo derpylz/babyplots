@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
@@ -25,10 +25,11 @@ var babyplots_1 = require("./babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
+        if (name === void 0) { name = "image stack"; }
         var _this = this;
         var colSize = attributes.dim[0];
         var rowSize = attributes.dim[1];
@@ -57,7 +58,7 @@ var ImgStack = (function (_super) {
             ]);
             Intensities[channel].push(values[i]);
         }
-        _this = _super.call(this, scene, [], [], size, legendData, xScale, yScale, zScale) || this;
+        _this = _super.call(this, name, "surface", scene, [], [], size, legendData, xScale, yScale, zScale) || this;
         _this._channelCoords = coords;
         _this._channelCoordIntensities = Intensities;
         _this._backgroundColor = backgroundColor;
