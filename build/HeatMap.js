@@ -1,22 +1,4 @@
 "use strict";
-/**
- * Babyplots - Easy, fast, interactive 3D visualizations
- *
- * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -37,13 +19,14 @@ var boxBuilder_1 = require("@babylonjs/core/Meshes/Builders/boxBuilder");
 var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
-var HeatMap = /** @class */ (function (_super) {
+var HeatMap = (function (_super) {
     __extends(HeatMap, _super);
-    function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+    function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
+        if (name === void 0) { name = "heat map"; }
+        var _this = _super.call(this, name, "heatmap", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createHeatMap();
         return _this;
     }

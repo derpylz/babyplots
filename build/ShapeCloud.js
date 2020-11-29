@@ -1,22 +1,4 @@
 "use strict";
-/**
- * Babyplots - Easy, fast, interactive 3D visualizations
- *
- * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -40,26 +22,23 @@ var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder
 var math_1 = require("@babylonjs/core/Maths/math");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
-var ShapeCloud = /** @class */ (function (_super) {
+var ShapeCloud = (function (_super) {
     __extends(ShapeCloud, _super);
-    function ShapeCloud(scene, coordinates, colorVar, shape, shading, size, legendData, xScale, yScale, zScale) {
+    function ShapeCloud(scene, coordinates, colorVar, shape, shading, size, legendData, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        var _this = _super.call(this, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale) || this;
-        _this.shape = shape;
+        if (name === void 0) { name = "shape cloud"; }
+        var _this = _super.call(this, name, "shape_" + shape, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale) || this;
+        _this._shape = shape;
         _this._shading = shading;
         _this._createShapeCloud();
         return _this;
     }
-    /**
-     * Creates shapes at coordinates
-     */
     ShapeCloud.prototype._createShapeCloud = function () {
         var instanceCount = this._coords.length;
         var matricesData = new Float32Array(16 * instanceCount);
         var colorData = new Float32Array(4 * instanceCount);
-        // set position and color data for shapes
         for (var i = 0; i < instanceCount; i++) {
             var matrix = math_1.Matrix.Translation(this._coords[i][0] * this.xScale, this._coords[i][1] * this.zScale, this._coords[i][2] * this.yScale);
             matrix.copyToArray(matricesData, i * 16);
@@ -67,7 +46,7 @@ var ShapeCloud = /** @class */ (function (_super) {
             colorData.set(col.asArray(), i * 4);
         }
         var origMesh;
-        switch (this.shape) {
+        switch (this._shape) {
             case "box":
                 origMesh = boxBuilder_1.BoxBuilder.CreateBox("root", { size: this._size });
                 break;

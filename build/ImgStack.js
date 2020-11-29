@@ -1,22 +1,4 @@
 "use strict";
-/**
- * Babyplots - Easy, fast, interactive 3D visualizations
- *
- * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -41,12 +23,13 @@ var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
-var ImgStack = /** @class */ (function (_super) {
+var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
+        if (name === void 0) { name = "image stack"; }
         var _this = this;
         var colSize = attributes.dim[0];
         var rowSize = attributes.dim[1];
@@ -75,7 +58,7 @@ var ImgStack = /** @class */ (function (_super) {
             ]);
             Intensities[channel].push(values[i]);
         }
-        _this = _super.call(this, scene, [], [], size, legendData, xScale, yScale, zScale) || this;
+        _this = _super.call(this, name, "surface", scene, [], [], size, legendData, xScale, yScale, zScale) || this;
         _this._channelCoords = coords;
         _this._channelCoordIntensities = Intensities;
         _this._backgroundColor = backgroundColor;

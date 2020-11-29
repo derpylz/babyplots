@@ -1,22 +1,4 @@
 "use strict";
-/**
- * Babyplots - Easy, fast, interactive 3D visualizations
- *
- * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -37,13 +19,14 @@ var math_1 = require("@babylonjs/core/Maths/math");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
-var PointCloud = /** @class */ (function (_super) {
+var PointCloud = (function (_super) {
     __extends(PointCloud, _super);
-    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration, xScale, yScale, zScale) {
+    function PointCloud(scene, coordinates, colorVar, size, legendData, folded, foldedEmbedding, foldAnimDelay, foldAnimDuration, xScale, yScale, zScale, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        var _this = _super.call(this, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
+        if (name === void 0) { name = "point cloud"; }
+        var _this = _super.call(this, name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._pointPicking = false;
         _this._selectionCallback = function (selection) { return false; };
         _this._foldVectors = [];
@@ -84,13 +67,8 @@ var PointCloud = /** @class */ (function (_super) {
         _this._createPointCloud();
         return _this;
     }
-    /**
-     * Positions spheres according to coordinates in a SPS
-     */
     PointCloud.prototype._createPointCloud = function () {
-        // prototype cell
         var customMesh = new mesh_1.Mesh("custom", this._scene);
-        // Set arrays for positions and indices
         var positions = [];
         var colors = [];
         if (this._folded) {
@@ -108,10 +86,8 @@ var PointCloud = /** @class */ (function (_super) {
             }
         }
         var vertexData = new mesh_vertexData_1.VertexData();
-        // Assign positions
         vertexData.positions = positions;
         vertexData.colors = colors;
-        // Apply vertexData to custom mesh
         vertexData.applyToMesh(customMesh, true);
         var mat = new standardMaterial_1.StandardMaterial("mat", this._scene);
         mat.emissiveColor = new math_1.Color3(1, 1, 1);

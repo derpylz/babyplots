@@ -1,27 +1,6 @@
-/**
- * Babyplots - Easy, fast, interactive 3D visualizations
- *
- * Copyright (c) 2020, Nils Jonathan Trost. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AxisData } from "./babyplots";
-/**
- * Class to store and update plot axes.
- */
 export declare class Axes {
     private _axes;
     private _axisLabels;
@@ -30,11 +9,6 @@ export declare class Axes {
     private _tickLines;
     private _scene;
     axisData: AxisData;
-    /**
-     * Create axes for plot.
-     * @param axisData object containing all information about axis setup.
-     * @param scene BABYLON scene.
-     */
     constructor(axisData: AxisData, scene: Scene, heatmap?: boolean);
     private _roundTicks;
     private _createAxes;
