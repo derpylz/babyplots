@@ -612,6 +612,7 @@ export class Plots {
         this._downloadObj["xScale"] = this._xScale;
         this._downloadObj["yScale"] = this._yScale;
         this._downloadObj["zScale"] = this._zScale;
+        this._downloadObj["shapeLegendTitle"] = this.shapeLegendTitle;
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
