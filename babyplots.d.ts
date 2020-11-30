@@ -221,7 +221,9 @@ export declare class Plots {
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     private _updateLegend;
+    private _drawStandaloneShapeLegend;
     private _createPlotLegend;
+    private _createShapeLegend;
     doRender(): Plots;
     resize(width?: number, height?: number): Plots;
     thumbnail(size: number, saveCallback: (data: string) => void): void;

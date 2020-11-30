@@ -1157,24 +1157,22 @@ var Plots = (function () {
                 }
             }
         }
-        if (this._shapeLegendPosition === undefined) {
-            if (shapeSpace > 0) {
-                if (this.shapeLegendTitle && this.shapeLegendTitle !== "") {
-                    shapeSpace += 100;
-                }
-                if (rightFree) {
+        if (shapeSpace > 0) {
+            if (this.shapeLegendTitle && this.shapeLegendTitle !== "") {
+                shapeSpace += 100;
+            }
+            if (rightFree) {
+                this._shapeLegendPosition = "right";
+            }
+            else if (leftFree) {
+                this._shapeLegendPosition = "left";
+            }
+            else {
+                if (spaceRight <= spaceLeft) {
                     this._shapeLegendPosition = "right";
                 }
-                else if (leftFree) {
-                    this._shapeLegendPosition = "left";
-                }
                 else {
-                    if (spaceRight <= spaceLeft) {
-                        this._shapeLegendPosition = "right";
-                    }
-                    else {
-                        this._shapeLegendPosition = "left";
-                    }
+                    this._shapeLegendPosition = "left";
                 }
             }
         }
@@ -1183,16 +1181,44 @@ var Plots = (function () {
             spacing: shapeSpace,
             shapes: shapes
         };
+        var shapeLegendDrawn = false;
         for (var i = 0; i < this.plots.length; i++) {
             var lgndData = this.plots[i].legendData;
-            if (lgndData.position === this._shapeLegendPosition) {
-                uiLayer = this._createPlotLegend(lgndData, uiLayer, shapeLegendData);
-            }
-            else {
-                uiLayer = this._createPlotLegend(lgndData, uiLayer);
+            if (lgndData.showLegend) {
+                if (lgndData.position === this._shapeLegendPosition) {
+                    uiLayer = this._createPlotLegend(lgndData, uiLayer, shapeLegendData);
+                    shapeLegendDrawn = true;
+                }
+                else {
+                    uiLayer = this._createPlotLegend(lgndData, uiLayer);
+                }
             }
         }
+        if (!shapeLegendDrawn) {
+            this._drawStandaloneShapeLegend(uiLayer, shapeSpace, shapeLegendData);
+        }
         this._legend = uiLayer;
+    };
+    Plots.prototype._drawStandaloneShapeLegend = function (uiLayer, shapeSpace, shapeLegendData) {
+        var grid = new controls_1.Grid();
+        uiLayer.addControl(grid);
+        var padding = (this.canvas.height - shapeSpace / 2) / 2;
+        grid.addRowDefinition(padding, true);
+        grid.addRowDefinition(shapeSpace, true);
+        grid.addRowDefinition(padding, true);
+        var legendWidth = 0.2;
+        var legendColumn = 1;
+        if (this._shapeLegendPosition === "right") {
+            grid.addColumnDefinition(1 - legendWidth);
+            grid.addColumnDefinition(legendWidth);
+        }
+        else {
+            grid.addColumnDefinition(legendWidth);
+            grid.addColumnDefinition(1 - legendWidth);
+            legendColumn = 0;
+        }
+        var shapeLegendGrid = this._createShapeLegend(this.plots[0].legendData, shapeLegendData);
+        grid.addControl(shapeLegendGrid, 1, legendColumn);
     };
     Plots.prototype._createPlotLegend = function (legendData, uiLayer, shapeLegendData) {
         if (!legendData.showLegend) {
@@ -1246,55 +1272,7 @@ var Plots = (function () {
             legendColumn = 0;
         }
         if (shapeLegendData) {
-            var shapeLegendGrid = new controls_1.Grid();
-            if (shapeLegendData.title && shapeLegendData.title !== "") {
-                shapeLegendGrid.paddingLeftInPixels = 10;
-                shapeLegendGrid.paddingRightInPixels = 10;
-                shapeLegendGrid.addRowDefinition(legendData.legendTitleFontSize + 5, true);
-                shapeLegendGrid.addRowDefinition(0.75);
-                shapeLegendGrid.addRowDefinition(0.05);
-                var shapeLegendTitle = new controls_1.TextBlock();
-                shapeLegendTitle.text = shapeLegendData.title;
-                shapeLegendTitle.color = legendData.legendTitleFontColor;
-                shapeLegendTitle.fontWeight = "bold";
-                if (legendData.legendTitleFontSize) {
-                    shapeLegendTitle.fontSize = legendData.legendTitleFontSize + "px";
-                }
-                else {
-                    shapeLegendTitle.fontSize = "16px";
-                }
-                shapeLegendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
-                shapeLegendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                shapeLegendTitle.textWrapping = true;
-                shapeLegendGrid.addControl(shapeLegendTitle, 0, 0);
-            }
-            else {
-                shapeLegendGrid.addRowDefinition(0.05);
-                shapeLegendGrid.addRowDefinition(0.9);
-                shapeLegendGrid.addRowDefinition(0.05);
-            }
-            var shapeLegendBody = new controls_1.Grid();
-            shapeLegendBody.addColumnDefinition(legendData.fontSize + 6, true);
-            shapeLegendBody.addColumnDefinition(0.9);
-            var rowHeight = 1 / shapeLegendData.shapes.length;
-            for (var i = 0; i < shapeLegendData.shapes.length; i++) {
-                var shapeDef = shapeLegendData.shapes[i];
-                shapeLegendBody.addRowDefinition(rowHeight);
-                var url = "data:image/svg+xml;base64," + window.btoa(SVGs_1.legendSVGs[shapeDef[1]]);
-                var shapeIcon = new controls_1.Image(shapeDef[0], url);
-                shapeIcon.width = legendData.fontSize + 2 + "px";
-                shapeIcon.height = legendData.fontSize + 2 + "px";
-                var column = Math.floor(i / breakN);
-                var row = i - column * breakN;
-                shapeLegendBody.addControl(shapeIcon, i, 0);
-                var shapeText = new controls_1.TextBlock();
-                shapeText.text = shapeDef[0];
-                shapeText.color = legendData.fontColor;
-                shapeText.fontSize = legendData.fontSize + "px";
-                shapeText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
-                shapeLegendBody.addControl(shapeText, i, 1);
-            }
-            shapeLegendGrid.addControl(shapeLegendBody, 1, 0);
+            var shapeLegendGrid = this._createShapeLegend(legendData, shapeLegendData);
             grid.addControl(shapeLegendGrid, 2, legendColumn);
         }
         var legendBody = new controls_1.Grid();
@@ -1432,6 +1410,60 @@ var Plots = (function () {
             }
         }
         return uiLayer;
+    };
+    Plots.prototype._createShapeLegend = function (legendData, shapeLegendData) {
+        var shapeLegendGrid = new controls_1.Grid();
+        legendData.fontColor = legendData.fontColor || "black";
+        legendData.fontSize = legendData.fontSize || 11;
+        legendData.legendTitleFontColor = legendData.legendTitleFontColor || "black";
+        legendData.legendTitleFontSize = legendData.legendTitleFontSize || 16;
+        if (shapeLegendData.title && shapeLegendData.title !== "") {
+            shapeLegendGrid.paddingLeftInPixels = 10;
+            shapeLegendGrid.paddingRightInPixels = 10;
+            shapeLegendGrid.addRowDefinition(legendData.legendTitleFontSize + 5, true);
+            shapeLegendGrid.addRowDefinition(shapeLegendData.spacing - (legendData.legendTitleFontSize + 5), true);
+            shapeLegendGrid.addRowDefinition(0.05);
+            var shapeLegendTitle = new controls_1.TextBlock();
+            shapeLegendTitle.text = shapeLegendData.title;
+            shapeLegendTitle.color = legendData.legendTitleFontColor;
+            shapeLegendTitle.fontWeight = "bold";
+            if (legendData.legendTitleFontSize) {
+                shapeLegendTitle.fontSize = legendData.legendTitleFontSize + "px";
+            }
+            else {
+                shapeLegendTitle.fontSize = "16px";
+            }
+            shapeLegendTitle.verticalAlignment = controls_1.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            shapeLegendTitle.horizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            shapeLegendTitle.textWrapping = true;
+            shapeLegendGrid.addControl(shapeLegendTitle, 0, 0);
+        }
+        else {
+            shapeLegendGrid.addRowDefinition(0.05);
+            shapeLegendGrid.addRowDefinition(shapeLegendData.spacing, true);
+            shapeLegendGrid.addRowDefinition(0.05);
+        }
+        var shapeLegendBody = new controls_1.Grid();
+        shapeLegendBody.addColumnDefinition(legendData.fontSize + 6, true);
+        shapeLegendBody.addColumnDefinition(0.9);
+        var rowHeight = 1 / shapeLegendData.shapes.length;
+        for (var i = 0; i < shapeLegendData.shapes.length; i++) {
+            var shapeDef = shapeLegendData.shapes[i];
+            shapeLegendBody.addRowDefinition(rowHeight);
+            var url = "data:image/svg+xml;base64," + window.btoa(SVGs_1.legendSVGs[shapeDef[1]]);
+            var shapeIcon = new controls_1.Image(shapeDef[0], url);
+            shapeIcon.width = legendData.fontSize + 2 + "px";
+            shapeIcon.height = legendData.fontSize + 2 + "px";
+            shapeLegendBody.addControl(shapeIcon, i, 0);
+            var shapeText = new controls_1.TextBlock();
+            shapeText.text = shapeDef[0];
+            shapeText.color = legendData.fontColor;
+            shapeText.fontSize = legendData.fontSize + "px";
+            shapeText.textHorizontalAlignment = controls_1.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            shapeLegendBody.addControl(shapeText, i, 1);
+        }
+        shapeLegendGrid.addControl(shapeLegendBody, 1, 0);
+        return shapeLegendGrid;
     };
     Plots.prototype.doRender = function () {
         var _this = this;
