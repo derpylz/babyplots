@@ -22,9 +22,11 @@ var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder
 var math_1 = require("@babylonjs/core/Maths/math");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("./babyplots");
+var uuid_1 = require("uuid");
+var transformNode_1 = require("@babylonjs/core/Meshes/transformNode");
 var ShapeCloud = (function (_super) {
     __extends(ShapeCloud, _super);
-    function ShapeCloud(scene, coordinates, colorVar, shape, shading, size, legendData, xScale, yScale, zScale, name) {
+    function ShapeCloud(scene, coordinates, colorVar, shape, shading, size, legendData, xScale, yScale, zScale, name, dpInfo) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
@@ -32,6 +34,9 @@ var ShapeCloud = (function (_super) {
         var _this = _super.call(this, name, "shape_" + shape, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale) || this;
         _this._shape = shape;
         _this._shading = shading;
+        if (dpInfo && dpInfo.length === coordinates.length) {
+            _this.dpInfo = dpInfo;
+        }
         _this._createShapeCloud();
         return _this;
     }
@@ -46,24 +51,25 @@ var ShapeCloud = (function (_super) {
             colorData.set(col.asArray(), i * 4);
         }
         var origMesh;
+        var mid = "root:" + uuid_1.v4();
         switch (this._shape) {
             case "box":
-                origMesh = boxBuilder_1.BoxBuilder.CreateBox("root", { size: this._size });
+                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: this._size });
                 break;
             case "sphere":
-                origMesh = sphereBuilder_1.SphereBuilder.CreateSphere("root", { diameter: this._size });
+                origMesh = sphereBuilder_1.SphereBuilder.CreateSphere(mid, { diameter: this._size });
                 break;
             case "cone":
-                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder("root", { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
+                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
                 break;
             case "torus":
-                origMesh = torusBuilder_1.TorusBuilder.CreateTorus("root", { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
+                origMesh = torusBuilder_1.TorusBuilder.CreateTorus(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
                 break;
             case "cylinder":
-                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder("root", { height: this._size, diameter: this._size }, this._scene);
+                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = boxBuilder_1.BoxBuilder.CreateBox("root", { size: 1 });
+                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: 1 });
                 break;
         }
         origMesh.thinInstanceSetBuffer("matrix", matricesData, 16, true);
@@ -80,6 +86,18 @@ var ShapeCloud = (function (_super) {
                 this.mesh.material.alpha = newAlpha;
             }
         });
+        if (this.dpInfo) {
+            origMesh.thinInstanceEnablePicking = true;
+        }
+    };
+    ShapeCloud.prototype.getPick = function (pickResult) {
+        var target = new transformNode_1.TransformNode("pickNode");
+        target.position = math_1.Vector3.FromArray(this._coords[pickResult.thinInstanceIndex]);
+        var pick = {
+            target: target,
+            info: this.dpInfo[pickResult.thinInstanceIndex]
+        };
+        return pick;
     };
     return ShapeCloud;
 }(babyplots_1.Plot));

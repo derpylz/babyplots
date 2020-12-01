@@ -24,14 +24,18 @@ import { SphereBuilder } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { TorusBuilder } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
-import { Color3, Color4, Matrix } from "@babylonjs/core/Maths/math";
+import { Color3, Color4, Matrix, Vector3 } from "@babylonjs/core/Maths/math";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData } from "./babyplots";
+import { v4 as uuidv4 } from "uuid";
+import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export class ShapeCloud extends Plot {
     private _shading: boolean;
     private _shape: string;
     
+    dpInfo: string[];
     
     constructor(
         scene: Scene,
@@ -45,10 +49,14 @@ export class ShapeCloud extends Plot {
         yScale: number = 1,
         zScale: number = 1,
         name: string = "shape cloud",
+        dpInfo?: string[]
     ) {
         super(name, "shape_" + shape, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale);
         this._shape = shape;
         this._shading = shading;
+        if (dpInfo && dpInfo.length === coordinates.length) {
+            this.dpInfo = dpInfo;
+        }
         this._createShapeCloud();
     }
     /**
@@ -76,31 +84,33 @@ export class ShapeCloud extends Plot {
         }
 
         let origMesh: Mesh;
+        let mid = "root:" + uuidv4()
 
         switch (this._shape) {
             case "box":
-                origMesh = BoxBuilder.CreateBox("root", { size: this._size });
+                origMesh = BoxBuilder.CreateBox(mid, { size: this._size });
                 break;
             case "sphere":
-                origMesh = SphereBuilder.CreateSphere("root", { diameter: this._size });
+                origMesh = SphereBuilder.CreateSphere(mid, { diameter: this._size });
                 break;
             case "cone":
-                origMesh = CylinderBuilder.CreateCylinder("root", { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
+                origMesh = CylinderBuilder.CreateCylinder(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
                 break;
             case "torus":
-                origMesh = TorusBuilder.CreateTorus("root", { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
+                origMesh = TorusBuilder.CreateTorus(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
                 break;
             case "cylinder":
-                origMesh = CylinderBuilder.CreateCylinder("root", { height: this._size, diameter: this._size }, this._scene);
+                origMesh = CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = BoxBuilder.CreateBox("root", { size: 1 });
+                origMesh = BoxBuilder.CreateBox(mid, { size: 1 });
                 break;
         }
         
         origMesh.thinInstanceSetBuffer("matrix", matricesData, 16, true);
         origMesh.thinInstanceSetBuffer("color", colorData, 4, true);
 
+        
         let mat = new StandardMaterial("shapeMat", this._scene);
         if (!this._shading) {
             mat.disableLighting = true;
@@ -114,5 +124,19 @@ export class ShapeCloud extends Plot {
                 this.mesh.material.alpha = newAlpha;
             }
         });
+        
+        if (this.dpInfo) {
+            origMesh.thinInstanceEnablePicking = true;
+        }
+
+    }
+    getPick(pickResult: PickingInfo) {
+        let target = new TransformNode("pickNode");
+        target.position = Vector3.FromArray(this._coords[pickResult.thinInstanceIndex])
+        let pick = {
+            target: target,
+            info: this.dpInfo[pickResult.thinInstanceIndex]
+        }
+        return pick;
     }
 }

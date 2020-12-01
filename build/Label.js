@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnnotationManager = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
@@ -8,6 +11,7 @@ var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture
 var controls_1 = require("@babylonjs/gui/2D/controls");
 var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
 var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder");
+var chroma_js_1 = __importDefault(require("chroma-js"));
 var Arrow = (function () {
     function Arrow(from, to, scene, color) {
         this.size = 1;
@@ -29,6 +33,51 @@ var Arrow = (function () {
         this._tip = tip;
     }
     return Arrow;
+}());
+var dpInfo = (function () {
+    function dpInfo(text, target, uiLayer, backgroundColor, color) {
+        this._bgColor = backgroundColor;
+        this._txtColor = color;
+        this._target = target;
+        this._uiLayer = uiLayer;
+        this._text = text;
+        this.draw();
+    }
+    dpInfo.prototype.draw = function () {
+        this._background = new controls_1.Rectangle();
+        this._uiLayer.addControl(this._background);
+        var rows = this._text.split("\n");
+        var maxRowLen = 0;
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.length > maxRowLen) {
+                maxRowLen = row.length;
+            }
+        }
+        var fontSize = 12;
+        this._background.widthInPixels = maxRowLen * fontSize + 6;
+        this._background.heightInPixels = rows.length * (fontSize + 4) + 6;
+        this._background.linkWithMesh(this._target);
+        this._background.background = this._bgColor;
+        this._background.alpha = 0.8;
+        this._background.linkOffsetY = -10;
+        this._textBlock = new controls_1.TextBlock();
+        this._textBlock.text = this._text;
+        this._textBlock.fontSize = fontSize;
+        this._textBlock.color = this._txtColor;
+        this._background.addControl(this._textBlock);
+    };
+    dpInfo.prototype.dispose = function () {
+        if (this._textBlock) {
+            this._textBlock.dispose();
+            this._textBlock = undefined;
+        }
+        if (this._background) {
+            this._background.dispose();
+            this._background = undefined;
+        }
+    };
+    return dpInfo;
 }());
 var Label = (function () {
     function Label(text, position, scene, color) {
@@ -102,7 +151,7 @@ var Label = (function () {
     return Label;
 }());
 var AnnotationManager = (function () {
-    function AnnotationManager(canvas, scene, ymax, camera) {
+    function AnnotationManager(canvas, scene, ymax, camera, backgroundColor, fullScreenUI) {
         this._editLabelForms = [];
         this._showLabels = false;
         this._arrows = [];
@@ -114,6 +163,12 @@ var AnnotationManager = (function () {
         this._scene = scene;
         this._ymax = ymax;
         this._camera = camera;
+        this._bgColor = backgroundColor;
+        this._fgColor = "white";
+        this._fullScreenUI = fullScreenUI;
+        if (chroma_js_1.default(backgroundColor).luminance() > 0.5) {
+            this._fgColor = "black";
+        }
         this._createLabelForms();
     }
     AnnotationManager.prototype._createLabelForms = function () {
@@ -173,6 +228,22 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype.addArrow = function (from, to) {
         this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
+    AnnotationManager.prototype.redrawInfo = function () {
+        if (this.dpInfo) {
+            this.dpInfo.dispose();
+            this.dpInfo.draw();
+        }
+    };
+    AnnotationManager.prototype.displayInfo = function (text, target) {
+        this.clearInfo();
+        this.dpInfo = new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor);
+    };
+    AnnotationManager.prototype.clearInfo = function () {
+        if (this.dpInfo) {
+            this.dpInfo.dispose();
+            this.dpInfo = undefined;
+        }
+    };
     AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";
         var labelIdx = this.labels.length;
@@ -183,7 +254,7 @@ var AnnotationManager = (function () {
         else {
             pos = new math_1.Vector3(0, this._ymax + 2, 0);
         }
-        var newLabel = new Label(text, pos, this._scene);
+        var newLabel = new Label(text, pos, this._scene, this._fgColor);
         this.labels.push(newLabel);
         var editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";

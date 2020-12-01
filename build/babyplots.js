@@ -135,6 +135,7 @@ var Plot = (function () {
     Plot.prototype.updateSize = function () { };
     Plot.prototype.update = function () { return false; };
     Plot.prototype.resetAnimation = function () { };
+    Plot.prototype.getPick = function (pickResult) { return null; };
     return Plot;
 }());
 exports.Plot = Plot;
@@ -233,6 +234,7 @@ var Plots = (function () {
         this._xScale = 1;
         this._yScale = 1;
         this._zScale = 1;
+        this._fsUIDirty = true;
         this.plots = [];
         this.ymax = 0;
         this.R = false;
@@ -270,7 +272,8 @@ var Plots = (function () {
         this._hl2 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new math_1.Color3(0, 0, 0);
-        this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera);
+        this.uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
+        this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
         this.scene.registerAfterRender(this._afterRender.bind(this));
         var styleElem = document.createElement("style");
@@ -285,6 +288,16 @@ var Plots = (function () {
         this._downloadObj = {
             plots: []
         };
+        this.scene.onPointerDown = (function (evt, pickResult) {
+            this._annotationManager.clearInfo();
+            for (var i = 0; i < this.plots.length; i++) {
+                var plot = this.plots[i];
+                if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
+                    var pick = plot.getPick(pickResult);
+                    this._annotationManager.displayInfo(pick.info, pick.target);
+                }
+            }
+        }).bind(this);
     }
     Plots.prototype.fromJSON = function (plotData) {
         if (plotData["turntable"] !== undefined) {
@@ -360,7 +373,9 @@ var Plots = (function () {
                     foldAnimDuration: plot["foldAnimDuration"],
                     colnames: plot["colnames"],
                     rownames: plot["rownames"],
-                    shape: plot["shape"]
+                    shape: plot["shape"],
+                    shading: plot["shading"],
+                    dpInfo: plot["dpInfo"]
                 });
             }
         }
@@ -631,6 +646,12 @@ var Plots = (function () {
                 this._axes[i].update(this.camera);
             }
         }
+        if (this._fsUIDirty) {
+            this.uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
+            this._updateLegend(this.uiLayer);
+            this._annotationManager.redrawInfo();
+            this._fsUIDirty = false;
+        }
         this._annotationManager.update();
     };
     Plots.prototype._afterRender = function () {
@@ -772,7 +793,7 @@ var Plots = (function () {
         legendData.legendTitleFontColor = opts.legendTitleFontColor;
         var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale);
         this.plots.push(plot);
-        this._updateLegend();
+        this._updateLegend(this.uiLayer);
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
         this.camera.wheelPrecision = 1;
         return this;
@@ -810,7 +831,8 @@ var Plots = (function () {
             colnames: null,
             rownames: null,
             shape: null,
-            shading: true
+            shading: true,
+            dpInfo: null,
         };
         Object.assign(opts, options);
         this._downloadObj["plots"].push({
@@ -845,7 +867,8 @@ var Plots = (function () {
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
-            shading: opts.shading
+            shading: opts.shading,
+            dpInfo: opts.dpInfo
         });
         var coordColors = [];
         var legendData;
@@ -1025,7 +1048,7 @@ var Plots = (function () {
                 ];
                 break;
             case "shapeCloud":
-                plot = new ShapeCloud_1.ShapeCloud(this.scene, coordinates, coordColors, opts.shape, opts.shading, opts.size, legendData, this._xScale, this._yScale, this._zScale, opts.name);
+                plot = new ShapeCloud_1.ShapeCloud(this.scene, coordinates, coordColors, opts.shape, opts.shading, opts.size, legendData, this._xScale, this._yScale, this._zScale, opts.name, opts.dpInfo);
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -1061,7 +1084,7 @@ var Plots = (function () {
                 break;
         }
         this.plots.push(plot);
-        this._updateLegend();
+        this._fsUIDirty = true;
         var axisData = {
             showAxes: opts.showAxes,
             static: true,
@@ -1082,11 +1105,10 @@ var Plots = (function () {
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this;
     };
-    Plots.prototype._updateLegend = function () {
+    Plots.prototype._updateLegend = function (uiLayer) {
         if (this._legend) {
             this._legend.dispose();
         }
-        var uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI");
         var rightFree = true;
         var leftFree = true;
         var spaceLeft;
@@ -1484,7 +1506,7 @@ var Plots = (function () {
                 this.canvas.height = height;
             }
         }
-        this._updateLegend();
+        this._fsUIDirty = true;
         this._resizePublishOverlay();
         this._engine.resize();
         return this;

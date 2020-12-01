@@ -55,9 +55,11 @@ var Axes = (function () {
                 ]
             }, this._scene);
             axisX.color = math_1.Color3.FromHexString(this.axisData.color[0]);
+            axisX.isPickable = false;
             this._axes.push(axisX);
             var xChar = this._makeTextPlane(this.axisData.axisLabels[0], 1, this.axisData.color[0]);
             xChar.position = new math_1.Vector3(xmax / 2, ymin - 0.5 * ymax, zmin);
+            xChar.isPickable = false;
             this._axisLabels.push(xChar);
             var xTicks = [];
             for (var i = 0; i < -Math.ceil(this.axisData.range[0][0] / xtickBreaks); i++) {
@@ -83,6 +85,7 @@ var Axes = (function () {
                     ]
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[0]);
+                tick.isPickable = false;
                 this._ticks.push(tick);
                 var tickLabel = this._roundTicks(tickPos / this.axisData.scale[0]).toString();
                 if (heatmap) {
@@ -93,6 +96,7 @@ var Axes = (function () {
                 }
                 var tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[0]);
                 tickChar.position = new math_1.Vector3(tickPos, ymin - 0.1 * ymax, zmin);
+                tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[0][0]) {
                     var tickLine = linesBuilder_1.LinesBuilder.CreateLines("xTickLines", {
@@ -102,6 +106,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[0][0]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[0][1]) {
@@ -112,6 +117,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[0][1]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
             }
@@ -124,9 +130,11 @@ var Axes = (function () {
                 ]
             }, this._scene);
             axisY.color = math_1.Color3.FromHexString(this.axisData.color[1]);
+            axisY.isPickable = false;
             this._axes.push(axisY);
             var yChar = this._makeTextPlane(this.axisData.axisLabels[1], 1, this.axisData.color[1]);
             yChar.position = new math_1.Vector3(xmin, ymax / 2, zmin - 0.5 * ymax);
+            yChar.isPickable = false;
             this._axisLabels.push(yChar);
             var yTicks = [];
             for (var i = 0; i < -Math.ceil(this.axisData.range[1][0] / ytickBreaks); i++) {
@@ -145,10 +153,12 @@ var Axes = (function () {
                     ]
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[1]);
+                tick.isPickable = false;
                 this._ticks.push(tick);
                 var tickLabel = this._roundTicks(tickPos / this.axisData.scale[1]);
                 var tickChar = this._makeTextPlane(tickLabel.toString(), 0.6, this.axisData.color[1]);
                 tickChar.position = new math_1.Vector3(xmin, tickPos, zmin - 0.05 * ymax);
+                tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[1][0]) {
                     var tickLine = linesBuilder_1.LinesBuilder.CreateLines("yTicksLines", {
@@ -158,6 +168,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[1][0]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[1][1]) {
@@ -168,6 +179,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[1][1]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
             }
@@ -180,9 +192,11 @@ var Axes = (function () {
                 ]
             }, this._scene);
             axisZ.color = math_1.Color3.FromHexString(this.axisData.color[2]);
+            axisZ.isPickable = false;
             this._axes.push(axisZ);
             var zChar = this._makeTextPlane(this.axisData.axisLabels[2], 1, this.axisData.color[2]);
             zChar.position = new math_1.Vector3(xmin, ymin - 0.5 * ymax, zmax / 2);
+            zChar.isPickable = false;
             this._axisLabels.push(zChar);
             var zTicks = [];
             for (var i = 0; i < -Math.ceil(this.axisData.range[2][0] / ztickBreaks); i++) {
@@ -208,6 +222,7 @@ var Axes = (function () {
                     ]
                 }, this._scene);
                 tick.color = math_1.Color3.FromHexString(this.axisData.color[2]);
+                tick.isPickable = false;
                 this._ticks.push(tick);
                 var tickLabel = this._roundTicks(tickPos / this.axisData.scale[2]).toString();
                 if (heatmap) {
@@ -218,6 +233,7 @@ var Axes = (function () {
                 }
                 var tickChar = this._makeTextPlane(tickLabel, 0.6, this.axisData.color[2]);
                 tickChar.position = new math_1.Vector3(xmin, ymin - 0.1 * ymax, tickPos);
+                tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[2][0]) {
                     var tickLine = linesBuilder_1.LinesBuilder.CreateLines("zTickLines", {
@@ -227,6 +243,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[2][0]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[2][1]) {
@@ -237,6 +254,7 @@ var Axes = (function () {
                         ]
                     }, this._scene);
                     tickLine.color = math_1.Color3.FromHexString(this.axisData.tickLineColor[2][1]);
+                    tickLine.isPickable = false;
                     this._tickLines.push(tickLine);
                 }
             }

@@ -28,6 +28,8 @@ import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
 import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import chroma from "chroma-js";
 
 class Arrow {
     private _lines: LinesMesh;
@@ -54,6 +56,62 @@ class Arrow {
         tip.position = to;
         this._tip = tip;
 
+    }
+}
+
+class dpInfo {
+    private _background: Rectangle;
+    private _textBlock: TextBlock;
+    private _text: string;
+    private _bgColor: string;
+    private _txtColor: string;
+    private _target: TransformNode;
+    private _uiLayer: AdvancedDynamicTexture;
+
+    constructor(text: string, target: TransformNode, uiLayer: AdvancedDynamicTexture, backgroundColor: string, color: string) {
+        this._bgColor = backgroundColor;
+        this._txtColor = color;
+        this._target = target;
+        this._uiLayer = uiLayer;
+        this._text = text;
+        this.draw();
+    }
+
+    draw() {
+        this._background = new Rectangle();
+        this._uiLayer.addControl(this._background);
+        let rows = this._text.split("\n");
+        let maxRowLen = 0;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length > maxRowLen) {
+                maxRowLen = row.length;
+            }
+        }
+        let fontSize = 12;
+        this._background.widthInPixels = maxRowLen * fontSize + 6;
+        this._background.heightInPixels = rows.length * (fontSize + 4) + 6;
+        this._background.linkWithMesh(this._target);
+        this._background.background = this._bgColor;
+        this._background.alpha = 0.8;
+        this._background.linkOffsetY = -10;
+        this._textBlock = new TextBlock();
+        this._textBlock.text = this._text;
+        this._textBlock.fontSize = fontSize;
+        this._textBlock.color = this._txtColor;
+        this._background.addControl(this._textBlock);
+
+    }
+
+    dispose() {
+        if (this._textBlock) {
+            this._textBlock.dispose();
+            this._textBlock = undefined;
+        }
+        if (this._background) {
+            this._background.dispose();
+            this._background = undefined;
+        }
     }
 }
 
@@ -160,16 +218,26 @@ export class AnnotationManager {
     private _showLabels: boolean = false;
     private _arrows: Arrow[] = [];
     private _showArrows: boolean = false;
-
+    private _bgColor: string;
+    private _fgColor: string;
+    private _fullScreenUI: AdvancedDynamicTexture;
+    
+    dpInfo: dpInfo;
     labels: Label[] = [];
     fixedLabels: boolean = false;
     fixedArrows: boolean = false;
 
-    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera) {
+    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera, backgroundColor: string, fullScreenUI: AdvancedDynamicTexture) {
         this._canvas = canvas;
         this._scene = scene;
         this._ymax = ymax;
         this._camera = camera;
+        this._bgColor = backgroundColor;
+        this._fgColor = "white";
+        this._fullScreenUI = fullScreenUI;
+        if (chroma(backgroundColor).luminance() > 0.5) {
+            this._fgColor = "black";
+        }
         this._createLabelForms();
     }
 
@@ -239,6 +307,25 @@ export class AnnotationManager {
         ));
     }
 
+    redrawInfo() {
+        if (this.dpInfo) {
+            this.dpInfo.dispose();
+            this.dpInfo.draw();
+        }
+    }
+
+    displayInfo(text: string, target: TransformNode) {
+        this.clearInfo();
+        this.dpInfo = new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor);
+    }
+
+    clearInfo() {
+        if (this.dpInfo) {
+            this.dpInfo.dispose();
+            this.dpInfo = undefined;
+        }
+    }
+
     /**
      * Add a 3d label to the plot
      * @param text Label title
@@ -255,7 +342,7 @@ export class AnnotationManager {
             pos = new Vector3(0, this._ymax + 2, 0);
         }
 
-        let newLabel = new Label(text, pos, this._scene);
+        let newLabel = new Label(text, pos, this._scene, this._fgColor);
 
         this.labels.push(newLabel);
 

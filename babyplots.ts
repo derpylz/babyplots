@@ -105,6 +105,7 @@ import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
+import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import chroma from "chroma-js";
 import download from "downloadjs";
 import { v4 as uuidv4 } from "uuid";
@@ -190,6 +191,7 @@ export abstract class Plot {
     xScale: number;
     yScale: number;
     zScale: number;
+    dpInfo: string[];
 
     constructor(
         name: string,
@@ -218,6 +220,7 @@ export abstract class Plot {
     updateSize(): void { }
     update(): boolean { return false }
     resetAnimation(): void { }
+    getPick(pickResult: PickingInfo): {target: TransformNode, info: string} { return null }
 }
 
 
@@ -284,6 +287,7 @@ import { HeatMap } from "./HeatMap";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./styleText";
 import { buttonSVGs, legendSVGs } from "./SVGs";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -338,6 +342,7 @@ export class Plots {
     private _publishFormOverlay: HTMLDivElement;
     private _uniqID: string;
     private _shapeLegendPosition: string;
+    private _fsUIDirty: boolean = true;
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -357,6 +362,8 @@ export class Plots {
     R: boolean = false;
     /** Title of the legend showing the names and plot types of multiple plots, if at least one plot has showShape enabled. */
     shapeLegendTitle: string = "";
+    /** AdvancedDynamicTexture for the full screen UI */
+    uiLayer: AdvancedDynamicTexture;
 
 
     /**
@@ -416,7 +423,10 @@ export class Plots {
         this._hl2.diffuse = new Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new Color3(0, 0, 0);
 
-        this._annotationManager = new AnnotationManager(this.canvas, this.scene, this.ymax, this.camera);
+        // create fullscreen GUI texture
+        this.uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
+
+        this._annotationManager = new AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer);
 
         this.scene.registerBeforeRender(this._prepRender.bind(this));
 
@@ -438,6 +448,17 @@ export class Plots {
         this._downloadObj = {
             plots: []
         };
+
+        this.scene.onPointerDown = (function (evt: any, pickResult: PickingInfo) {
+            (this as Plots)._annotationManager.clearInfo();
+            for (let i = 0; i < (this as Plots).plots.length; i++) {
+                const plot = (this as Plots).plots[i];
+                if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
+                    let pick = plot.getPick(pickResult);
+                    (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
+                }
+            }
+        }).bind(this);
     }
 
     /**
@@ -528,7 +549,9 @@ export class Plots {
                         foldAnimDuration: plot["foldAnimDuration"],
                         colnames: plot["colnames"],
                         rownames: plot["rownames"],
-                        shape: plot["shape"]
+                        shape: plot["shape"],
+                        shading: plot["shading"],
+                        dpInfo: plot["dpInfo"]
                     }
                 )
             }
@@ -840,6 +863,14 @@ export class Plots {
             }
         }
 
+        if (this._fsUIDirty) {
+            // create fullscreen GUI texture
+            this.uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
+            this._updateLegend(this.uiLayer);
+            this._annotationManager.redrawInfo();
+            this._fsUIDirty = false;
+        }
+
         // update labels
         this._annotationManager.update();
 
@@ -1038,7 +1069,7 @@ export class Plots {
             this._zScale
         );
         this.plots.push(plot);
-        this._updateLegend();
+        this._updateLegend(this.uiLayer);
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
         this.camera.wheelPrecision = 1;
         return this;
@@ -1094,7 +1125,8 @@ export class Plots {
             colnames: null,
             rownames: null,
             shape: null,
-            shading: true
+            shading: true,
+            dpInfo: null,
         }
         // apply user options
         Object.assign(opts, options);
@@ -1131,7 +1163,8 @@ export class Plots {
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
-            shading: opts.shading
+            shading: opts.shading,
+            dpInfo: opts.dpInfo
         })
 
         let coordColors: string[] = [];
@@ -1364,7 +1397,8 @@ export class Plots {
                     this._xScale,
                     this._yScale,
                     this._zScale,
-                    opts.name
+                    opts.name,
+                    opts.dpInfo
                 );
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
@@ -1412,7 +1446,7 @@ export class Plots {
         }
 
         this.plots.push(plot);
-        this._updateLegend();
+        this._fsUIDirty = true;
         let axisData: AxisData = {
             showAxes: opts.showAxes,
             static: true,
@@ -1437,11 +1471,8 @@ export class Plots {
     /**
      * Creates a color legend for the plots
      */
-    private _updateLegend(): void {
+    private _updateLegend(uiLayer: AdvancedDynamicTexture): void {
         if (this._legend) { this._legend.dispose(); }
-
-        // create fullscreen GUI texture
-        let uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
         let rightFree = true;
         let leftFree = true;
@@ -1894,7 +1925,7 @@ export class Plots {
                 this.canvas.height = height;
             }
         }
-        this._updateLegend();
+        this._fsUIDirty = true;
         this._resizePublishOverlay();
         this._engine.resize();
         return this

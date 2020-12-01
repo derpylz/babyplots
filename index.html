@@ -9,6 +9,7 @@
     <script src="dist/examples/heatMap.js"></script>
     <script src="dist/examples/pointCloud.js"></script>
     <script src="dist/examples/shapeCloud.js"></script>
+    <script src="dist/examples/shapeCloudInfo.js"></script>
     <script src="dist/examples/imagestack.js"></script>
     <script src="dist/babyplots.js"></script>
     <style>
@@ -33,9 +34,10 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      vis.fromJSON(shapeCloudData);
-      vis.turntable = true;
+      vis.fromJSON(shapeCloudInfoData);
+      vis.turntable = false;
       vis.doRender();
+      // vis.createButtons("label");
       window.onresize = function () {
         vis.resize();
       }

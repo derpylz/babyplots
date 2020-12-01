@@ -98,6 +98,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 export interface AxisData {
     showAxes: boolean[];
     static: boolean;
@@ -150,10 +151,15 @@ export declare abstract class Plot {
     xScale: number;
     yScale: number;
     zScale: number;
+    dpInfo: string[];
     constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
+    getPick(pickResult: PickingInfo): {
+        target: TransformNode;
+        info: string;
+    };
 }
 declare global {
     interface Array<T> {
@@ -164,6 +170,7 @@ declare global {
 export declare function matrixMax(matrix: number[][]): number;
 export declare function matrixMin(matrix: number[][]): number;
 export declare function getUniqueVals(source: string[]): string[];
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export declare const PLOTTYPES: {
     pointCloud: string[];
     surface: string[];
@@ -193,6 +200,7 @@ export declare class Plots {
     private _publishFormOverlay;
     private _uniqID;
     private _shapeLegendPosition;
+    private _fsUIDirty;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -202,6 +210,7 @@ export declare class Plots {
     ymax: number;
     R: boolean;
     shapeLegendTitle: string;
+    uiLayer: AdvancedDynamicTexture;
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
