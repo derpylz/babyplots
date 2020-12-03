@@ -36,14 +36,16 @@ var Arrow = (function () {
 }());
 var dpInfo = (function () {
     function dpInfo(text, target, uiLayer, backgroundColor, color) {
+        this.disposed = false;
         this._bgColor = backgroundColor;
         this._txtColor = color;
-        this._target = target;
+        this.target = target;
         this._uiLayer = uiLayer;
         this._text = text;
         this.draw();
     }
     dpInfo.prototype.draw = function () {
+        this.disposed = false;
         this._background = new controls_1.Rectangle();
         this._uiLayer.addControl(this._background);
         var rows = this._text.split("\n");
@@ -57,7 +59,7 @@ var dpInfo = (function () {
         var fontSize = 12;
         this._background.widthInPixels = maxRowLen * fontSize + 6;
         this._background.heightInPixels = rows.length * (fontSize + 4) + 6;
-        this._background.linkWithMesh(this._target);
+        this._background.linkWithMesh(this.target);
         this._background.background = this._bgColor;
         this._background.alpha = 0.8;
         this._background.linkOffsetY = -10;
@@ -66,6 +68,18 @@ var dpInfo = (function () {
         this._textBlock.fontSize = fontSize;
         this._textBlock.color = this._txtColor;
         this._background.addControl(this._textBlock);
+        this._closeBtn = controls_1.Button.CreateSimpleButton("close", "x");
+        this._background.addControl(this._closeBtn);
+        this._closeBtn.topInPixels = -this._background.heightInPixels / 2 + 10;
+        this._closeBtn.leftInPixels = this._background.widthInPixels / 2 - 10;
+        this._closeBtn.widthInPixels = 20;
+        this._closeBtn.heightInPixels = 20;
+        this._closeBtn.fontSize = 10;
+        this._closeBtn.background = this._txtColor;
+        this._closeBtn.color = this._bgColor;
+        this._closeBtn.onPointerClickObservable.add((function () {
+            this.dispose();
+        }).bind(this));
     };
     dpInfo.prototype.dispose = function () {
         if (this._textBlock) {
@@ -76,6 +90,11 @@ var dpInfo = (function () {
             this._background.dispose();
             this._background = undefined;
         }
+        if (this._closeBtn) {
+            this._closeBtn.dispose();
+            this._closeBtn = undefined;
+        }
+        this.disposed = true;
     };
     return dpInfo;
 }());
@@ -156,6 +175,7 @@ var AnnotationManager = (function () {
         this._showLabels = false;
         this._arrows = [];
         this._showArrows = false;
+        this.dpInfos = [];
         this.labels = [];
         this.fixedLabels = false;
         this.fixedArrows = false;
@@ -229,20 +249,37 @@ var AnnotationManager = (function () {
         this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
     AnnotationManager.prototype.redrawInfo = function () {
-        if (this.dpInfo) {
-            this.dpInfo.dispose();
-            this.dpInfo.draw();
+        for (var i = this.dpInfos.length - 1; i >= 0; i--) {
+            var dpInfo_1 = this.dpInfos[i];
+            if (dpInfo_1.disposed) {
+                this.dpInfos.splice(i, 1);
+            }
+            else {
+                dpInfo_1.dispose();
+                dpInfo_1.draw();
+            }
         }
     };
     AnnotationManager.prototype.displayInfo = function (text, target) {
-        this.clearInfo();
-        this.dpInfo = new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor);
+        var alreadyShown = false;
+        for (var i = 0; i < this.dpInfos.length; i++) {
+            var dpInfo_2 = this.dpInfos[i];
+            if (dpInfo_2.target === target) {
+                alreadyShown = true;
+                if (dpInfo_2.disposed) {
+                    dpInfo_2.draw();
+                }
+            }
+        }
+        if (!alreadyShown) {
+            this.dpInfos.push(new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor));
+        }
     };
     AnnotationManager.prototype.clearInfo = function () {
-        if (this.dpInfo) {
-            this.dpInfo.dispose();
-            this.dpInfo = undefined;
+        for (var i = 0; i < this.dpInfos.length; i++) {
+            this.dpInfos[i].dispose();
         }
+        this.dpInfos = [];
     };
     AnnotationManager.prototype.addLabel = function (text, position) {
         this._addLabelTextInput.value = "";

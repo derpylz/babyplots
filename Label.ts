@@ -24,7 +24,7 @@ import { Vector3, Axis, Color3 } from "@babylonjs/core/Maths/math";
 import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
-import { Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
+import { Button, Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
 import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
@@ -65,19 +65,23 @@ class dpInfo {
     private _text: string;
     private _bgColor: string;
     private _txtColor: string;
-    private _target: TransformNode;
     private _uiLayer: AdvancedDynamicTexture;
+    private _closeBtn: Button;
+    
+    target: TransformNode;
+    disposed: boolean = false;
 
     constructor(text: string, target: TransformNode, uiLayer: AdvancedDynamicTexture, backgroundColor: string, color: string) {
         this._bgColor = backgroundColor;
         this._txtColor = color;
-        this._target = target;
+        this.target = target;
         this._uiLayer = uiLayer;
         this._text = text;
         this.draw();
     }
 
     draw() {
+        this.disposed = false;
         this._background = new Rectangle();
         this._uiLayer.addControl(this._background);
         let rows = this._text.split("\n");
@@ -91,7 +95,7 @@ class dpInfo {
         let fontSize = 12;
         this._background.widthInPixels = maxRowLen * fontSize + 6;
         this._background.heightInPixels = rows.length * (fontSize + 4) + 6;
-        this._background.linkWithMesh(this._target);
+        this._background.linkWithMesh(this.target);
         this._background.background = this._bgColor;
         this._background.alpha = 0.8;
         this._background.linkOffsetY = -10;
@@ -100,6 +104,18 @@ class dpInfo {
         this._textBlock.fontSize = fontSize;
         this._textBlock.color = this._txtColor;
         this._background.addControl(this._textBlock);
+        this._closeBtn = Button.CreateSimpleButton("close", "x");
+        this._background.addControl(this._closeBtn);
+        this._closeBtn.topInPixels = -this._background.heightInPixels/2 + 10;
+        this._closeBtn.leftInPixels = this._background.widthInPixels/2 - 10;
+        this._closeBtn.widthInPixels = 20;
+        this._closeBtn.heightInPixels = 20;
+        this._closeBtn.fontSize = 10;
+        this._closeBtn.background = this._txtColor;
+        this._closeBtn.color = this._bgColor
+        this._closeBtn.onPointerClickObservable.add((function () {
+            this.dispose();
+        }).bind(this));
 
     }
 
@@ -112,6 +128,11 @@ class dpInfo {
             this._background.dispose();
             this._background = undefined;
         }
+        if (this._closeBtn) {
+            this._closeBtn.dispose();
+            this._closeBtn = undefined;
+        }
+        this.disposed = true;
     }
 }
 
@@ -222,7 +243,7 @@ export class AnnotationManager {
     private _fgColor: string;
     private _fullScreenUI: AdvancedDynamicTexture;
     
-    dpInfo: dpInfo;
+    dpInfos: dpInfo[] = [];
     labels: Label[] = [];
     fixedLabels: boolean = false;
     fixedArrows: boolean = false;
@@ -308,22 +329,38 @@ export class AnnotationManager {
     }
 
     redrawInfo() {
-        if (this.dpInfo) {
-            this.dpInfo.dispose();
-            this.dpInfo.draw();
+        for (let i = this.dpInfos.length - 1; i >= 0; i--) {
+            const dpInfo = this.dpInfos[i];
+            if (dpInfo.disposed) {
+                this.dpInfos.splice(i, 1);
+            } else {
+                dpInfo.dispose();
+                dpInfo.draw();
+            }
         }
     }
 
     displayInfo(text: string, target: TransformNode) {
-        this.clearInfo();
-        this.dpInfo = new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor);
+        let alreadyShown = false;
+        for (let i = 0; i < this.dpInfos.length; i++) {
+            const dpInfo = this.dpInfos[i];
+            if (dpInfo.target === target) {
+                alreadyShown = true;
+                if (dpInfo.disposed) {
+                    dpInfo.draw();
+                }
+            }
+        }
+        if (!alreadyShown) {
+            this.dpInfos.push(new dpInfo(text, target, this._fullScreenUI, this._bgColor, this._fgColor));
+        }
     }
 
     clearInfo() {
-        if (this.dpInfo) {
-            this.dpInfo.dispose();
-            this.dpInfo = undefined;
+        for (let i = 0; i < this.dpInfos.length; i++) {
+            this.dpInfos[i].dispose();
         }
+        this.dpInfos = [];
     }
 
     /**

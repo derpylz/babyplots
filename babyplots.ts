@@ -449,8 +449,8 @@ export class Plots {
             plots: []
         };
 
-        this.scene.onPointerDown = (function (evt: any, pickResult: PickingInfo) {
-            (this as Plots)._annotationManager.clearInfo();
+        this.scene.onPointerDown = (function (_evt: any, pickResult: PickingInfo) {
+            // (this as Plots)._annotationManager.clearInfo();
             for (let i = 0; i < (this as Plots).plots.length; i++) {
                 const plot = (this as Plots).plots[i];
                 if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {

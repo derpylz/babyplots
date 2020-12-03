@@ -34,6 +34,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export class ShapeCloud extends Plot {
     private _shading: boolean;
     private _shape: string;
+    private _tNodes: TransformNode[] = [];
     
     dpInfo: string[];
     
@@ -131,8 +132,19 @@ export class ShapeCloud extends Plot {
 
     }
     getPick(pickResult: PickingInfo) {
-        let target = new TransformNode("pickNode");
-        target.position = Vector3.FromArray(this._coords[pickResult.thinInstanceIndex])
+        let pickCoords = Vector3.FromArray(this._coords[pickResult.thinInstanceIndex]);
+        let target: TransformNode;
+        for (let i = 0; i < this._tNodes.length; i++) {
+            const tNode = this._tNodes[i];
+            if (pickCoords.equals(tNode.position)) {
+                target = tNode;
+            }
+        }
+        if (target === undefined) {
+            target = new TransformNode("pickNode");
+            target.position = pickCoords
+            this._tNodes.push(target);
+        }
         let pick = {
             target: target,
             info: this.dpInfo[pickResult.thinInstanceIndex]

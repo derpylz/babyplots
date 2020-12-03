@@ -32,6 +32,7 @@ var ShapeCloud = (function (_super) {
         if (zScale === void 0) { zScale = 1; }
         if (name === void 0) { name = "shape cloud"; }
         var _this = _super.call(this, name, "shape_" + shape, scene, coordinates, colorVar, size * 0.1, legendData, xScale, yScale, zScale) || this;
+        _this._tNodes = [];
         _this._shape = shape;
         _this._shading = shading;
         if (dpInfo && dpInfo.length === coordinates.length) {
@@ -91,8 +92,19 @@ var ShapeCloud = (function (_super) {
         }
     };
     ShapeCloud.prototype.getPick = function (pickResult) {
-        var target = new transformNode_1.TransformNode("pickNode");
-        target.position = math_1.Vector3.FromArray(this._coords[pickResult.thinInstanceIndex]);
+        var pickCoords = math_1.Vector3.FromArray(this._coords[pickResult.thinInstanceIndex]);
+        var target;
+        for (var i = 0; i < this._tNodes.length; i++) {
+            var tNode = this._tNodes[i];
+            if (pickCoords.equals(tNode.position)) {
+                target = tNode;
+            }
+        }
+        if (target === undefined) {
+            target = new transformNode_1.TransformNode("pickNode");
+            target.position = pickCoords;
+            this._tNodes.push(target);
+        }
         var pick = {
             target: target,
             info: this.dpInfo[pickResult.thinInstanceIndex]

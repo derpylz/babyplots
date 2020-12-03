@@ -288,8 +288,7 @@ var Plots = (function () {
         this._downloadObj = {
             plots: []
         };
-        this.scene.onPointerDown = (function (evt, pickResult) {
-            this._annotationManager.clearInfo();
+        this.scene.onPointerDown = (function (_evt, pickResult) {
             for (var i = 0; i < this.plots.length; i++) {
                 var plot = this.plots[i];
                 if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {

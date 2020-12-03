@@ -9,8 +9,10 @@ declare class dpInfo {
     private _text;
     private _bgColor;
     private _txtColor;
-    private _target;
     private _uiLayer;
+    private _closeBtn;
+    target: TransformNode;
+    disposed: boolean;
     constructor(text: string, target: TransformNode, uiLayer: AdvancedDynamicTexture, backgroundColor: string, color: string);
     draw(): void;
     dispose(): void;
@@ -45,7 +47,7 @@ export declare class AnnotationManager {
     private _bgColor;
     private _fgColor;
     private _fullScreenUI;
-    dpInfo: dpInfo;
+    dpInfos: dpInfo[];
     labels: Label[];
     fixedLabels: boolean;
     fixedArrows: boolean;
