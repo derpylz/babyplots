@@ -695,11 +695,11 @@ var Plots = (function () {
                 this._capturer.stop();
                 var loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
                 loadingText.innerText = "Saving GIF...";
-                this._capturer.save(function (blob) {
+                this._capturer.save((function (blob) {
                     downloadjs_1.default(blob, "babyplots.gif", 'image/gif');
                     document.getElementById("GIFloadingText_" + this._uniqID).remove();
                     document.getElementById("GIFloadingOverlay_" + this._uniqID).remove();
-                });
+                }).bind(this));
                 this._turned = 0;
                 this.rotationRate = 0.01;
                 this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
