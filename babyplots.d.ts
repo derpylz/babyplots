@@ -173,6 +173,7 @@ export declare function getUniqueVals(source: string[]): string[];
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export declare const PLOTTYPES: {
     pointCloud: string[];
+    shapeCloud: string[];
     surface: string[];
     heatMap: string[];
     imageStack: string[];
@@ -209,6 +210,7 @@ export declare class Plots {
     rotationRate: number;
     ymax: number;
     R: boolean;
+    Python: boolean;
     shapeLegendTitle: string;
     uiLayer: AdvancedDynamicTexture;
     constructor(canvasElement: string, options?: {});

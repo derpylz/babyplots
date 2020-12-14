@@ -196,6 +196,7 @@ var styleText_1 = require("./styleText");
 var SVGs_1 = require("./SVGs");
 exports.PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
+    'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
     'imageStack': ['values', 'indices', 'attributes']
@@ -238,6 +239,7 @@ var Plots = (function () {
         this.plots = [];
         this.ymax = 0;
         this.R = false;
+        this.Python = false;
         this.shapeLegendTitle = "";
         this._uniqID = uuid_1.v4();
         var opts = {
@@ -471,13 +473,21 @@ var Plots = (function () {
         formOverlay.id = "publishOverlay_" + this._uniqID;
         formOverlay.style.position = "absolute";
         var r = this.canvas.getBoundingClientRect();
-        formOverlay.style.top = r.y + "px";
-        formOverlay.style.left = r.x + "px";
-        formOverlay.style.width = r.width + "px";
-        formOverlay.style.height = r.height + "px";
+        if (this.Python) {
+            formOverlay.style.top = "0px";
+            formOverlay.style.left = "0px";
+            formOverlay.style.width = "100%";
+            formOverlay.style.height = "100%";
+        }
+        else {
+            formOverlay.style.top = r.y + "px";
+            formOverlay.style.left = r.x + "px";
+            formOverlay.style.width = r.width + "px";
+            formOverlay.style.height = r.height + "px";
+        }
         formOverlay.style.backgroundColor = "#ffffff66";
         var formBox = document.createElement("div");
-        formBox.style.width = "180px";
+        formBox.style.width = "275px";
         formBox.style.margin = "42px auto";
         formBox.style.backgroundColor = "white";
         formBox.style.padding = "15px 30px";

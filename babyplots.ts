@@ -291,6 +291,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
+    'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
     'imageStack': ['values', 'indices', 'attributes']
@@ -360,6 +361,8 @@ export class Plots {
     ymax: number = 0;
     /** This variable should be exclusively set by the babyplots R package. It controls some specific options for babyplots behavior in the RStudio viewer. */
     R: boolean = false;
+    /** This variable should be exclusively set by the babyplots Python package. It controls some specific options for babyplots behavior in the Jupyter notebook. */
+    Python: boolean = false;
     /** Title of the legend showing the names and plot types of multiple plots, if at least one plot has showShape enabled. */
     shapeLegendTitle: string = "";
     /** AdvancedDynamicTexture for the full screen UI */
@@ -668,13 +671,20 @@ export class Plots {
         formOverlay.id = "publishOverlay_" + this._uniqID;
         formOverlay.style.position = "absolute";
         let r = this.canvas.getBoundingClientRect();
-        formOverlay.style.top = r.y + "px";
-        formOverlay.style.left = r.x + "px";
-        formOverlay.style.width = r.width + "px";
-        formOverlay.style.height = r.height + "px";
+        if (this.Python) {
+            formOverlay.style.top = "0px";
+            formOverlay.style.left = "0px";
+            formOverlay.style.width = "100%";
+            formOverlay.style.height = "100%";
+        } else {
+            formOverlay.style.top = r.y + "px";
+            formOverlay.style.left = r.x + "px";
+            formOverlay.style.width = r.width + "px";
+            formOverlay.style.height = r.height + "px";
+        }
         formOverlay.style.backgroundColor = "#ffffff66";
         let formBox = document.createElement("div");
-        formBox.style.width = "180px";
+        formBox.style.width = "275px";
         formBox.style.margin = "42px auto";
         formBox.style.backgroundColor = "white";
         formBox.style.padding = "15px 30px";
