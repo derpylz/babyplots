@@ -47,11 +47,12 @@ export declare class AnnotationManager {
     private _bgColor;
     private _fgColor;
     private _fullScreenUI;
+    private _uniqID;
     dpInfos: dpInfo[];
     labels: Label[];
     fixedLabels: boolean;
     fixedArrows: boolean;
-    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera, backgroundColor: string, fullScreenUI: AdvancedDynamicTexture);
+    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera, backgroundColor: string, fullScreenUI: AdvancedDynamicTexture, uniqID: string);
     private _createLabelForms;
     update(): void;
     toggleLabelControl(): void;

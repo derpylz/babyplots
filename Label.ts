@@ -242,13 +242,14 @@ export class AnnotationManager {
     private _bgColor: string;
     private _fgColor: string;
     private _fullScreenUI: AdvancedDynamicTexture;
+    private _uniqID: string;
     
     dpInfos: dpInfo[] = [];
     labels: Label[] = [];
     fixedLabels: boolean = false;
     fixedArrows: boolean = false;
 
-    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera, backgroundColor: string, fullScreenUI: AdvancedDynamicTexture) {
+    constructor(canvas: HTMLCanvasElement, scene: Scene, ymax: number, camera: ArcRotateCamera, backgroundColor: string, fullScreenUI: AdvancedDynamicTexture, uniqID: string) {
         this._canvas = canvas;
         this._scene = scene;
         this._ymax = ymax;
@@ -256,6 +257,7 @@ export class AnnotationManager {
         this._bgColor = backgroundColor;
         this._fgColor = "white";
         this._fullScreenUI = fullScreenUI;
+        this._uniqID = uniqID;
         if (chroma(backgroundColor).luminance() > 0.5) {
             this._fgColor = "black";
         }
@@ -264,6 +266,7 @@ export class AnnotationManager {
 
     private _createLabelForms() {
         let labelBox = document.createElement("div");
+        labelBox.id = "labelControl_" + this._uniqID;
         labelBox.className = "bbp label-control";
         labelBox.style.display = "none";
         labelBox.style.top = this._canvas.clientTop + 40 + "px";

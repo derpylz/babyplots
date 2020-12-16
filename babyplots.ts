@@ -220,7 +220,7 @@ export abstract class Plot {
     updateSize(): void { }
     update(): boolean { return false }
     resetAnimation(): void { }
-    getPick(pickResult: PickingInfo): {target: TransformNode, info: string} { return null }
+    getPick(pickResult: PickingInfo): { target: TransformNode, info: string } { return null }
 }
 
 
@@ -429,7 +429,7 @@ export class Plots {
         // create fullscreen GUI texture
         this.uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
 
-        this._annotationManager = new AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer);
+        this._annotationManager = new AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer, this._uniqID);
 
         this.scene.registerBeforeRender(this._prepRender.bind(this));
 
@@ -442,6 +442,7 @@ export class Plots {
         document.getElementsByTagName('head')[0].appendChild(styleElem);
         // create ui elements
         let buttonBar = document.createElement("div");
+        buttonBar.id = "buttonBar_" + this._uniqID;
         buttonBar.className = "bbp button-bar"
         buttonBar.style.top = this.canvas.clientTop + 5 + "px";
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
@@ -1957,6 +1958,11 @@ export class Plots {
     dispose(): void {
         this.scene.dispose();
         this._engine.dispose();
+        // remove UI
+        let btnbar = document.getElementById("buttonBar_" + this._uniqID);
+        btnbar.remove();
+        let lblCntrl = document.getElementById("labelControl_" + this._uniqID);
+        lblCntrl.remove();
     }
 
     /**

@@ -275,13 +275,14 @@ var Plots = (function () {
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
         this._hl2.specular = new math_1.Color3(0, 0, 0);
         this.uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
-        this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer);
+        this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer, this._uniqID);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
         this.scene.registerAfterRender(this._afterRender.bind(this));
         var styleElem = document.createElement("style");
         styleElem.appendChild(document.createTextNode(styleText_1.styleText));
         document.getElementsByTagName('head')[0].appendChild(styleElem);
         var buttonBar = document.createElement("div");
+        buttonBar.id = "buttonBar_" + this._uniqID;
         buttonBar.className = "bbp button-bar";
         buttonBar.style.top = this.canvas.clientTop + 5 + "px";
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
@@ -1526,6 +1527,10 @@ var Plots = (function () {
     Plots.prototype.dispose = function () {
         this.scene.dispose();
         this._engine.dispose();
+        var btnbar = document.getElementById("buttonBar_" + this._uniqID);
+        btnbar.remove();
+        var lblCntrl = document.getElementById("labelControl_" + this._uniqID);
+        lblCntrl.remove();
     };
     Plots.prototype.addLabels = function (labelList) {
         this._annotationManager.addLabels(labelList);

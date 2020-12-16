@@ -170,7 +170,7 @@ var Label = (function () {
     return Label;
 }());
 var AnnotationManager = (function () {
-    function AnnotationManager(canvas, scene, ymax, camera, backgroundColor, fullScreenUI) {
+    function AnnotationManager(canvas, scene, ymax, camera, backgroundColor, fullScreenUI, uniqID) {
         this._editLabelForms = [];
         this._showLabels = false;
         this._arrows = [];
@@ -186,6 +186,7 @@ var AnnotationManager = (function () {
         this._bgColor = backgroundColor;
         this._fgColor = "white";
         this._fullScreenUI = fullScreenUI;
+        this._uniqID = uniqID;
         if (chroma_js_1.default(backgroundColor).luminance() > 0.5) {
             this._fgColor = "black";
         }
@@ -193,6 +194,7 @@ var AnnotationManager = (function () {
     }
     AnnotationManager.prototype._createLabelForms = function () {
         var labelBox = document.createElement("div");
+        labelBox.id = "labelControl_" + this._uniqID;
         labelBox.className = "bbp label-control";
         labelBox.style.display = "none";
         labelBox.style.top = this._canvas.clientTop + 40 + "px";
