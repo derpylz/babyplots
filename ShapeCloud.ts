@@ -104,7 +104,7 @@ export class ShapeCloud extends Plot {
                 origMesh = CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = BoxBuilder.CreateBox(mid, { size: 1 });
+                origMesh = BoxBuilder.CreateBox(mid, { size: this._size });
                 break;
         }
         
