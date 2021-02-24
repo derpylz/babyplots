@@ -4,6 +4,7 @@ export declare const buttonSVGs: {
     labels: string;
     publish: string;
     replay: string;
+    loop: string;
     record: string;
 };
 export declare const legendSVGs: {

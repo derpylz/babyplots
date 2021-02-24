@@ -7,6 +7,7 @@
     <script src="dist/CCapture.all.min.js"></script>
     <script src="dist/examples/surface.js"></script>
     <script src="dist/examples/heatMap.js"></script>
+    <script src="dist/examples/animPlot.js"></script>
     <script src="dist/examples/pointCloud.js"></script>
     <script src="dist/examples/shapeCloud.js"></script>
     <script src="dist/examples/shapeCloudInfo.js"></script>
@@ -34,8 +35,8 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      vis.fromJSON(shapeCloudInfoData);
-      vis.turntable = false;
+      vis.fromJSON(plot);
+      vis.turntable = true;
       vis.doRender();
       // vis.createButtons("label");
       window.onresize = function () {

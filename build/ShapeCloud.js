@@ -70,7 +70,7 @@ var ShapeCloud = (function (_super) {
                 origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: 1 });
+                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: this._size });
                 break;
         }
         origMesh.thinInstanceSetBuffer("matrix", matricesData, 16, true);

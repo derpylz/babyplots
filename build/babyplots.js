@@ -135,6 +135,7 @@ var Plot = (function () {
     Plot.prototype.updateSize = function () { };
     Plot.prototype.update = function () { return false; };
     Plot.prototype.resetAnimation = function () { };
+    Plot.prototype.setLooping = function (looping) { };
     Plot.prototype.getPick = function (pickResult) { return null; };
     return Plot;
 }());
@@ -227,6 +228,7 @@ var Plots = (function () {
         if (options === void 0) { options = {}; }
         this._showLegend = true;
         this._hasAnim = false;
+        this._loopingAnim = false;
         this._axes = [];
         this._downloadObj = {};
         this._recording = false;
@@ -373,6 +375,7 @@ var Plots = (function () {
                     foldedEmbedding: plot["foldedEmbedding"],
                     foldAnimDelay: plot["foldAnimDelay"],
                     foldAnimDuration: plot["foldAnimDuration"],
+                    foldAnimLoop: plot["foldAnimLoop"],
                     colnames: plot["colnames"],
                     rownames: plot["rownames"],
                     shape: plot["shape"],
@@ -607,7 +610,9 @@ var Plots = (function () {
     };
     Plots.prototype._resetAnimation = function () {
         this._hasAnim = true;
-        this.plots[0].resetAnimation();
+        for (var idx = 0; idx < this.plots.length; idx++) {
+            this.plots[idx].resetAnimation();
+        }
         var boundingBox = this.plots[0].mesh.getBoundingInfo().boundingBox;
         var rangeX = [
             boundingBox.minimumWorld.x,
@@ -624,6 +629,25 @@ var Plots = (function () {
         this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
         this._axes[0].update(this.camera, true);
     };
+    Plots.prototype._toggleLoopAnimation = function () {
+        if (this._loopingAnim) {
+            this._loopingAnim = false;
+            for (var idx = 0; idx < this.plots.length; idx++) {
+                this.plots[idx].setLooping(false);
+            }
+            this._loopBtn.className = "button";
+        }
+        else {
+            this._loopingAnim = true;
+            for (var idx = 0; idx < this.plots.length; idx++) {
+                this.plots[idx].setLooping(true);
+            }
+            this._loopBtn.className = "button active";
+        }
+        if (!this._hasAnim) {
+            this._resetAnimation();
+        }
+    };
     Plots.prototype._startRecording = function () {
         this._recording = true;
     };
@@ -632,7 +656,14 @@ var Plots = (function () {
             this.camera.alpha += this.rotationRate;
         }
         if (this._hasAnim) {
-            this._hasAnim = this.plots[0].update();
+            var anyAnim = false;
+            for (var idx = 0; idx < this.plots.length; idx++) {
+                var animState = this.plots[idx].update();
+                if (animState) {
+                    anyAnim = true;
+                }
+            }
+            this._hasAnim = anyAnim;
             if (!this._hasAnim) {
                 var boundingBox = this.plots[0].mesh.getBoundingInfo().boundingBox;
                 var rangeX = [
@@ -838,6 +869,7 @@ var Plots = (function () {
             foldedEmbedding: null,
             foldAnimDelay: null,
             foldAnimDuration: null,
+            foldAnimLoop: false,
             colnames: null,
             rownames: null,
             shape: null,
@@ -874,6 +906,7 @@ var Plots = (function () {
             foldedEmbedding: opts.foldedEmbedding,
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
+            foldAnimLoop: opts.foldAnimLoop,
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
@@ -892,6 +925,17 @@ var Plots = (function () {
             replayBtn.innerHTML = SVGs_1.buttonSVGs.replay;
             replayBtn.onclick = this._resetAnimation.bind(this);
             this._buttonBar.appendChild(replayBtn);
+            var loopBtn = document.createElement("div");
+            if (opts.foldAnimLoop) {
+                loopBtn.className = "button active";
+            }
+            else {
+                loopBtn.className = "button";
+            }
+            loopBtn.innerHTML = SVGs_1.buttonSVGs.loop;
+            loopBtn.onclick = this._toggleLoopAnimation.bind(this);
+            this._buttonBar.appendChild(loopBtn);
+            this._loopBtn = loopBtn;
         }
         switch (colorBy) {
             case "categories":
@@ -1092,6 +1136,10 @@ var Plots = (function () {
                     this._zScale,
                 ];
                 break;
+        }
+        if (opts.foldAnimLoop) {
+            this._loopingAnim = true;
+            plot.setLooping(true);
         }
         this.plots.push(plot);
         this._fsUIDirty = true;

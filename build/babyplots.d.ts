@@ -156,6 +156,7 @@ export declare abstract class Plot {
     updateSize(): void;
     update(): boolean;
     resetAnimation(): void;
+    setLooping(looping: boolean): void;
     getPick(pickResult: PickingInfo): {
         target: TransformNode;
         info: string;
@@ -186,6 +187,8 @@ export declare class Plots {
     protected _legend: AdvancedDynamicTexture;
     protected _showLegend: boolean;
     private _hasAnim;
+    private _loopingAnim;
+    private _loopBtn;
     private _axes;
     private _downloadObj;
     private _buttonBar;
@@ -223,6 +226,7 @@ export declare class Plots {
     private _tryPublish;
     private _cancelPublish;
     private _resetAnimation;
+    private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;
     private _afterRender;

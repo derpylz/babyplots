@@ -6,6 +6,8 @@ exports.styleText = [
     ".bbp.button-bar > .button { float: right; width: 75px; height: 30px; cursor: pointer; border-radius: 2px; background-color: #f0f0f0; margin: 0 4px 0 0; }",
     ".bbp.button-bar > .button:hover { background-color: #ddd; }",
     ".bbp.button-bar > .button > svg { width: 75px; height: 30px; }",
+    ".bbp.button-bar > .button.active { background-color: #afafaf; }",
+    ".bbp.button-bar > .button.active:hover { background-color: #9f9f9f; }",
     ".bbp.label-control { position: absolute; z-index: 3; font-family: sans-serif; width: 200px; background-color: #f0f0f0; padding: 5px; border-radius: 2px; }",
     ".bbp.label-control > label { font-size: 11pt; }",
     ".bbp.label-control > .edit-container { overflow: auto; }",

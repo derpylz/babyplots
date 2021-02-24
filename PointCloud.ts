@@ -30,6 +30,8 @@ export class PointCloud extends Plot {
     private _pointPicking: boolean = false;
     private _selectionCallback = function (selection: number[]) { return false; };
     private _folded: boolean;
+    private _looping: boolean = false;
+    private _animDirection: number = 1;
     private _foldedEmbedding: number[][];
     private _foldVectors: Vector3[] = [];
     private _foldCounter: number = 0;
@@ -162,6 +164,12 @@ export class PointCloud extends Plot {
         this.mesh.updateMeshPositions(positionFunction.bind(this), true);
         this.mesh.refreshBoundingInfo();
         this._foldCounter = 0;
+        this._animDirection = 1;
+    }
+
+    setLooping(looping: boolean): void {
+        this._looping = looping;
+        this.resetAnimation();
     }
 
     update(): boolean {
@@ -169,14 +177,20 @@ export class PointCloud extends Plot {
             if (this._foldCounter < this._foldDelay) {
                 this._foldCounter += 1;
             } else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
-                let positionFunction = function (positions: FloatArray) {
+                let positionFunction = function (this: PointCloud, positions: FloatArray) {
                     let numberOfVertices = positions.length / 3;
                     for (let i = 0; i < numberOfVertices; i++) {
                         let posVector = new Vector3(
                             positions[i * 3],
                             positions[i * 3 + 1],
                             positions[i * 3 + 2]
-                        ).addInPlace(this._foldVectorFract[i]);
+                        );
+                        let vectorFractDir = this._foldVectorFract[i].multiplyByFloats(
+                            this._animDirection,
+                            this._animDirection,
+                            this._animDirection
+                        )
+                        posVector = posVector.addInPlace(vectorFractDir);
                         positions[i * 3] = posVector.x;
                         positions[i * 3 + 1] = posVector.y;
                         positions[i * 3 + 2] = posVector.z;
@@ -185,16 +199,21 @@ export class PointCloud extends Plot {
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this._foldCounter += 1;
             } else {
-                this._folded = false;
-                let positionFunction = function (positions: FloatArray) {
-                    let numberOfVertices = positions.length / 3;
-                    for (let i = 0; i < numberOfVertices; i++) {
-                        positions[i * 3] = this._coords[i][0] * this.xScale;
-                        positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
-                        positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
+                if (this._looping) {
+                    this._foldCounter = 0;
+                    this._animDirection *= -1;
+                } else {
+                    this._folded = false;
+                    let positionFunction = function (positions: FloatArray) {
+                        let numberOfVertices = positions.length / 3;
+                        for (let i = 0; i < numberOfVertices; i++) {
+                            positions[i * 3] = this._coords[i][0] * this.xScale;
+                            positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
+                            positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
+                        }
                     }
+                    this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 }
-                this.mesh.updateMeshPositions(positionFunction.bind(this), true);
                 this.mesh.refreshBoundingInfo();
             }
         }

@@ -29,6 +29,8 @@ var PointCloud = (function (_super) {
         var _this = _super.call(this, name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._pointPicking = false;
         _this._selectionCallback = function (selection) { return false; };
+        _this._looping = false;
+        _this._animDirection = 1;
         _this._foldVectors = [];
         _this._foldCounter = 0;
         _this._foldAnimFrames = 200;
@@ -115,6 +117,11 @@ var PointCloud = (function (_super) {
         this.mesh.updateMeshPositions(positionFunction.bind(this), true);
         this.mesh.refreshBoundingInfo();
         this._foldCounter = 0;
+        this._animDirection = 1;
+    };
+    PointCloud.prototype.setLooping = function (looping) {
+        this._looping = looping;
+        this.resetAnimation();
     };
     PointCloud.prototype.update = function () {
         if (this.mesh && this._folded) {
@@ -125,7 +132,9 @@ var PointCloud = (function (_super) {
                 var positionFunction = function (positions) {
                     var numberOfVertices = positions.length / 3;
                     for (var i = 0; i < numberOfVertices; i++) {
-                        var posVector = new math_1.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).addInPlace(this._foldVectorFract[i]);
+                        var posVector = new math_1.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+                        var vectorFractDir = this._foldVectorFract[i].multiplyByFloats(this._animDirection, this._animDirection, this._animDirection);
+                        posVector = posVector.addInPlace(vectorFractDir);
                         positions[i * 3] = posVector.x;
                         positions[i * 3 + 1] = posVector.y;
                         positions[i * 3 + 2] = posVector.z;
@@ -135,16 +144,22 @@ var PointCloud = (function (_super) {
                 this._foldCounter += 1;
             }
             else {
-                this._folded = false;
-                var positionFunction = function (positions) {
-                    var numberOfVertices = positions.length / 3;
-                    for (var i = 0; i < numberOfVertices; i++) {
-                        positions[i * 3] = this._coords[i][0] * this.xScale;
-                        positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
-                        positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
-                    }
-                };
-                this.mesh.updateMeshPositions(positionFunction.bind(this), true);
+                if (this._looping) {
+                    this._foldCounter = 0;
+                    this._animDirection *= -1;
+                }
+                else {
+                    this._folded = false;
+                    var positionFunction = function (positions) {
+                        var numberOfVertices = positions.length / 3;
+                        for (var i = 0; i < numberOfVertices; i++) {
+                            positions[i * 3] = this._coords[i][0] * this.xScale;
+                            positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
+                            positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
+                        }
+                    };
+                    this.mesh.updateMeshPositions(positionFunction.bind(this), true);
+                }
                 this.mesh.refreshBoundingInfo();
             }
         }

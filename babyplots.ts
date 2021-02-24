@@ -220,6 +220,7 @@ export abstract class Plot {
     updateSize(): void { }
     update(): boolean { return false }
     resetAnimation(): void { }
+    setLooping(looping: boolean): void { }
     getPick(pickResult: PickingInfo): { target: TransformNode, info: string } { return null }
 }
 
@@ -328,6 +329,8 @@ export class Plots {
     protected _legend: AdvancedDynamicTexture;
     protected _showLegend: boolean = true;
     private _hasAnim: boolean = false;
+    private _loopingAnim: boolean = false;
+    private _loopBtn: HTMLElement;
     private _axes: Axes[] = [];
     private _downloadObj: {} = {};
     private _buttonBar: HTMLDivElement;
@@ -551,6 +554,7 @@ export class Plots {
                         foldedEmbedding: plot["foldedEmbedding"],
                         foldAnimDelay: plot["foldAnimDelay"],
                         foldAnimDuration: plot["foldAnimDuration"],
+                        foldAnimLoop: plot["foldAnimLoop"],
                         colnames: plot["colnames"],
                         rownames: plot["rownames"],
                         shape: plot["shape"],
@@ -816,7 +820,9 @@ export class Plots {
 
     private _resetAnimation() {
         this._hasAnim = true;
-        this.plots[0].resetAnimation();
+        for (let idx = 0; idx < this.plots.length; idx++) {
+            this.plots[idx].resetAnimation();
+        }
         let boundingBox = this.plots[0].mesh.getBoundingInfo().boundingBox;
         let rangeX = [
             boundingBox.minimumWorld.x,
@@ -834,6 +840,26 @@ export class Plots {
         this._axes[0].update(this.camera, true);
     }
 
+    private _toggleLoopAnimation() {
+        if (this._loopingAnim) {
+            this._loopingAnim = false;
+            for (let idx = 0; idx < this.plots.length; idx++) {
+                this.plots[idx].setLooping(false);
+            }
+            this._loopBtn.className = "button";
+        } else {
+            this._loopingAnim = true;
+            for (let idx = 0; idx < this.plots.length; idx++) {
+                this.plots[idx].setLooping(true);
+            }
+            this._loopBtn.className = "button active";
+        }
+        if (!this._hasAnim) {
+            this._resetAnimation();
+        }
+        
+    }
+
     private _startRecording() {
         this._recording = true;
     }
@@ -848,7 +874,14 @@ export class Plots {
         }
         // update plots with animations
         if (this._hasAnim) {
-            this._hasAnim = this.plots[0].update();
+            let anyAnim = false;
+            for (let idx = 0; idx < this.plots.length; idx++) {
+                let animState = this.plots[idx].update();
+                if (animState) {
+                    anyAnim = true;
+                }
+            }
+            this._hasAnim = anyAnim;
             if (!this._hasAnim) {
                 let boundingBox = this.plots[0].mesh.getBoundingInfo().boundingBox;
                 let rangeX = [
@@ -1133,6 +1166,7 @@ export class Plots {
             foldedEmbedding: null,
             foldAnimDelay: null,
             foldAnimDuration: null,
+            foldAnimLoop: false,
             colnames: null,
             rownames: null,
             shape: null,
@@ -1171,6 +1205,7 @@ export class Plots {
             foldedEmbedding: opts.foldedEmbedding,
             foldAnimDelay: opts.foldAnimDelay,
             foldAnimDuration: opts.foldAnimDuration,
+            foldAnimLoop: opts.foldAnimLoop,
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
@@ -1190,6 +1225,16 @@ export class Plots {
             replayBtn.innerHTML = buttonSVGs.replay;
             replayBtn.onclick = this._resetAnimation.bind(this);
             this._buttonBar.appendChild(replayBtn);
+            let loopBtn = document.createElement("div");
+            if (opts.foldAnimLoop) {
+                loopBtn.className = "button active"
+            } else {
+                loopBtn.className = "button"
+            }
+            loopBtn.innerHTML = buttonSVGs.loop;
+            loopBtn.onclick = this._toggleLoopAnimation.bind(this);
+            this._buttonBar.appendChild(loopBtn);
+            this._loopBtn = loopBtn;
         }
 
         switch (colorBy) {
@@ -1456,6 +1501,10 @@ export class Plots {
                 break
         }
 
+        if (opts.foldAnimLoop) {
+            this._loopingAnim = true;
+            plot.setLooping(true);
+        }
         this.plots.push(plot);
         this._fsUIDirty = true;
         let axisData: AxisData = {
