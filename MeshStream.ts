@@ -31,7 +31,8 @@ export class MeshStream extends Plot {
     private _filenames: string[] = [];
     private _allLoaded: boolean = false;
     private _frameIndex: number = 0;
-    private _containers: Promise<AssetContainer>[] = [];
+    private _prevTime: number = performance.now();
+    private _containers: AssetContainer[] = [];
 
     frameDelay: number;
 
@@ -62,32 +63,36 @@ export class MeshStream extends Plot {
         // load meshes one by one, store them and display them as they come in
 
         // start loading first mesh container
-        this._containers.push(this._loadMeshAndWait(this._filenames[0]));
+        let loadingContainers: Promise<AssetContainer>[] = [];
+        loadingContainers.push(this._loadMeshAndWait(this._filenames[0]));
 
         // load subsequent containers
         for (let idx = 1; idx < this._filenames.length; idx++) {
             const filename = this._filenames[idx];
             // start loading container
-            this._containers.push(this._loadMeshAndWait(filename));
+            loadingContainers.push(this._loadMeshAndWait(filename));
             // wait until previous mesh is loaded
-            const prevContainer = await this._containers[idx - 1];
+            const prevContainer = await loadingContainers[idx - 1];
+            this._containers.push(prevContainer);
             if (idx > 1) {
                 // remove the meshes before the previous frame from the scene
-                (await this._containers[idx - 2]).removeAllFromScene();
+                (await loadingContainers[idx - 2]).removeAllFromScene();
             }
             // add the previous meshes to the scene
             prevContainer.addAllToScene();
             console.log('added containter ' + idx);
         }
-        const prevContainer = await this._containers[this._filenames.length - 2];
-        const lastContainer = await this._containers[this._filenames.length - 1];
+        const prevContainer = await loadingContainers[this._filenames.length - 2];
+        const lastContainer = await loadingContainers[this._filenames.length - 1];
+        this._containers.push(lastContainer);
         prevContainer.removeAllFromScene();
         lastContainer.addAllToScene();
         this._allLoaded = true;
+        this._frameIndex = 0;
     }
 
     async _loadMeshAndWait(filename: string): Promise<AssetContainer> {
-        const ensureDelay = _wait(this.frameDelay);
+        const t0 = performance.now();
         let container = await SceneLoader.LoadAssetContainerAsync(
             this._rootUrl, filename, this._scene
         ).then(container => {
@@ -96,24 +101,37 @@ export class MeshStream extends Plot {
             rootMesh.rotate(Axis.X, Math.PI / 2, Space.LOCAL);
             return container;
         });
-        await ensureDelay;
+        const remTime = this.frameDelay - (performance.now() - t0);
+        if (remTime > 0) {
+            await _sleep(remTime);
+        }
         return container;
     }
 
     update(): boolean {
         if (this._allLoaded) {
+            let timeNow = performance.now();
+            if (timeNow - this._prevTime > this.frameDelay) {
+                this._prevTime = timeNow;
+                if (this._frameIndex === 0) {
+                    this._containers[this._containers.length - 1].removeAllFromScene();
+                } else {
+                    this._containers[this._frameIndex - 1].removeAllFromScene();
+                }
+                this._containers[this._frameIndex].addAllToScene();
+                if (this._frameIndex === this._containers.length - 1) {
+                    this._frameIndex = 0;
+                } else {
+                    this._frameIndex++;
+                }
+            }
             // go through the loaded meshes sequentially, then reset.
         }
         return true;
     }
 }
 
-function _wait(delay: number): Promise<void> {
-    return new Promise(resolve => {
-        setTimeout(function () {
-            resolve();
-        }, delay);
-    });
+function _sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 

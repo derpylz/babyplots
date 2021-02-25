@@ -1609,6 +1609,7 @@ export class Plots {
             this._zScale,
             frameDelay
         );
+        this._hasAnim = true;
         this.plots.push(plot);
         // this._updateLegend(this.uiLayer);
         // this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
