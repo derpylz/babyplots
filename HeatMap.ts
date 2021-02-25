@@ -23,9 +23,9 @@ import { Color3, Vector3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, LegendData, matrixMax } from "./babyplots";
+import { CoordinatePlot, LegendData} from "./babyplots";
 
-export class HeatMap extends Plot {
+export class HeatMap extends CoordinatePlot {
     constructor(
         scene: Scene,
         coordinates: number[][],

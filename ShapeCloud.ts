@@ -26,12 +26,12 @@ import { TorusBuilder } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { Color3, Color4, Matrix, Vector3 } from "@babylonjs/core/Maths/math";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, LegendData } from "./babyplots";
+import { CoordinatePlot, LegendData } from "./babyplots";
 import { v4 as uuidv4 } from "uuid";
 import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
-export class ShapeCloud extends Plot {
+export class ShapeCloud extends CoordinatePlot {
     private _shading: boolean;
     private _shape: string;
     private _tNodes: TransformNode[] = [];

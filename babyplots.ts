@@ -175,22 +175,50 @@ export interface LegendData {
 }
 
 export abstract class Plot {
-    protected _coords: number[][];
-    protected _coordColors: string[];
-    protected _groups: string[];
-    protected _groupNames: string[];
-    protected _size: number = 1;
     protected _scene: Scene;
 
     name: string;
     shape: string;
     mesh: Mesh;
     meshes: Mesh[];
-    selection: number[]; // contains indices of cells in selection cube
     legendData: LegendData;
     xScale: number;
     yScale: number;
     zScale: number;
+    pickable: boolean = false;
+
+    constructor(
+        name: string,
+        shape: string,
+        scene: Scene,
+        legendData: LegendData,
+        xScale: number = 1,
+        yScale: number = 1,
+        zScale: number = 1,
+    ) {
+        this.name = name;
+        this.shape = shape;
+        this._scene = scene;
+        this.legendData = legendData;
+        this.xScale = xScale;
+        this.yScale = yScale;
+        this.zScale = zScale;
+    }
+
+    update(): boolean { return false }
+    resetAnimation(): void { }
+    setLooping(looping: boolean): void { }
+}
+
+export abstract class CoordinatePlot extends Plot {
+    protected _coords: number[][];
+    protected _coordColors: string[];
+    protected _groups: string[];
+    protected _groupNames: string[];
+    protected _size: number = 1;
+    
+    pickable: boolean = true;
+    selection: number[]; // contains indices of cells in selection cube
     dpInfo: string[];
 
     constructor(
@@ -203,27 +231,16 @@ export abstract class Plot {
         legendData: LegendData,
         xScale: number = 1,
         yScale: number = 1,
-        zScale: number = 1,
+        zScale: number = 1
     ) {
-        this.name = name;
-        this.shape = shape;
-        this._scene = scene;
+        super(name, shape, scene, legendData, xScale, yScale, zScale);
         this._coords = coordinates;
         this._coordColors = colorVar;
         this._size = size;
-        this.legendData = legendData;
-        this.xScale = xScale
-        this.yScale = yScale
-        this.zScale = zScale
     }
 
-    updateSize(): void { }
-    update(): boolean { return false }
-    resetAnimation(): void { }
-    setLooping(looping: boolean): void { }
     getPick(pickResult: PickingInfo): { target: TransformNode, info: string } { return null }
 }
-
 
 declare global {
     interface Array<T> {
@@ -285,6 +302,7 @@ import { ShapeCloud } from "./ShapeCloud";
 import { PointCloud } from "./PointCloud";
 import { Surface } from "./Surface";
 import { HeatMap } from "./HeatMap";
+import { MeshStream } from "./MeshStream";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./styleText";
 import { buttonSVGs, legendSVGs } from "./SVGs";
@@ -459,9 +477,12 @@ export class Plots {
         this.scene.onPointerDown = (function (_evt: any, pickResult: PickingInfo) {
             // (this as Plots)._annotationManager.clearInfo();
             for (let i = 0; i < (this as Plots).plots.length; i++) {
-                const plot = (this as Plots).plots[i];
-                if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
-                    let pick = plot.getPick(pickResult);
+                let plot = (this as Plots).plots[i];
+                if (!plot.pickable) {
+                    continue;
+                }
+                if (pickResult.pickedMesh === plot.mesh && (plot as CoordinatePlot).dpInfo) {
+                    let pick = (plot as CoordinatePlot).getPick(pickResult);
                     (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
                 }
             }
@@ -1526,6 +1547,73 @@ export class Plots {
         this._axes.push(new Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this
+    }
+
+    /**
+     * Streams meshes from a url and displays them sequentially.
+     * 
+     * @param rootUrl 
+     * @param filePrefix 
+     * @param fileSuffix 
+     * @param fileIteratorStart 
+     * @param fileIteratorEnd 
+     * @param options An object with general and plot type specific options.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addMeshStream).
+     */
+    addMeshStream(
+        rootUrl: string,
+        filePrefix: string,
+        fileSuffix: string,
+        fileIteratorStart: number,
+        fileIteratorEnd: number,
+        frameDelay: number,
+        options: {}
+    ) {
+        // default options
+        let opts = {
+            
+        }
+        // apply user options
+        Object.assign(opts, options);
+        // prepare object for download as json button
+        this._downloadObj["plots"].push({
+            plotType: "meshStream",
+            rootUrl: rootUrl,
+            filePrefix: filePrefix,
+            fileSuffix: fileSuffix,
+            fileIteratorStart: fileIteratorStart,
+            fileIteratorEnd: fileIteratorEnd,
+            frameDelay: frameDelay
+        })
+
+        let legendData: LegendData = {
+            showLegend: false,
+            discrete: false,
+            breaks: [],
+            colorScale: "",
+            inverted: false,
+            position: undefined
+        }
+
+        let plot = new MeshStream(
+            this.scene,
+            rootUrl,
+            filePrefix,
+            fileSuffix,
+            fileIteratorStart,
+            fileIteratorEnd,
+            legendData,
+            this._xScale,
+            this._yScale,
+            this._zScale,
+            frameDelay
+        );
+        this.plots.push(plot);
+        // this._updateLegend(this.uiLayer);
+        // this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
+        this.camera.wheelPrecision = 1;
+        return this;
     }
 
     /**

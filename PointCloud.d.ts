@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Plot, LegendData } from "./babyplots";
-export declare class PointCloud extends Plot {
+import { LegendData, CoordinatePlot } from "./babyplots";
+export declare class PointCloud extends CoordinatePlot {
     private _pointPicking;
     private _selectionCallback;
     private _folded;

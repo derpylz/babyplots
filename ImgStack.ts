@@ -24,6 +24,7 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData } from "./babyplots";
 import chroma from "chroma-js";
+import { Size } from "babylonjs";
 
 
 
@@ -32,6 +33,9 @@ export class ImgStack extends Plot {
     private _intensityMode: string;
     private _channelCoords: number[][][];
     private _channelCoordIntensities: number[][];
+
+    size: number;
+
     constructor(
         scene: Scene,
         values: number[],
@@ -73,7 +77,9 @@ export class ImgStack extends Plot {
             ]);
             Intensities[channel].push(values[i]);
         }
-        super(name, "surface", scene, [], [], size, legendData, xScale, yScale, zScale);
+        super(name, "imgStack", scene, legendData, xScale, yScale, zScale);
+        this.size = size;
+        this.legendData
         this._channelCoords = coords;
         this._channelCoordIntensities = Intensities;
         this._backgroundColor = backgroundColor;
@@ -149,7 +155,7 @@ export class ImgStack extends Plot {
                     mat.emissiveColor = new Color3(1, 1, 1);
                     mat.disableLighting = true;
                     mat.pointsCloud = true;
-                    mat.pointSize = this._size;
+                    mat.pointSize = this.size;
                     mat.alpha = intensity;
                     customMesh.material = mat;
                     this.meshes.push(customMesh);
@@ -174,7 +180,7 @@ export class ImgStack extends Plot {
                 mat.emissiveColor = new Color3(1, 1, 1);
                 mat.disableLighting = true;
                 mat.pointsCloud = true;
-                mat.pointSize = this._size;
+                mat.pointSize = this.size;
                 customMesh.material = mat;
                 this.meshes.push(customMesh);
             }

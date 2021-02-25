@@ -35,8 +35,18 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      vis.fromJSON(plot);
-      vis.turntable = true;
+      // vis.fromJSON(plot);
+      // vis.turntable = true;
+      vis.addMeshStream(
+        "https://cdn.glitch.com/",
+        "b12df82c-ed15-473a-b9aa-f1ccd97600ac%2FEat_",
+        ".glb?v=1610559236379",
+        2,
+        101,
+        10,
+        {}
+      )
+      console.log('adding done?')
       vis.doRender();
       // vis.createButtons("label");
       window.onresize = function () {

@@ -21,11 +21,11 @@ import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Plot, LegendData, matrixMax } from "./babyplots";
+import { LegendData, CoordinatePlot } from "./babyplots";
 import chroma from "chroma-js";
 
 
-export class Surface extends Plot {
+export class Surface extends CoordinatePlot {
     constructor(
         scene: Scene,
         coordinates: number[][],
