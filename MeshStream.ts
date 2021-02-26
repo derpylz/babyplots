@@ -94,7 +94,13 @@ export class MeshStream extends Plot {
             prevContainer.addAllToScene();
             t0 = performance.now();
             if (idx === 1) {
+                // position camera
                 this.worldextends = this._scene.getWorldExtends();
+                let mm = this.worldextends.min.add(this.worldextends.max);
+                let midpoint = mm.divide(new Vector3(2, 2, 2));
+                this._camera.target = midpoint;
+                this._camera.alpha = 0;
+                this._camera.beta = 1;
                 this._camera.useFramingBehavior = true;
                 let framingBehavior = this._camera.getBehaviorByName("Framing") as FramingBehavior;
                 framingBehavior.framingTime = 0;
