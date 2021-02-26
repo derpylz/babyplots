@@ -12,12 +12,13 @@ export declare class MeshStream extends Plot {
     private _prevTime;
     private _containers;
     private _camera;
+    private _rotation;
     frameDelay: number;
     worldextends: {
         min: Vector3;
         max: Vector3;
     };
-    constructor(scene: Scene, camera: ArcRotateCamera, rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number, frameDelay?: number, name?: string);
+    constructor(scene: Scene, camera: ArcRotateCamera, rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, legendData: LegendData, xScale: number, yScale: number, zScale: number, frameDelay: number, rotation: number[], name?: string);
     _createMeshStream(): Promise<void>;
     _loadMesh(filename: string): Promise<AssetContainer>;
     update(): boolean;

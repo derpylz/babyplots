@@ -1572,7 +1572,7 @@ export class Plots {
     ) {
         // default options
         let opts = {
-            
+            meshRotation: [0, 0, 0]
         }
         // apply user options
         Object.assign(opts, options);
@@ -1584,7 +1584,8 @@ export class Plots {
             fileSuffix: fileSuffix,
             fileIteratorStart: fileIteratorStart,
             fileIteratorEnd: fileIteratorEnd,
-            frameDelay: frameDelay
+            frameDelay: frameDelay,
+            meshRotation: opts.meshRotation
         })
 
         let legendData: LegendData = {
@@ -1608,7 +1609,8 @@ export class Plots {
             this._xScale,
             this._yScale,
             this._zScale,
-            frameDelay
+            frameDelay,
+            opts.meshRotation,
         );
         this._hasAnim = true;
         this.plots.push(plot);

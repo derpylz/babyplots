@@ -37,6 +37,7 @@ export class MeshStream extends Plot {
     private _prevTime: number = performance.now();
     private _containers: AssetContainer[] = [];
     private _camera: ArcRotateCamera;
+    private _rotation: number[];
 
     frameDelay: number;
     worldextends: { min: Vector3; max: Vector3; };
@@ -54,12 +55,14 @@ export class MeshStream extends Plot {
         yScale: number = 1,
         zScale: number = 1,
         frameDelay: number = 200,
+        rotation: number[],
         name: string = "mesh stream"
     ) {
         super(name, "meshStream", scene, legendData, xScale, yScale, zScale);
         this._camera = camera;
         this._rootUrl = rootUrl;
         this.frameDelay = frameDelay;
+        this._rotation = rotation;
         for (let iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
@@ -122,9 +125,13 @@ export class MeshStream extends Plot {
         let container = await SceneLoader.LoadAssetContainerAsync(
             this._rootUrl, filename, this._scene
         ).then(container => {
-            let rootMesh = container.meshes[0];
-            rootMesh.rotationQuaternion = null;
-            rootMesh.rotate(Axis.X, Math.PI / 2, Space.LOCAL);
+            if (this._rotation.length === 3) {
+                let rootMesh = container.meshes[0];
+                rootMesh.rotationQuaternion = null;
+                rootMesh.rotate(Axis.X, this._rotation[0], Space.LOCAL);
+                rootMesh.rotate(Axis.Y, this._rotation[1], Space.LOCAL);
+                rootMesh.rotate(Axis.Z, this._rotation[2], Space.LOCAL);
+            }
             return container;
         });
         return container;
