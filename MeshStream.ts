@@ -17,13 +17,16 @@
  * 
  */
 
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import { LegendData, Plot } from "./babyplots";
-import { Axis, Space } from "@babylonjs/core/Maths/math";
+import { Axis, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
+import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 
 
 export class MeshStream extends Plot {
@@ -33,11 +36,14 @@ export class MeshStream extends Plot {
     private _frameIndex: number = 0;
     private _prevTime: number = performance.now();
     private _containers: AssetContainer[] = [];
+    private _camera: ArcRotateCamera;
 
     frameDelay: number;
+    worldextends: { min: Vector3; max: Vector3; };
 
     constructor(
         scene: Scene,
+        camera: ArcRotateCamera,
         rootUrl: string,
         filePrefix: string,
         fileSuffix: string,
@@ -51,6 +57,7 @@ export class MeshStream extends Plot {
         name: string = "mesh stream"
     ) {
         super(name, "meshStream", scene, legendData, xScale, yScale, zScale);
+        this._camera = camera;
         this._rootUrl = rootUrl;
         this.frameDelay = frameDelay;
         for (let iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
@@ -64,23 +71,39 @@ export class MeshStream extends Plot {
 
         // start loading first mesh container
         let loadingContainers: Promise<AssetContainer>[] = [];
-        loadingContainers.push(this._loadMeshAndWait(this._filenames[0]));
+        let t0 = performance.now();
+        loadingContainers.push(this._loadMesh(this._filenames[0]));
 
         // load subsequent containers
         for (let idx = 1; idx < this._filenames.length; idx++) {
             const filename = this._filenames[idx];
             // start loading container
-            loadingContainers.push(this._loadMeshAndWait(filename));
+            loadingContainers.push(this._loadMesh(filename));
             // wait until previous mesh is loaded
-            const prevContainer = await loadingContainers[idx - 1];
+            const prevContainer = await loadingContainers[loadingContainers.length - 2];
+            const remTime = this.frameDelay - (performance.now() - t0);
+            if (remTime > 0) {
+                await _sleep(remTime);
+            }
             this._containers.push(prevContainer);
             if (idx > 1) {
                 // remove the meshes before the previous frame from the scene
-                (await loadingContainers[idx - 2]).removeAllFromScene();
+                this._containers[this._containers.length - 2].removeAllFromScene();
             }
             // add the previous meshes to the scene
             prevContainer.addAllToScene();
-            console.log('added containter ' + idx);
+            t0 = performance.now();
+            if (idx === 1) {
+                this.worldextends = this._scene.getWorldExtends();
+                this._camera.useFramingBehavior = true;
+                let framingBehavior = this._camera.getBehaviorByName("Framing") as FramingBehavior;
+                framingBehavior.framingTime = 0;
+                framingBehavior.elevationReturnTime = -1;
+                this._camera.lowerRadiusLimit = 0;
+                framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
+                let light = new HemisphericLight("hemi", new Vector3(0, 1, 0), this._scene);
+                this._scene.lights.push(light);
+            }
         }
         const prevContainer = await loadingContainers[this._filenames.length - 2];
         const lastContainer = await loadingContainers[this._filenames.length - 1];
@@ -91,8 +114,7 @@ export class MeshStream extends Plot {
         this._frameIndex = 0;
     }
 
-    async _loadMeshAndWait(filename: string): Promise<AssetContainer> {
-        const t0 = performance.now();
+    async _loadMesh(filename: string): Promise<AssetContainer> {
         let container = await SceneLoader.LoadAssetContainerAsync(
             this._rootUrl, filename, this._scene
         ).then(container => {
@@ -101,10 +123,6 @@ export class MeshStream extends Plot {
             rootMesh.rotate(Axis.X, Math.PI / 2, Space.LOCAL);
             return container;
         });
-        const remTime = this.frameDelay - (performance.now() - t0);
-        if (remTime > 0) {
-            await _sleep(remTime);
-        }
         return container;
     }
 

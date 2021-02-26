@@ -438,7 +438,7 @@ export class Plots {
         this._yScale = opts.yScale;
         this._zScale = opts.zScale;
 
-        // two lights to illuminate the cells uniformly (top and bottom)
+        // two lights to illuminate the plot uniformly (top and bottom)
         this._hl1 = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new Color3(1, 1, 1);
         this._hl1.specular = new Color3(0, 0, 0);
@@ -1598,6 +1598,7 @@ export class Plots {
 
         let plot = new MeshStream(
             this.scene,
+            this.camera,
             rootUrl,
             filePrefix,
             fileSuffix,
