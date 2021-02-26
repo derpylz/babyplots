@@ -35,7 +35,7 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      // vis.fromJSON(plot);
+      // vis.fromJSON(surfaceData);
       // vis.turntable = true;
       vis.addMeshStream(
         "https://cdn.glitch.com/",
@@ -46,7 +46,6 @@
         100,
         {}
       )
-      console.log('adding done?')
       vis.doRender();
       // vis.createButtons("label");
       window.onresize = function () {

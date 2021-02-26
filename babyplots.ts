@@ -441,11 +441,11 @@ export class Plots {
         // two lights to illuminate the plot uniformly (top and bottom)
         this._hl1 = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new Color3(1, 1, 1);
-        this._hl1.specular = new Color3(0, 0, 0);
+        this._hl1.specular = new Color3(0.01, 0.01, 0.01);
         // bottom light slightly weaker for better depth perception and orientation
         this._hl2 = new HemisphericLight("HemiLight", new Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new Color3(0.8, 0.8, 0.8);
-        this._hl2.specular = new Color3(0, 0, 0);
+        this._hl2.specular = new Color3(0.01, 0.01, 0.01);
 
         // create fullscreen GUI texture
         this.uiLayer = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);

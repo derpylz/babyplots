@@ -22,7 +22,7 @@ import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import { LegendData, Plot } from "./babyplots";
-import { Axis, Space, Vector3 } from "@babylonjs/core/Maths/math";
+import { Axis, Color3, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
 import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
@@ -101,8 +101,6 @@ export class MeshStream extends Plot {
                 framingBehavior.elevationReturnTime = -1;
                 this._camera.lowerRadiusLimit = 0;
                 framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
-                let light = new HemisphericLight("hemi", new Vector3(0, 1, 0), this._scene);
-                this._scene.lights.push(light);
             }
         }
         const prevContainer = await loadingContainers[this._filenames.length - 2];
@@ -152,4 +150,3 @@ export class MeshStream extends Plot {
 function _sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
