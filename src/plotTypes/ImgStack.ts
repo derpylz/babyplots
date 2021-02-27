@@ -24,7 +24,6 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Plot, LegendData } from "../babyplots";
 import chroma from "chroma-js";
-import { Size } from "babylonjs";
 
 
 

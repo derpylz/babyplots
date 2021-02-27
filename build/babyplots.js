@@ -95,11 +95,26 @@
  * THE SOFTWARE.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.Plot = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CoordinatePlot = exports.Plot = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -113,33 +128,46 @@ var chroma_js_1 = __importDefault(require("chroma-js"));
 var downloadjs_1 = __importDefault(require("downloadjs"));
 var uuid_1 = require("uuid");
 var axios = require('axios').default;
-var Label_1 = require("./Label");
-var Axes_1 = require("./Axes");
+var Label_1 = require("./utils/Label");
+var Axes_1 = require("./utils/Axes");
 var Plot = (function () {
-    function Plot(name, shape, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+    function Plot(name, shape, scene, legendData, xScale, yScale, zScale) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        this._size = 1;
+        this.pickable = false;
         this.name = name;
         this.shape = shape;
         this._scene = scene;
-        this._coords = coordinates;
-        this._coordColors = colorVar;
-        this._size = size;
         this.legendData = legendData;
         this.xScale = xScale;
         this.yScale = yScale;
         this.zScale = zScale;
     }
-    Plot.prototype.updateSize = function () { };
     Plot.prototype.update = function () { return false; };
     Plot.prototype.resetAnimation = function () { };
     Plot.prototype.setLooping = function (looping) { };
-    Plot.prototype.getPick = function (pickResult) { return null; };
     return Plot;
 }());
 exports.Plot = Plot;
+var CoordinatePlot = (function (_super) {
+    __extends(CoordinatePlot, _super);
+    function CoordinatePlot(name, shape, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, name, shape, scene, legendData, xScale, yScale, zScale) || this;
+        _this._size = 1;
+        _this.pickable = true;
+        _this._coords = coordinates;
+        _this._coordColors = colorVar;
+        _this._size = size;
+        return _this;
+    }
+    CoordinatePlot.prototype.getPick = function (pickResult) { return null; };
+    return CoordinatePlot;
+}(Plot));
+exports.CoordinatePlot = CoordinatePlot;
 Array.prototype.min = function () {
     if (this.length > 65536) {
         var r_1 = this[0];
@@ -188,13 +216,14 @@ function getUniqueVals(source) {
     return result;
 }
 exports.getUniqueVals = getUniqueVals;
-var ImgStack_1 = require("./ImgStack");
-var ShapeCloud_1 = require("./ShapeCloud");
-var PointCloud_1 = require("./PointCloud");
-var Surface_1 = require("./Surface");
-var HeatMap_1 = require("./HeatMap");
-var styleText_1 = require("./styleText");
-var SVGs_1 = require("./SVGs");
+var ImgStack_1 = require("./plotTypes/ImgStack");
+var ShapeCloud_1 = require("./plotTypes/ShapeCloud");
+var PointCloud_1 = require("./plotTypes/PointCloud");
+var Surface_1 = require("./plotTypes/Surface");
+var HeatMap_1 = require("./plotTypes/HeatMap");
+var MeshStream_1 = require("./plotTypes/MeshStream");
+var styleText_1 = require("./utils/styleText");
+var SVGs_1 = require("./utils/SVGs");
 exports.PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
     'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -272,10 +301,10 @@ var Plots = (function () {
         this._zScale = opts.zScale;
         this._hl1 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new math_1.Color3(1, 1, 1);
-        this._hl1.specular = new math_1.Color3(0, 0, 0);
+        this._hl1.specular = new math_1.Color3(0.01, 0.01, 0.01);
         this._hl2 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
-        this._hl2.specular = new math_1.Color3(0, 0, 0);
+        this._hl2.specular = new math_1.Color3(0.01, 0.01, 0.01);
         this.uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
         this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer, this._uniqID);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
@@ -296,6 +325,9 @@ var Plots = (function () {
         this.scene.onPointerDown = (function (_evt, pickResult) {
             for (var i = 0; i < this.plots.length; i++) {
                 var plot = this.plots[i];
+                if (!plot.pickable) {
+                    continue;
+                }
                 if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
                     var pick = plot.getPick(pickResult);
                     this._annotationManager.displayInfo(pick.info, pick.target);
@@ -1161,6 +1193,35 @@ var Plots = (function () {
         };
         this._axes.push(new Axes_1.Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
+        return this;
+    };
+    Plots.prototype.addMeshStream = function (rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, frameDelay, options) {
+        var opts = {
+            meshRotation: [0, 0, 0]
+        };
+        Object.assign(opts, options);
+        this._downloadObj["plots"].push({
+            plotType: "meshStream",
+            rootUrl: rootUrl,
+            filePrefix: filePrefix,
+            fileSuffix: fileSuffix,
+            fileIteratorStart: fileIteratorStart,
+            fileIteratorEnd: fileIteratorEnd,
+            frameDelay: frameDelay,
+            meshRotation: opts.meshRotation
+        });
+        var legendData = {
+            showLegend: false,
+            discrete: false,
+            breaks: [],
+            colorScale: "",
+            inverted: false,
+            position: undefined
+        };
+        var plot = new MeshStream_1.MeshStream(this.scene, this.camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation);
+        this._hasAnim = true;
+        this.plots.push(plot);
+        this.camera.wheelPrecision = 1;
         return this;
     };
     Plots.prototype._updateLegend = function (uiLayer) {

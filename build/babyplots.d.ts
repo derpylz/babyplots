@@ -136,27 +136,31 @@ export interface LegendData {
     legendTitleFontColor?: string;
 }
 export declare abstract class Plot {
-    protected _coords: number[][];
-    protected _coordColors: string[];
-    protected _groups: string[];
-    protected _groupNames: string[];
-    protected _size: number;
     protected _scene: Scene;
     name: string;
     shape: string;
     mesh: Mesh;
     meshes: Mesh[];
-    selection: number[];
     legendData: LegendData;
     xScale: number;
     yScale: number;
     zScale: number;
-    dpInfo: string[];
-    constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
-    updateSize(): void;
+    pickable: boolean;
+    constructor(name: string, shape: string, scene: Scene, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     update(): boolean;
     resetAnimation(): void;
     setLooping(looping: boolean): void;
+}
+export declare abstract class CoordinatePlot extends Plot {
+    protected _coords: number[][];
+    protected _coordColors: string[];
+    protected _groups: string[];
+    protected _groupNames: string[];
+    protected _size: number;
+    pickable: boolean;
+    selection: number[];
+    dpInfo: string[];
+    constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     getPick(pickResult: PickingInfo): {
         target: TransformNode;
         info: string;
@@ -235,6 +239,7 @@ export declare class Plots {
         dim: number[];
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
+    addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): this;
     private _updateLegend;
     private _drawStandaloneShapeLegend;
     private _createPlotLegend;
