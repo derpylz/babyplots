@@ -1,6 +1,6 @@
 {
     "files": [
-        "./babyplots.ts"
+        "./src/babyplots.ts"
     ],
     "compilerOptions": {
         "target": "es5",

@@ -6,6 +6,9 @@ export declare const buttonSVGs: {
     replay: string;
     loop: string;
     record: string;
+    play: string;
+    pause: string;
+    loading: string;
 };
 export declare const legendSVGs: {
     heatmap: string;

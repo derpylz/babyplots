@@ -21,24 +21,26 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
-import { LegendData, Plot } from "./babyplots";
+import { LegendData, Plot } from "../babyplots";
 import { Axis, Color3, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
 import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 
 
 export class MeshStream extends Plot {
     private _rootUrl: string;
     private _filenames: string[] = [];
-    private _allLoaded: boolean = false;
-    private _frameIndex: number = 0;
     private _prevTime: number = performance.now();
     private _containers: AssetContainer[] = [];
     private _camera: ArcRotateCamera;
     private _rotation: number[];
-
+    
+    allLoaded: boolean = false;
+    frameIndex: number = 0;
+    loading: boolean = true;
+    frameTotal: number;
+    playing: boolean;
     frameDelay: number;
     worldextends: { min: Vector3; max: Vector3; };
 
@@ -66,6 +68,7 @@ export class MeshStream extends Plot {
         for (let iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
+        this.frameTotal = this._filenames.length;
         this._createMeshStream();
     }
 
@@ -95,6 +98,7 @@ export class MeshStream extends Plot {
             }
             // add the previous meshes to the scene
             prevContainer.addAllToScene();
+            this.frameIndex++;
             t0 = performance.now();
             if (idx === 1) {
                 // position camera
@@ -117,8 +121,8 @@ export class MeshStream extends Plot {
         this._containers.push(lastContainer);
         prevContainer.removeAllFromScene();
         lastContainer.addAllToScene();
-        this._allLoaded = true;
-        this._frameIndex = 0;
+        this.allLoaded = true;
+        this.frameIndex = 0;
     }
 
     async _loadMesh(filename: string): Promise<AssetContainer> {
@@ -138,20 +142,20 @@ export class MeshStream extends Plot {
     }
 
     update(): boolean {
-        if (this._allLoaded) {
+        if (this.allLoaded) {
             let timeNow = performance.now();
             if (timeNow - this._prevTime > this.frameDelay) {
                 this._prevTime = timeNow;
-                if (this._frameIndex === 0) {
+                if (this.frameIndex === 0) {
                     this._containers[this._containers.length - 1].removeAllFromScene();
                 } else {
-                    this._containers[this._frameIndex - 1].removeAllFromScene();
+                    this._containers[this.frameIndex - 1].removeAllFromScene();
                 }
-                this._containers[this._frameIndex].addAllToScene();
-                if (this._frameIndex === this._containers.length - 1) {
-                    this._frameIndex = 0;
+                this._containers[this.frameIndex].addAllToScene();
+                if (this.frameIndex === this._containers.length - 1) {
+                    this.frameIndex = 0;
                 } else {
-                    this._frameIndex++;
+                    this.frameIndex++;
                 }
             }
             // go through the loaded meshes sequentially, then reset.

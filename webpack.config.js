@@ -2,7 +2,7 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-    entry: './babyplots.ts',
+    entry: './src/babyplots.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'babyplots.js',

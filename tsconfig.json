@@ -1,6 +1,6 @@
 {
   "files": [
-    "./babyplots.ts"
+    "./src/babyplots.ts"
   ],
   "compilerOptions": {
     "target": "es5",
@@ -12,7 +12,7 @@
     ],
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./",
+    "outDir": "./src/",
     "removeComments": true,
     "isolatedModules": true,
     "strict": false,

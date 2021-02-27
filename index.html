@@ -35,19 +35,19 @@
     <canvas id="renderCanvas"></canvas>
     <script>
       var vis = new Baby.Plots("renderCanvas", {});
-      // vis.fromJSON(surfaceData);
+      vis.fromJSON(plot);
       // vis.turntable = true;
-      vis.addMeshStream(
-        "https://cdn.glitch.com/",
-        "b12df82c-ed15-473a-b9aa-f1ccd97600ac%2FEat_",
-        ".glb?v=1610559236379",
-        2,
-        101,
-        100,
-        {
-          meshRotation: [Math.PI /2, 0, 0]
-        }
-      )
+      // vis.addMeshStream(
+      //   "https://cdn.glitch.com/",
+      //   "b12df82c-ed15-473a-b9aa-f1ccd97600ac%2FEat_",
+      //   ".glb?v=1610559236379",
+      //   2,
+      //   101,
+      //   100,
+      //   {
+      //     meshRotation: [Math.PI /2, 0, 0]
+      //   }
+      // )
       vis.doRender();
       // vis.createButtons("label");
       window.onresize = function () {

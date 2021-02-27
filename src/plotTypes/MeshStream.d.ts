@@ -1,18 +1,21 @@
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
-import { LegendData, Plot } from "./babyplots";
+import { LegendData, Plot } from "../babyplots";
 import { Vector3 } from "@babylonjs/core/Maths/math";
 import "@babylonjs/loaders/glTF";
 export declare class MeshStream extends Plot {
     private _rootUrl;
     private _filenames;
-    private _allLoaded;
-    private _frameIndex;
     private _prevTime;
     private _containers;
     private _camera;
     private _rotation;
+    allLoaded: boolean;
+    frameIndex: number;
+    loading: boolean;
+    frameTotal: number;
+    playing: boolean;
     frameDelay: number;
     worldextends: {
         min: Vector3;

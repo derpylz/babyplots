@@ -112,7 +112,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const axios = require('axios').default;
 
-import { AnnotationManager } from "./Label";
+import { AnnotationManager } from "./utils/Label";
 
 /**
  * Interface for object containing information about axis setup.
@@ -134,7 +134,7 @@ export interface AxisData {
     rownames: string[];
 }
 
-import { Axes } from "./Axes";
+import { Axes } from "./utils/Axes";
 
 export interface shapeLegendData {
     title: string;
@@ -297,15 +297,15 @@ export function getUniqueVals(source: string[]): string[] {
     return result;
 }
 
-import { ImgStack } from "./ImgStack";
-import { ShapeCloud } from "./ShapeCloud";
-import { PointCloud } from "./PointCloud";
-import { Surface } from "./Surface";
-import { HeatMap } from "./HeatMap";
-import { MeshStream } from "./MeshStream";
+import { ImgStack } from "./plotTypes/ImgStack";
+import { ShapeCloud } from "./plotTypes/ShapeCloud";
+import { PointCloud } from "./plotTypes/PointCloud";
+import { Surface } from "./plotTypes/Surface";
+import { HeatMap } from "./plotTypes/HeatMap";
+import { MeshStream } from "./plotTypes/MeshStream";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
-import { styleText } from "./styleText";
-import { buttonSVGs, legendSVGs } from "./SVGs";
+import { styleText } from "./utils/styleText";
+import { buttonSVGs, legendSVGs } from "./utils/SVGs";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export const PLOTTYPES = {

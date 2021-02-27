@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import "@babylonjs/core/Meshes/thinInstanceMesh";
-import { CoordinatePlot, LegendData } from "./babyplots";
+import { CoordinatePlot, LegendData } from "../babyplots";
 import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export declare class ShapeCloud extends CoordinatePlot {

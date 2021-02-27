@@ -23,7 +23,7 @@ import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { FloatArray } from "@babylonjs/core/types";
-import { LegendData, CoordinatePlot } from "./babyplots";
+import { LegendData, CoordinatePlot } from "../babyplots";
 
 export class PointCloud extends CoordinatePlot {
     private _pointPicking: boolean = false;
