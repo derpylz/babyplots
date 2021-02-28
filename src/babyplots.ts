@@ -109,6 +109,7 @@ import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import chroma from "chroma-js";
 import download from "downloadjs";
 import { v4 as uuidv4 } from "uuid";
+import { warn, deprecationWarning } from "./utils/logging";
 
 const axios = require('axios').default;
 
@@ -571,6 +572,11 @@ export class Plots {
                         tickBreaks: plot["tickBreaks"],
                         showTickLines: plot["showTickLines"],
                         tickLineColors: plot["tickLineColors"],
+                        hasAnimation: plot["hasAnimation"],
+                        animationTargets: plot["animationTargets"],
+                        animationDelay: plot["animationDelay"],
+                        animationDuration: plot["animationDuration"],
+                        animationLoop: plot["animationLoop"],
                         folded: plot["folded"],
                         foldedEmbedding: plot["foldedEmbedding"],
                         foldAnimDelay: plot["foldAnimDelay"],
@@ -1183,19 +1189,57 @@ export class Plots {
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
-            folded: false,
-            foldedEmbedding: null,
-            foldAnimDelay: null,
-            foldAnimDuration: null,
-            foldAnimLoop: false,
+            hasAnimation: false,
+            animationTargets: null,
+            animationDelay: null,
+            animationDuration: null,
+            animationLoop: false,
+            foldAnimLoop: null,
             colnames: null,
             rownames: null,
             shape: null,
             shading: true,
             dpInfo: null,
+            // deprecated animation option names:
+            folded: null,
+            foldedEmbedding: null,
+            foldAnimDelay: null,
+            foldAnimDuration: null,
         }
         // apply user options
         Object.assign(opts, options);
+        // warnings for deprecated animation option names
+        // keeping these for a while to not break compatibility, but suggest using the new option names
+        if (opts.folded) {
+            deprecationWarning("folded", "hasAnimation");
+            if (!opts.hasAnimation) {
+                opts.hasAnimation = opts.folded;
+            }
+        }
+        if (opts.foldedEmbedding) {
+            deprecationWarning("foldedEmbedding", "animationTargets");
+            if (!opts.animationTargets) {
+                opts.animationTargets = opts.foldedEmbedding;
+            }
+        }
+        if (opts.foldAnimDelay) {
+            deprecationWarning("foldAnimDelay", "animationDelay");
+            if (!opts.animationDelay) {
+                opts.animationDelay = opts.foldAnimDelay;
+            }
+        }
+        if (opts.foldAnimDuration) {
+            deprecationWarning("foldAnimDuration", "animationDuration");
+            if (!opts.animationDuration) {
+                opts.animationDuration = opts.foldAnimDuration;
+            }
+        }
+        if (opts.foldAnimLoop) {
+            deprecationWarning("foldAnimLoop", "animationLoop");
+            if (!opts.animationLoop) {
+                opts.animationLoop = opts.foldAnimLoop;
+            }
+        }
         // create plot data object for download as json button
         this._downloadObj["plots"].push({
             plotType: plotType,
@@ -1222,11 +1266,11 @@ export class Plots {
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            folded: opts.folded,
-            foldedEmbedding: opts.foldedEmbedding,
-            foldAnimDelay: opts.foldAnimDelay,
-            foldAnimDuration: opts.foldAnimDuration,
-            foldAnimLoop: opts.foldAnimLoop,
+            hasAnimation: opts.hasAnimation,
+            animationTargets: opts.animationTargets,
+            animationDelay: opts.animationDelay,
+            animationDuration: opts.animationDuration,
+            animationLoop: opts.animationLoop,
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
@@ -1239,15 +1283,15 @@ export class Plots {
         let rangeX: number[];
         let rangeY: number[];
         let rangeZ: number[];
-        this._hasAnim = opts.folded;
-        if (opts.folded) {
+        this._hasAnim = opts.hasAnimation;
+        if (opts.hasAnimation) {
             let replayBtn = document.createElement("div");
             replayBtn.className = "button"
             replayBtn.innerHTML = buttonSVGs.replay;
             replayBtn.onclick = this._resetAnimation.bind(this);
             this._buttonBar.appendChild(replayBtn);
             let loopBtn = document.createElement("div");
-            if (opts.foldAnimLoop) {
+            if (opts.animationLoop) {
                 loopBtn.className = "button active"
             } else {
                 loopBtn.className = "button"
@@ -1410,10 +1454,10 @@ export class Plots {
                     coordColors,
                     opts.size,
                     legendData,
-                    opts.folded,
-                    opts.foldedEmbedding,
-                    opts.foldAnimDelay,
-                    opts.foldAnimDuration,
+                    opts.hasAnimation,
+                    opts.animationTargets,
+                    opts.animationDelay,
+                    opts.animationDuration,
                     this._xScale,
                     this._yScale,
                     this._zScale,
@@ -1522,7 +1566,7 @@ export class Plots {
                 break
         }
 
-        if (opts.foldAnimLoop) {
+        if (opts.animationLoop) {
             this._loopingAnim = true;
             plot.setLooping(true);
         }

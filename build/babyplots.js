@@ -127,6 +127,7 @@ var screenshotTools_1 = require("@babylonjs/core/Misc/screenshotTools");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var downloadjs_1 = __importDefault(require("downloadjs"));
 var uuid_1 = require("uuid");
+var logging_1 = require("./utils/logging");
 var axios = require('axios').default;
 var Label_1 = require("./utils/Label");
 var Axes_1 = require("./utils/Axes");
@@ -403,6 +404,11 @@ var Plots = (function () {
                     tickBreaks: plot["tickBreaks"],
                     showTickLines: plot["showTickLines"],
                     tickLineColors: plot["tickLineColors"],
+                    hasAnimation: plot["hasAnimation"],
+                    animationTargets: plot["animationTargets"],
+                    animationDelay: plot["animationDelay"],
+                    animationDuration: plot["animationDuration"],
+                    animationLoop: plot["animationLoop"],
                     folded: plot["folded"],
                     foldedEmbedding: plot["foldedEmbedding"],
                     foldAnimDelay: plot["foldAnimDelay"],
@@ -897,18 +903,53 @@ var Plots = (function () {
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
-            folded: false,
-            foldedEmbedding: null,
-            foldAnimDelay: null,
-            foldAnimDuration: null,
-            foldAnimLoop: false,
+            hasAnimation: false,
+            animationTargets: null,
+            animationDelay: null,
+            animationDuration: null,
+            animationLoop: false,
+            foldAnimLoop: null,
             colnames: null,
             rownames: null,
             shape: null,
             shading: true,
             dpInfo: null,
+            folded: null,
+            foldedEmbedding: null,
+            foldAnimDelay: null,
+            foldAnimDuration: null,
         };
         Object.assign(opts, options);
+        if (opts.folded) {
+            logging_1.deprecationWarning("folded", "hasAnimation");
+            if (!opts.hasAnimation) {
+                opts.hasAnimation = opts.folded;
+            }
+        }
+        if (opts.foldedEmbedding) {
+            logging_1.deprecationWarning("foldedEmbedding", "animationTargets");
+            if (!opts.animationTargets) {
+                opts.animationTargets = opts.foldedEmbedding;
+            }
+        }
+        if (opts.foldAnimDelay) {
+            logging_1.deprecationWarning("foldAnimDelay", "animationDelay");
+            if (!opts.animationDelay) {
+                opts.animationDelay = opts.foldAnimDelay;
+            }
+        }
+        if (opts.foldAnimDuration) {
+            logging_1.deprecationWarning("foldAnimDuration", "animationDuration");
+            if (!opts.animationDuration) {
+                opts.animationDuration = opts.foldAnimDuration;
+            }
+        }
+        if (opts.foldAnimLoop) {
+            logging_1.deprecationWarning("foldAnimLoop", "animationLoop");
+            if (!opts.animationLoop) {
+                opts.animationLoop = opts.foldAnimLoop;
+            }
+        }
         this._downloadObj["plots"].push({
             plotType: plotType,
             coordinates: coordinates,
@@ -934,11 +975,11 @@ var Plots = (function () {
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            folded: opts.folded,
-            foldedEmbedding: opts.foldedEmbedding,
-            foldAnimDelay: opts.foldAnimDelay,
-            foldAnimDuration: opts.foldAnimDuration,
-            foldAnimLoop: opts.foldAnimLoop,
+            hasAnimation: opts.hasAnimation,
+            animationTargets: opts.animationTargets,
+            animationDelay: opts.animationDelay,
+            animationDuration: opts.animationDuration,
+            animationLoop: opts.animationLoop,
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
@@ -950,15 +991,15 @@ var Plots = (function () {
         var rangeX;
         var rangeY;
         var rangeZ;
-        this._hasAnim = opts.folded;
-        if (opts.folded) {
+        this._hasAnim = opts.hasAnimation;
+        if (opts.hasAnimation) {
             var replayBtn = document.createElement("div");
             replayBtn.className = "button";
             replayBtn.innerHTML = SVGs_1.buttonSVGs.replay;
             replayBtn.onclick = this._resetAnimation.bind(this);
             this._buttonBar.appendChild(replayBtn);
             var loopBtn = document.createElement("div");
-            if (opts.foldAnimLoop) {
+            if (opts.animationLoop) {
                 loopBtn.className = "button active";
             }
             else {
@@ -1099,7 +1140,7 @@ var Plots = (function () {
         var boundingBox;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration, this._xScale, this._yScale, this._zScale, opts.name);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name);
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -1169,7 +1210,7 @@ var Plots = (function () {
                 ];
                 break;
         }
-        if (opts.foldAnimLoop) {
+        if (opts.animationLoop) {
             this._loopingAnim = true;
             plot.setLooping(true);
         }

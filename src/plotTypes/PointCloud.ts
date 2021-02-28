@@ -28,74 +28,74 @@ import { LegendData, CoordinatePlot } from "../babyplots";
 export class PointCloud extends CoordinatePlot {
     private _pointPicking: boolean = false;
     private _selectionCallback = function (selection: number[]) { return false; };
-    private _folded: boolean;
+    private _hasAnimation: boolean;
     private _looping: boolean = false;
     private _animDirection: number = 1;
-    private _foldedEmbedding: number[][];
-    private _foldVectors: Vector3[] = [];
-    private _foldCounter: number = 0;
-    private _foldAnimFrames: number = 200;
-    private _foldVectorFract: Vector3[] = [];
-    private _foldDelay: number = 100;
+    private _animationTargets: number[][];
+    private _animationVectors: Vector3[] = [];
+    private _animationCounter: number = 0;
+    private _animationFrames: number = 200;
+    private _animationVectorFract: Vector3[] = [];
+    private _animationDelay: number = 100;
     constructor(
         scene: Scene,
         coordinates: number[][],
         colorVar: string[],
         size: number,
         legendData: LegendData,
-        folded?: boolean,
-        foldedEmbedding?: number[][],
-        foldAnimDelay?: number,
-        foldAnimDuration?: number,
+        hasAnimation?: boolean,
+        animationTargets?: number[][],
+        animationDelay?: number,
+        animationDuration?: number,
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1,
         name: string = "point cloud"
     ) {
         super(name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
-        this._folded = folded;
-        if (foldAnimDelay) {
-            this._foldDelay = foldAnimDelay;
+        this._hasAnimation = hasAnimation;
+        if (animationDelay) {
+            this._animationDelay = animationDelay;
         }
-        if (foldAnimDuration) {
-            this._foldAnimFrames = foldAnimDuration;
+        if (animationDuration) {
+            this._animationFrames = animationDuration;
         }
-        if (folded) {
-            if (foldedEmbedding) {
-                for (let i = 0; i < foldedEmbedding.length; i++) {
-                    if (foldedEmbedding[i].length == 2) {
-                        foldedEmbedding[i].push(0);
+        if (hasAnimation) {
+            if (animationTargets) {
+                for (let i = 0; i < animationTargets.length; i++) {
+                    if (animationTargets[i].length == 2) {
+                        animationTargets[i].push(0);
                     }
                     let fv = new Vector3(
                         coordinates[i][0] * this.xScale,
                         coordinates[i][2] * this.zScale,
                         coordinates[i][1] * this.yScale
                     ).subtractFromFloats(
-                        foldedEmbedding[i][0] * this.xScale,
+                        animationTargets[i][0] * this.xScale,
                         0,
-                        foldedEmbedding[i][1] * this.yScale,
+                        animationTargets[i][1] * this.yScale,
                     );
-                    this._foldVectors.push(fv);
-                    this._foldVectorFract.push(fv.divide(new Vector3(this._foldAnimFrames, this._foldAnimFrames, this._foldAnimFrames)));
+                    this._animationVectors.push(fv);
+                    this._animationVectorFract.push(fv.divide(new Vector3(this._animationFrames, this._animationFrames, this._animationFrames)));
                 }
-                this._foldedEmbedding = foldedEmbedding;
+                this._animationTargets = animationTargets;
             } else {
-                foldedEmbedding = JSON.parse(JSON.stringify(coordinates));
-                for (let i = 0; i < foldedEmbedding.length; i++) {
-                    foldedEmbedding[i][2] = 0;
+                animationTargets = JSON.parse(JSON.stringify(coordinates));
+                for (let i = 0; i < animationTargets.length; i++) {
+                    animationTargets[i][2] = 0;
                     let fv = new Vector3(
                         coordinates[i][0] * this.xScale,
                         coordinates[i][2] * this.zScale,
                         coordinates[i][1] * this.yScale
                     ).subtractFromFloats(
-                        foldedEmbedding[i][0] * this.xScale,
+                        animationTargets[i][0] * this.xScale,
                         0,
-                        foldedEmbedding[i][1] * this.yScale
+                        animationTargets[i][1] * this.yScale
                     );
-                    this._foldVectors.push(fv);
-                    this._foldVectorFract.push(fv.divide(new Vector3(this._foldAnimFrames, this._foldAnimFrames, this._foldAnimFrames)));
+                    this._animationVectors.push(fv);
+                    this._animationVectorFract.push(fv.divide(new Vector3(this._animationFrames, this._animationFrames, this._animationFrames)));
                 }
-                this._foldedEmbedding = foldedEmbedding;
+                this._animationTargets = animationTargets;
             }
         }
         this._createPointCloud();
@@ -109,12 +109,12 @@ export class PointCloud extends CoordinatePlot {
         // Set arrays for positions and indices
         let positions = [];
         let colors = [];
-        if (this._folded) {
+        if (this._hasAnimation) {
             for (let p = 0; p < this._coords.length; p++) {
                 positions.push(
-                    this._foldedEmbedding[p][0] * this.xScale,
-                    this._foldedEmbedding[p][2] * this.zScale,
-                    this._foldedEmbedding[p][1] * this.yScale
+                    this._animationTargets[p][0] * this.xScale,
+                    this._animationTargets[p][2] * this.zScale,
+                    this._animationTargets[p][1] * this.yScale
                 );
                 let col = Color4.FromHexString(this._coordColors[p]);
                 colors.push(col.r, col.g, col.b, col.a);
@@ -151,18 +151,18 @@ export class PointCloud extends CoordinatePlot {
     }
 
     resetAnimation(): void {
-        this._folded = true;
-        let positionFunction = function (positions: FloatArray) {
+        this._hasAnimation = true;
+        let positionFunction = function (this: PointCloud, positions: FloatArray) {
             let numberOfVertices = positions.length / 3;
             for (let i = 0; i < numberOfVertices; i++) {
-                positions[i * 3] = this._foldedEmbedding[i][0] * this.xScale;
-                positions[i * 3 + 1] = this._foldedEmbedding[i][2] * this.zScale;
-                positions[i * 3 + 2] = this._foldedEmbedding[i][1] * this.yScale;
+                positions[i * 3] = this._animationTargets[i][0] * this.xScale;
+                positions[i * 3 + 1] = this._animationTargets[i][2] * this.zScale;
+                positions[i * 3 + 2] = this._animationTargets[i][1] * this.yScale;
             }
         }
         this.mesh.updateMeshPositions(positionFunction.bind(this), true);
         this.mesh.refreshBoundingInfo();
-        this._foldCounter = 0;
+        this._animationCounter = 0;
         this._animDirection = 1;
     }
 
@@ -172,10 +172,10 @@ export class PointCloud extends CoordinatePlot {
     }
 
     update(): boolean {
-        if (this.mesh && this._folded) {
-            if (this._foldCounter < this._foldDelay) {
-                this._foldCounter += 1;
-            } else if (this._foldCounter < this._foldAnimFrames + this._foldDelay) {
+        if (this.mesh && this._hasAnimation) {
+            if (this._animationCounter < this._animationDelay) {
+                this._animationCounter += 1;
+            } else if (this._animationCounter < this._animationFrames + this._animationDelay) {
                 let positionFunction = function (this: PointCloud, positions: FloatArray) {
                     let numberOfVertices = positions.length / 3;
                     for (let i = 0; i < numberOfVertices; i++) {
@@ -184,7 +184,7 @@ export class PointCloud extends CoordinatePlot {
                             positions[i * 3 + 1],
                             positions[i * 3 + 2]
                         );
-                        let vectorFractDir = this._foldVectorFract[i].multiplyByFloats(
+                        let vectorFractDir = this._animationVectorFract[i].multiplyByFloats(
                             this._animDirection,
                             this._animDirection,
                             this._animDirection
@@ -196,13 +196,13 @@ export class PointCloud extends CoordinatePlot {
                     }
                 }
                 this.mesh.updateMeshPositions(positionFunction.bind(this), true);
-                this._foldCounter += 1;
+                this._animationCounter += 1;
             } else {
                 if (this._looping) {
-                    this._foldCounter = 0;
+                    this._animationCounter = 0;
                     this._animDirection *= -1;
                 } else {
-                    this._folded = false;
+                    this._hasAnimation = false;
                     let positionFunction = function (positions: FloatArray) {
                         let numberOfVertices = positions.length / 3;
                         for (let i = 0; i < numberOfVertices; i++) {
@@ -216,6 +216,6 @@ export class PointCloud extends CoordinatePlot {
                 this.mesh.refreshBoundingInfo();
             }
         }
-        return this._folded;
+        return this._hasAnimation;
     }
 }
