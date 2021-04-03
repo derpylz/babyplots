@@ -33,6 +33,7 @@ var Surface = (function (_super) {
         if (name === void 0) { name = "surface"; }
         var _this = _super.call(this, name, "surface", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createSurface();
+        _this.allLoaded = true;
         return _this;
     }
     Surface.prototype._createSurface = function () {

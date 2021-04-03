@@ -38,9 +38,7 @@ export class MeshStream extends Plot {
     private _offset: number[];
 
     frameIndex: number = 0;
-    loading: boolean = true;
     frameTotal: number;
-    playing: boolean = true;
     frameDelay: number;
     worldextends: { min: Vector3; max: Vector3; };
 
@@ -153,14 +151,19 @@ export class MeshStream extends Plot {
 
     goToFrame(n: number): void {
         if (this.allLoaded && n >= 0 && n < this.frameTotal) {
-            this._containers[this.frameIndex].removeAllFromScene();
+            for (let fi = 0; fi < this._containers.length; fi++) {
+                this._containers[fi].removeAllFromScene();
+            }
             this._containers[n].addAllToScene();
-            this.frameIndex = n;
+            this.frameIndex = n + 1;
+            if (this.frameIndex === this._containers.length) {
+                this.frameIndex = 0;
+            }
         }
     }
 
     update(): boolean {
-        if (this.allLoaded && this.playing) {
+        if (this.allLoaded) {
             let timeNow = performance.now();
             if (timeNow - this._prevTime > this.frameDelay) {
                 this._prevTime = timeNow;

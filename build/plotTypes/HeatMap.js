@@ -30,6 +30,7 @@ var HeatMap = (function (_super) {
         if (name === void 0) { name = "heat map"; }
         var _this = _super.call(this, name, "heatmap", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._createHeatMap();
+        _this.allLoaded = true;
         return _this;
     }
     HeatMap.prototype._createHeatMap = function () {

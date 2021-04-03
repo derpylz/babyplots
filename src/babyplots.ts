@@ -207,6 +207,7 @@ export abstract class Plot {
         this.zScale = zScale;
     }
 
+    goToFrame(n: number): void {}
     update(): boolean { return false }
     resetAnimation(): void { }
     setLooping(looping: boolean): void { }
@@ -354,6 +355,7 @@ export class Plots {
     private _turntableBtn: HTMLDivElement;
     private _loopBtn: HTMLElement;
     private _streamControlBtn: HTMLDivElement;
+    private _animationSlider: HTMLInputElement;
     private _axes: Axes[] = [];
     private _downloadObj: {} = {};
     private _annotationManager: AnnotationManager;
@@ -494,6 +496,17 @@ export class Plots {
         streamCtrlPause.innerHTML = buttonSVGs.pause;
         streamCtrlBtn.appendChild(streamCtrlPause);
         this._buttonBar.appendChild(streamCtrlBtn);
+        let animRange = document.createElement("input");
+        animRange.type = "range";
+        animRange.min = "0";
+        animRange.max = "0";
+        animRange.value = "0";
+        animRange.step = "1";
+        animRange.className = "anim-slider hidden";
+        animRange.disabled = true;
+        animRange.onchange = () => this.setAnimationFrame();
+        this._animationSlider = animRange;
+        this._buttonBar.appendChild(animRange);
 
         this._streamControlBtn = streamCtrlBtn;
 
@@ -660,6 +673,18 @@ export class Plots {
      * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
      */
     createButtons(whichBtns = ["json", "label", "publish", "record", "turntable"]): void {
+        if (whichBtns.indexOf("turntable") !== -1) {
+            let turntableBtn = document.createElement("div");
+            turntableBtn.className = "button";
+            turntableBtn.onclick = () => this.toggleTurntable();
+            turntableBtn.innerHTML = buttonSVGs.turntable;
+            turntableBtn.title = "Toggle turntable animation."
+            this._buttonBar.appendChild(turntableBtn);
+            this._turntableBtn = turntableBtn;
+            if (this.turntable) {
+                turntableBtn.className = "button active";
+            }
+        }
         if (whichBtns.indexOf("json") !== -1) {
             let jsonBtn = document.createElement("div");
             jsonBtn.className = "button";
@@ -691,18 +716,6 @@ export class Plots {
             publishBtn.innerHTML = buttonSVGs.publish;
             publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
-        }
-        if (whichBtns.indexOf("turntable") !== -1) {
-            let turntableBtn = document.createElement("div");
-            turntableBtn.className = "button";
-            turntableBtn.onclick = () => this.toggleTurntable();
-            turntableBtn.innerHTML = buttonSVGs.turntable;
-            turntableBtn.title = "Toggle turntable animation."
-            this._buttonBar.appendChild(turntableBtn);
-            this._turntableBtn = turntableBtn;
-            if (this.turntable) {
-                turntableBtn.className = "button active";
-            }
         }
     }
 
@@ -929,6 +942,15 @@ export class Plots {
         }
     }
 
+    setAnimationFrame() {
+        for (let idx = 0; idx < this.plots.length; idx++) {
+            const animPlot = this.plots[idx];
+            if (animPlot.allLoaded) {
+                animPlot.goToFrame(parseInt(this._animationSlider.value));
+            }
+        }
+    }
+
     private _toggleLoopAnimation() {
         if (this._loopingAnim) {
             this._loopingAnim = false;
@@ -971,6 +993,10 @@ export class Plots {
                     anyAnim = true;
                     if (animPlot.allLoaded && this._streamControlBtn.className === "button streamctrl loading") {
                         this._streamControlBtn.className = "button streamctrl pause";
+                        this._animationSlider.disabled = false;
+                    }
+                    if (animPlot.hasOwnProperty("frameIndex")) {
+                        this._animationSlider.value = (animPlot as MeshStream).frameIndex.toString();
                     }
                 }
             }
@@ -1731,6 +1757,8 @@ export class Plots {
         this.camera.wheelPrecision = 1;
 
         this._streamControlBtn.className = "button streamctrl loading";
+        this._animationSlider.max = (plot.frameTotal - 1).toString();
+        this._animationSlider.className = "anim-slider";
 
         // let replayBtn = document.createElement("div");
         // replayBtn.className = "button"

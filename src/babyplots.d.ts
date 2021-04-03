@@ -148,6 +148,7 @@ export declare abstract class Plot {
     zScale: number;
     pickable: boolean;
     constructor(name: string, shape: string, scene: Scene, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    goToFrame(n: number): void;
     update(): boolean;
     resetAnimation(): void;
     setLooping(looping: boolean): void;
@@ -197,6 +198,7 @@ export declare class Plots {
     private _turntableBtn;
     private _loopBtn;
     private _streamControlBtn;
+    private _animationSlider;
     private _axes;
     private _downloadObj;
     private _annotationManager;
@@ -237,6 +239,7 @@ export declare class Plots {
     pauseAnimation(): void;
     playAnimation(): void;
     toggleTurntable(): void;
+    setAnimationFrame(): void;
     private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;

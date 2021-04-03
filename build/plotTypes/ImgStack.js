@@ -69,6 +69,7 @@ var ImgStack = (function (_super) {
         _this._intensityMode = intensityMode;
         _this.meshes = [];
         _this._createImgStack();
+        _this.allLoaded = true;
         return _this;
     }
     ImgStack.prototype._createImgStack = function () {

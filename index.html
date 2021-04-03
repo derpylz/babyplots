@@ -47,9 +47,9 @@
         {
           meshRotation: [Math.PI /2, 0, 0]
         }
-      )
+      );
       vis.doRender();
-      vis.createButtons("turntable", "json");
+      vis.createButtons(["turntable", "json"]);
       window.onresize = function () {
         vis.resize();
       }

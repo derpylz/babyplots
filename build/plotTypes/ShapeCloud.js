@@ -41,6 +41,7 @@ var ShapeCloud = (function (_super) {
             _this.dpInfo = dpInfo;
         }
         _this._createShapeCloud();
+        _this.allLoaded = true;
         return _this;
     }
     ShapeCloud.prototype._createShapeCloud = function () {

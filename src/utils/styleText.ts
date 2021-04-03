@@ -2,6 +2,8 @@
 export const styleText = [
     ".bbp.button-bar { position: absolute; z-index: 2; overflow: hidden; padding: 0 10px 4px 0; }",
     ".bbp.button-bar>.button.hidden { display: none; }",
+    ".bbp.button-bar>.anim-slider { display: block; float: right; width: 150px; height: 30px }",
+    ".bbp.button-bar>.anim-slider.hidden { display: none; }",
     ".bbp.button-bar>.button { float: right; width: 75px; height: 30px; cursor: pointer; border-radius: 2px; background-color: #f0f0f0; margin: 0 4px 0 0; }",
     ".bbp.button-bar>.button:hover { background-color: #ddd; }",
     ".bbp.button-bar>.button>svg { width: 75px; height: 30px; }",

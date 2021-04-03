@@ -58,23 +58,24 @@ var math_1 = require("@babylonjs/core/Maths/math");
 require("@babylonjs/loaders/glTF");
 var MeshStream = (function (_super) {
     __extends(MeshStream, _super);
-    function MeshStream(scene, camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, name) {
+    function MeshStream(scene, camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, offset, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         if (frameDelay === void 0) { frameDelay = 200; }
+        if (rotation === void 0) { rotation = []; }
+        if (offset === void 0) { offset = []; }
         if (name === void 0) { name = "mesh stream"; }
         var _this = _super.call(this, name, "meshStream", scene, legendData, xScale, yScale, zScale) || this;
         _this._filenames = [];
         _this._prevTime = performance.now();
         _this._containers = [];
-        _this.allLoaded = false;
         _this.frameIndex = 0;
-        _this.loading = true;
         _this._camera = camera;
         _this._rootUrl = rootUrl;
         _this.frameDelay = frameDelay;
         _this._rotation = rotation;
+        _this._offset = offset;
         for (var iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             _this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
@@ -162,6 +163,10 @@ var MeshStream = (function (_super) {
                                 rootMesh.rotate(math_1.Axis.Y, _this._rotation[1], math_1.Space.LOCAL);
                                 rootMesh.rotate(math_1.Axis.Z, _this._rotation[2], math_1.Space.LOCAL);
                             }
+                            if (_this._offset.length === 3) {
+                                var rootMesh = container.meshes[0];
+                                rootMesh.position = new math_1.Vector3(_this._offset[0], _this._offset[1], _this._offset[2]);
+                            }
                             return container;
                         })];
                     case 1:
@@ -170,6 +175,18 @@ var MeshStream = (function (_super) {
                 }
             });
         });
+    };
+    MeshStream.prototype.goToFrame = function (n) {
+        if (this.allLoaded && n >= 0 && n < this.frameTotal) {
+            for (var fi = 0; fi < this._containers.length; fi++) {
+                this._containers[fi].removeAllFromScene();
+            }
+            this._containers[n].addAllToScene();
+            this.frameIndex = n + 1;
+            if (this.frameIndex === this._containers.length) {
+                this.frameIndex = 0;
+            }
+        }
     };
     MeshStream.prototype.update = function () {
         if (this.allLoaded) {

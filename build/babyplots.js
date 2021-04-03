@@ -136,6 +136,7 @@ var Plot = (function () {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
+        this.allLoaded = false;
         this.pickable = false;
         this.name = name;
         this.shape = shape;
@@ -145,6 +146,7 @@ var Plot = (function () {
         this.yScale = yScale;
         this.zScale = zScale;
     }
+    Plot.prototype.goToFrame = function (n) { };
     Plot.prototype.update = function () { return false; };
     Plot.prototype.resetAnimation = function () { };
     Plot.prototype.setLooping = function (looping) { };
@@ -255,6 +257,7 @@ function isValidPlot(plotData) {
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
     function Plots(canvasElement, options) {
+        var _this = this;
         if (options === void 0) { options = {}; }
         this._showLegend = true;
         this._hasAnim = false;
@@ -273,6 +276,7 @@ var Plots = (function () {
         this.R = false;
         this.Python = false;
         this.shapeLegendTitle = "";
+        this.animPaused = false;
         this._uniqID = uuid_1.v4();
         var opts = {
             backgroundColor: "#ffffffff",
@@ -320,6 +324,34 @@ var Plots = (function () {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        var streamCtrlBtn = document.createElement("div");
+        streamCtrlBtn.className = "button streamctrl loading hidden";
+        streamCtrlBtn.onclick = function () { return (_this._streamControlBtn.className === "button streamctrl pause") ? _this.pauseAnimation() : _this.playAnimation(); };
+        var streamCtrlLoading = document.createElement("div");
+        streamCtrlLoading.className = "btn-label loading";
+        streamCtrlLoading.innerHTML = SVGs_1.buttonSVGs.loading;
+        streamCtrlBtn.appendChild(streamCtrlLoading);
+        var streamCtrlPlay = document.createElement("div");
+        streamCtrlPlay.className = "btn-label play";
+        streamCtrlPlay.innerHTML = SVGs_1.buttonSVGs.play;
+        streamCtrlBtn.appendChild(streamCtrlPlay);
+        var streamCtrlPause = document.createElement("div");
+        streamCtrlPause.className = "btn-label pause";
+        streamCtrlPause.innerHTML = SVGs_1.buttonSVGs.pause;
+        streamCtrlBtn.appendChild(streamCtrlPause);
+        this._buttonBar.appendChild(streamCtrlBtn);
+        var animRange = document.createElement("input");
+        animRange.type = "range";
+        animRange.min = "0";
+        animRange.max = "0";
+        animRange.value = "0";
+        animRange.step = "1";
+        animRange.className = "anim-slider hidden";
+        animRange.disabled = true;
+        animRange.onchange = function () { return _this.setAnimationFrame(); };
+        this._animationSlider = animRange;
+        this._buttonBar.appendChild(animRange);
+        this._streamControlBtn = streamCtrlBtn;
         this._downloadObj = {
             plots: []
         };
@@ -450,12 +482,26 @@ var Plots = (function () {
         }
     };
     Plots.prototype.createButtons = function (whichBtns) {
-        if (whichBtns === void 0) { whichBtns = ["json", "label", "publish", "record"]; }
+        var _this = this;
+        if (whichBtns === void 0) { whichBtns = ["json", "label", "publish", "record", "turntable"]; }
+        if (whichBtns.indexOf("turntable") !== -1) {
+            var turntableBtn = document.createElement("div");
+            turntableBtn.className = "button";
+            turntableBtn.onclick = function () { return _this.toggleTurntable(); };
+            turntableBtn.innerHTML = SVGs_1.buttonSVGs.turntable;
+            turntableBtn.title = "Toggle turntable animation.";
+            this._buttonBar.appendChild(turntableBtn);
+            this._turntableBtn = turntableBtn;
+            if (this.turntable) {
+                turntableBtn.className = "button active";
+            }
+        }
         if (whichBtns.indexOf("json") !== -1) {
             var jsonBtn = document.createElement("div");
             jsonBtn.className = "button";
             jsonBtn.onclick = this._downloadJson.bind(this);
             jsonBtn.innerHTML = SVGs_1.buttonSVGs.toJson;
+            jsonBtn.title = "Download the plot as json file.";
             this._buttonBar.appendChild(jsonBtn);
         }
         if (whichBtns.indexOf("label") !== -1) {
@@ -463,6 +509,7 @@ var Plots = (function () {
             labelBtn.className = "button";
             labelBtn.onclick = this._annotationManager.toggleLabelControl.bind(this._annotationManager);
             labelBtn.innerHTML = SVGs_1.buttonSVGs.labels;
+            labelBtn.title = "Show or hide the label manager.";
             this._buttonBar.appendChild(labelBtn);
         }
         if (whichBtns.indexOf("record") !== -1) {
@@ -470,6 +517,7 @@ var Plots = (function () {
             recordBtn.className = "button";
             recordBtn.onclick = this._startRecording.bind(this);
             recordBtn.innerHTML = SVGs_1.buttonSVGs.record;
+            recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
         }
         if (whichBtns.indexOf("publish") !== -1) {
@@ -477,6 +525,7 @@ var Plots = (function () {
             publishBtn.className = "button";
             publishBtn.onclick = this._createPublishForm.bind(this);
             publishBtn.innerHTML = SVGs_1.buttonSVGs.publish;
+            publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
         }
     };
@@ -667,6 +716,31 @@ var Plots = (function () {
         this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
         this._axes[0].update(this.camera, true);
     };
+    Plots.prototype.pauseAnimation = function () {
+        this.animPaused = true;
+        this._streamControlBtn.className = "button streamctrl play";
+    };
+    Plots.prototype.playAnimation = function () {
+        this.animPaused = false;
+        this._streamControlBtn.className = "button streamctrl pause";
+    };
+    Plots.prototype.toggleTurntable = function () {
+        this.turntable = !this.turntable;
+        if (this.turntable) {
+            this._turntableBtn.className = "button active";
+        }
+        else {
+            this._turntableBtn.className = "button";
+        }
+    };
+    Plots.prototype.setAnimationFrame = function () {
+        for (var idx = 0; idx < this.plots.length; idx++) {
+            var animPlot = this.plots[idx];
+            if (animPlot.allLoaded) {
+                animPlot.goToFrame(parseInt(this._animationSlider.value));
+            }
+        }
+    };
     Plots.prototype._toggleLoopAnimation = function () {
         if (this._loopingAnim) {
             this._loopingAnim = false;
@@ -693,12 +767,20 @@ var Plots = (function () {
         if (this.turntable) {
             this.camera.alpha += this.rotationRate;
         }
-        if (this._hasAnim) {
+        if (this._hasAnim && !this.animPaused) {
             var anyAnim = false;
             for (var idx = 0; idx < this.plots.length; idx++) {
-                var animState = this.plots[idx].update();
+                var animPlot = this.plots[idx];
+                var animState = animPlot.update();
                 if (animState) {
                     anyAnim = true;
+                    if (animPlot.allLoaded && this._streamControlBtn.className === "button streamctrl loading") {
+                        this._streamControlBtn.className = "button streamctrl pause";
+                        this._animationSlider.disabled = false;
+                    }
+                    if (animPlot.hasOwnProperty("frameIndex")) {
+                        this._animationSlider.value = animPlot.frameIndex.toString();
+                    }
                 }
             }
             this._hasAnim = anyAnim;
@@ -1238,7 +1320,8 @@ var Plots = (function () {
     };
     Plots.prototype.addMeshStream = function (rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, frameDelay, options) {
         var opts = {
-            meshRotation: [0, 0, 0]
+            meshRotation: [0, 0, 0],
+            meshOffset: [0, 0, 0]
         };
         Object.assign(opts, options);
         this._downloadObj["plots"].push({
@@ -1249,7 +1332,8 @@ var Plots = (function () {
             fileIteratorStart: fileIteratorStart,
             fileIteratorEnd: fileIteratorEnd,
             frameDelay: frameDelay,
-            meshRotation: opts.meshRotation
+            meshRotation: opts.meshRotation,
+            meshOffset: opts.meshOffset
         });
         var legendData = {
             showLegend: false,
@@ -1263,6 +1347,9 @@ var Plots = (function () {
         this._hasAnim = true;
         this.plots.push(plot);
         this.camera.wheelPrecision = 1;
+        this._streamControlBtn.className = "button streamctrl loading";
+        this._animationSlider.max = (plot.frameTotal - 1).toString();
+        this._animationSlider.className = "anim-slider";
         return this;
     };
     Plots.prototype._updateLegend = function (uiLayer) {

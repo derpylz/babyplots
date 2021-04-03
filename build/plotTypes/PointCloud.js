@@ -69,6 +69,7 @@ var PointCloud = (function (_super) {
             }
         }
         _this._createPointCloud();
+        _this.allLoaded = true;
         return _this;
     }
     PointCloud.prototype._createPointCloud = function () {
