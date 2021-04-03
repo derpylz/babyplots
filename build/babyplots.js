@@ -95,11 +95,26 @@
  * THE SOFTWARE.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.Plot = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CoordinatePlot = exports.Plot = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -112,34 +127,50 @@ var screenshotTools_1 = require("@babylonjs/core/Misc/screenshotTools");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var downloadjs_1 = __importDefault(require("downloadjs"));
 var uuid_1 = require("uuid");
+var logging_1 = require("./utils/logging");
 var axios = require('axios').default;
-var Label_1 = require("./Label");
-var Axes_1 = require("./Axes");
+var Label_1 = require("./utils/Label");
+var Axes_1 = require("./utils/Axes");
 var Plot = (function () {
-    function Plot(name, shape, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+    function Plot(name, shape, scene, legendData, xScale, yScale, zScale) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
-        this._size = 1;
+        this.allLoaded = false;
+        this.pickable = false;
         this.name = name;
         this.shape = shape;
         this._scene = scene;
-        this._coords = coordinates;
-        this._coordColors = colorVar;
-        this._size = size;
         this.legendData = legendData;
         this.xScale = xScale;
         this.yScale = yScale;
         this.zScale = zScale;
     }
-    Plot.prototype.updateSize = function () { };
+    Plot.prototype.goToFrame = function (n) { };
     Plot.prototype.update = function () { return false; };
     Plot.prototype.resetAnimation = function () { };
     Plot.prototype.setLooping = function (looping) { };
-    Plot.prototype.getPick = function (pickResult) { return null; };
     return Plot;
 }());
 exports.Plot = Plot;
+var CoordinatePlot = (function (_super) {
+    __extends(CoordinatePlot, _super);
+    function CoordinatePlot(name, shape, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
+        if (xScale === void 0) { xScale = 1; }
+        if (yScale === void 0) { yScale = 1; }
+        if (zScale === void 0) { zScale = 1; }
+        var _this = _super.call(this, name, shape, scene, legendData, xScale, yScale, zScale) || this;
+        _this._size = 1;
+        _this.pickable = true;
+        _this._coords = coordinates;
+        _this._coordColors = colorVar;
+        _this._size = size;
+        return _this;
+    }
+    CoordinatePlot.prototype.getPick = function (pickResult) { return null; };
+    return CoordinatePlot;
+}(Plot));
+exports.CoordinatePlot = CoordinatePlot;
 Array.prototype.min = function () {
     if (this.length > 65536) {
         var r_1 = this[0];
@@ -188,13 +219,14 @@ function getUniqueVals(source) {
     return result;
 }
 exports.getUniqueVals = getUniqueVals;
-var ImgStack_1 = require("./ImgStack");
-var ShapeCloud_1 = require("./ShapeCloud");
-var PointCloud_1 = require("./PointCloud");
-var Surface_1 = require("./Surface");
-var HeatMap_1 = require("./HeatMap");
-var styleText_1 = require("./styleText");
-var SVGs_1 = require("./SVGs");
+var ImgStack_1 = require("./plotTypes/ImgStack");
+var ShapeCloud_1 = require("./plotTypes/ShapeCloud");
+var PointCloud_1 = require("./plotTypes/PointCloud");
+var Surface_1 = require("./plotTypes/Surface");
+var HeatMap_1 = require("./plotTypes/HeatMap");
+var MeshStream_1 = require("./plotTypes/MeshStream");
+var styleText_1 = require("./utils/styleText");
+var SVGs_1 = require("./utils/SVGs");
 exports.PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
     'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -225,6 +257,7 @@ function isValidPlot(plotData) {
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
     function Plots(canvasElement, options) {
+        var _this = this;
         if (options === void 0) { options = {}; }
         this._showLegend = true;
         this._hasAnim = false;
@@ -243,6 +276,7 @@ var Plots = (function () {
         this.R = false;
         this.Python = false;
         this.shapeLegendTitle = "";
+        this.animPaused = false;
         this._uniqID = uuid_1.v4();
         var opts = {
             backgroundColor: "#ffffffff",
@@ -272,10 +306,10 @@ var Plots = (function () {
         this._zScale = opts.zScale;
         this._hl1 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, 1, 0), this.scene);
         this._hl1.diffuse = new math_1.Color3(1, 1, 1);
-        this._hl1.specular = new math_1.Color3(0, 0, 0);
+        this._hl1.specular = new math_1.Color3(0.01, 0.01, 0.01);
         this._hl2 = new hemisphericLight_1.HemisphericLight("HemiLight", new math_1.Vector3(0, -1, 0), this.scene);
         this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
-        this._hl2.specular = new math_1.Color3(0, 0, 0);
+        this._hl2.specular = new math_1.Color3(0.01, 0.01, 0.01);
         this.uiLayer = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
         this._annotationManager = new Label_1.AnnotationManager(this.canvas, this.scene, this.ymax, this.camera, this._backgroundColor, this.uiLayer, this._uniqID);
         this.scene.registerBeforeRender(this._prepRender.bind(this));
@@ -290,12 +324,43 @@ var Plots = (function () {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+        var streamCtrlBtn = document.createElement("div");
+        streamCtrlBtn.className = "button streamctrl loading hidden";
+        streamCtrlBtn.onclick = function () { return (_this._streamControlBtn.className === "button streamctrl pause") ? _this.pauseAnimation() : _this.playAnimation(); };
+        var streamCtrlLoading = document.createElement("div");
+        streamCtrlLoading.className = "btn-label loading";
+        streamCtrlLoading.innerHTML = SVGs_1.buttonSVGs.loading;
+        streamCtrlBtn.appendChild(streamCtrlLoading);
+        var streamCtrlPlay = document.createElement("div");
+        streamCtrlPlay.className = "btn-label play";
+        streamCtrlPlay.innerHTML = SVGs_1.buttonSVGs.play;
+        streamCtrlBtn.appendChild(streamCtrlPlay);
+        var streamCtrlPause = document.createElement("div");
+        streamCtrlPause.className = "btn-label pause";
+        streamCtrlPause.innerHTML = SVGs_1.buttonSVGs.pause;
+        streamCtrlBtn.appendChild(streamCtrlPause);
+        this._buttonBar.appendChild(streamCtrlBtn);
+        var animRange = document.createElement("input");
+        animRange.type = "range";
+        animRange.min = "0";
+        animRange.max = "0";
+        animRange.value = "0";
+        animRange.step = "1";
+        animRange.className = "anim-slider hidden";
+        animRange.disabled = true;
+        animRange.onchange = function () { return _this.setAnimationFrame(); };
+        this._animationSlider = animRange;
+        this._buttonBar.appendChild(animRange);
+        this._streamControlBtn = streamCtrlBtn;
         this._downloadObj = {
             plots: []
         };
         this.scene.onPointerDown = (function (_evt, pickResult) {
             for (var i = 0; i < this.plots.length; i++) {
                 var plot = this.plots[i];
+                if (!plot.pickable) {
+                    continue;
+                }
                 if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
                     var pick = plot.getPick(pickResult);
                     this._annotationManager.displayInfo(pick.info, pick.target);
@@ -371,6 +436,11 @@ var Plots = (function () {
                     tickBreaks: plot["tickBreaks"],
                     showTickLines: plot["showTickLines"],
                     tickLineColors: plot["tickLineColors"],
+                    hasAnimation: plot["hasAnimation"],
+                    animationTargets: plot["animationTargets"],
+                    animationDelay: plot["animationDelay"],
+                    animationDuration: plot["animationDuration"],
+                    animationLoop: plot["animationLoop"],
                     folded: plot["folded"],
                     foldedEmbedding: plot["foldedEmbedding"],
                     foldAnimDelay: plot["foldAnimDelay"],
@@ -412,12 +482,26 @@ var Plots = (function () {
         }
     };
     Plots.prototype.createButtons = function (whichBtns) {
-        if (whichBtns === void 0) { whichBtns = ["json", "label", "publish", "record"]; }
+        var _this = this;
+        if (whichBtns === void 0) { whichBtns = ["json", "label", "publish", "record", "turntable"]; }
+        if (whichBtns.indexOf("turntable") !== -1) {
+            var turntableBtn = document.createElement("div");
+            turntableBtn.className = "button";
+            turntableBtn.onclick = function () { return _this.toggleTurntable(); };
+            turntableBtn.innerHTML = SVGs_1.buttonSVGs.turntable;
+            turntableBtn.title = "Toggle turntable animation.";
+            this._buttonBar.appendChild(turntableBtn);
+            this._turntableBtn = turntableBtn;
+            if (this.turntable) {
+                turntableBtn.className = "button active";
+            }
+        }
         if (whichBtns.indexOf("json") !== -1) {
             var jsonBtn = document.createElement("div");
             jsonBtn.className = "button";
             jsonBtn.onclick = this._downloadJson.bind(this);
             jsonBtn.innerHTML = SVGs_1.buttonSVGs.toJson;
+            jsonBtn.title = "Download the plot as json file.";
             this._buttonBar.appendChild(jsonBtn);
         }
         if (whichBtns.indexOf("label") !== -1) {
@@ -425,6 +509,7 @@ var Plots = (function () {
             labelBtn.className = "button";
             labelBtn.onclick = this._annotationManager.toggleLabelControl.bind(this._annotationManager);
             labelBtn.innerHTML = SVGs_1.buttonSVGs.labels;
+            labelBtn.title = "Show or hide the label manager.";
             this._buttonBar.appendChild(labelBtn);
         }
         if (whichBtns.indexOf("record") !== -1) {
@@ -432,6 +517,7 @@ var Plots = (function () {
             recordBtn.className = "button";
             recordBtn.onclick = this._startRecording.bind(this);
             recordBtn.innerHTML = SVGs_1.buttonSVGs.record;
+            recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
         }
         if (whichBtns.indexOf("publish") !== -1) {
@@ -439,6 +525,7 @@ var Plots = (function () {
             publishBtn.className = "button";
             publishBtn.onclick = this._createPublishForm.bind(this);
             publishBtn.innerHTML = SVGs_1.buttonSVGs.publish;
+            publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
         }
     };
@@ -629,6 +716,31 @@ var Plots = (function () {
         this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
         this._axes[0].update(this.camera, true);
     };
+    Plots.prototype.pauseAnimation = function () {
+        this.animPaused = true;
+        this._streamControlBtn.className = "button streamctrl play";
+    };
+    Plots.prototype.playAnimation = function () {
+        this.animPaused = false;
+        this._streamControlBtn.className = "button streamctrl pause";
+    };
+    Plots.prototype.toggleTurntable = function () {
+        this.turntable = !this.turntable;
+        if (this.turntable) {
+            this._turntableBtn.className = "button active";
+        }
+        else {
+            this._turntableBtn.className = "button";
+        }
+    };
+    Plots.prototype.setAnimationFrame = function () {
+        for (var idx = 0; idx < this.plots.length; idx++) {
+            var animPlot = this.plots[idx];
+            if (animPlot.allLoaded) {
+                animPlot.goToFrame(parseInt(this._animationSlider.value));
+            }
+        }
+    };
     Plots.prototype._toggleLoopAnimation = function () {
         if (this._loopingAnim) {
             this._loopingAnim = false;
@@ -655,12 +767,20 @@ var Plots = (function () {
         if (this.turntable) {
             this.camera.alpha += this.rotationRate;
         }
-        if (this._hasAnim) {
+        if (this._hasAnim && !this.animPaused) {
             var anyAnim = false;
             for (var idx = 0; idx < this.plots.length; idx++) {
-                var animState = this.plots[idx].update();
+                var animPlot = this.plots[idx];
+                var animState = animPlot.update();
                 if (animState) {
                     anyAnim = true;
+                    if (animPlot.allLoaded && this._streamControlBtn.className === "button streamctrl loading") {
+                        this._streamControlBtn.className = "button streamctrl pause";
+                        this._animationSlider.disabled = false;
+                    }
+                    if (animPlot.hasOwnProperty("frameIndex")) {
+                        this._animationSlider.value = animPlot.frameIndex.toString();
+                    }
                 }
             }
             this._hasAnim = anyAnim;
@@ -865,18 +985,53 @@ var Plots = (function () {
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
-            folded: false,
-            foldedEmbedding: null,
-            foldAnimDelay: null,
-            foldAnimDuration: null,
-            foldAnimLoop: false,
+            hasAnimation: false,
+            animationTargets: null,
+            animationDelay: null,
+            animationDuration: null,
+            animationLoop: false,
+            foldAnimLoop: null,
             colnames: null,
             rownames: null,
             shape: null,
             shading: true,
             dpInfo: null,
+            folded: null,
+            foldedEmbedding: null,
+            foldAnimDelay: null,
+            foldAnimDuration: null,
         };
         Object.assign(opts, options);
+        if (opts.folded) {
+            logging_1.deprecationWarning("folded", "hasAnimation");
+            if (!opts.hasAnimation) {
+                opts.hasAnimation = opts.folded;
+            }
+        }
+        if (opts.foldedEmbedding) {
+            logging_1.deprecationWarning("foldedEmbedding", "animationTargets");
+            if (!opts.animationTargets) {
+                opts.animationTargets = opts.foldedEmbedding;
+            }
+        }
+        if (opts.foldAnimDelay) {
+            logging_1.deprecationWarning("foldAnimDelay", "animationDelay");
+            if (!opts.animationDelay) {
+                opts.animationDelay = opts.foldAnimDelay;
+            }
+        }
+        if (opts.foldAnimDuration) {
+            logging_1.deprecationWarning("foldAnimDuration", "animationDuration");
+            if (!opts.animationDuration) {
+                opts.animationDuration = opts.foldAnimDuration;
+            }
+        }
+        if (opts.foldAnimLoop) {
+            logging_1.deprecationWarning("foldAnimLoop", "animationLoop");
+            if (!opts.animationLoop) {
+                opts.animationLoop = opts.foldAnimLoop;
+            }
+        }
         this._downloadObj["plots"].push({
             plotType: plotType,
             coordinates: coordinates,
@@ -902,11 +1057,11 @@ var Plots = (function () {
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            folded: opts.folded,
-            foldedEmbedding: opts.foldedEmbedding,
-            foldAnimDelay: opts.foldAnimDelay,
-            foldAnimDuration: opts.foldAnimDuration,
-            foldAnimLoop: opts.foldAnimLoop,
+            hasAnimation: opts.hasAnimation,
+            animationTargets: opts.animationTargets,
+            animationDelay: opts.animationDelay,
+            animationDuration: opts.animationDuration,
+            animationLoop: opts.animationLoop,
             colnames: opts.colnames,
             rownames: opts.rownames,
             shape: opts.shape,
@@ -918,15 +1073,15 @@ var Plots = (function () {
         var rangeX;
         var rangeY;
         var rangeZ;
-        this._hasAnim = opts.folded;
-        if (opts.folded) {
+        this._hasAnim = opts.hasAnimation;
+        if (opts.hasAnimation) {
             var replayBtn = document.createElement("div");
             replayBtn.className = "button";
             replayBtn.innerHTML = SVGs_1.buttonSVGs.replay;
             replayBtn.onclick = this._resetAnimation.bind(this);
             this._buttonBar.appendChild(replayBtn);
             var loopBtn = document.createElement("div");
-            if (opts.foldAnimLoop) {
+            if (opts.animationLoop) {
                 loopBtn.className = "button active";
             }
             else {
@@ -1067,7 +1222,7 @@ var Plots = (function () {
         var boundingBox;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.folded, opts.foldedEmbedding, opts.foldAnimDelay, opts.foldAnimDuration, this._xScale, this._yScale, this._zScale, opts.name);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name);
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
@@ -1137,7 +1292,7 @@ var Plots = (function () {
                 ];
                 break;
         }
-        if (opts.foldAnimLoop) {
+        if (opts.animationLoop) {
             this._loopingAnim = true;
             plot.setLooping(true);
         }
@@ -1161,6 +1316,40 @@ var Plots = (function () {
         };
         this._axes.push(new Axes_1.Axes(axisData, this.scene, plotType == "heatMap"));
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
+        return this;
+    };
+    Plots.prototype.addMeshStream = function (rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, frameDelay, options) {
+        var opts = {
+            meshRotation: [0, 0, 0],
+            meshOffset: [0, 0, 0]
+        };
+        Object.assign(opts, options);
+        this._downloadObj["plots"].push({
+            plotType: "meshStream",
+            rootUrl: rootUrl,
+            filePrefix: filePrefix,
+            fileSuffix: fileSuffix,
+            fileIteratorStart: fileIteratorStart,
+            fileIteratorEnd: fileIteratorEnd,
+            frameDelay: frameDelay,
+            meshRotation: opts.meshRotation,
+            meshOffset: opts.meshOffset
+        });
+        var legendData = {
+            showLegend: false,
+            discrete: false,
+            breaks: [],
+            colorScale: "",
+            inverted: false,
+            position: undefined
+        };
+        var plot = new MeshStream_1.MeshStream(this.scene, this.camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation);
+        this._hasAnim = true;
+        this.plots.push(plot);
+        this.camera.wheelPrecision = 1;
+        this._streamControlBtn.className = "button streamctrl loading";
+        this._animationSlider.max = (plot.frameTotal - 1).toString();
+        this._animationSlider.className = "anim-slider";
         return this;
     };
     Plots.prototype._updateLegend = function (uiLayer) {

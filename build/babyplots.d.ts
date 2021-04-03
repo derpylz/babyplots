@@ -136,27 +136,33 @@ export interface LegendData {
     legendTitleFontColor?: string;
 }
 export declare abstract class Plot {
+    protected _scene: Scene;
+    allLoaded: boolean;
+    name: string;
+    shape: string;
+    mesh: Mesh;
+    meshes: Mesh[];
+    legendData: LegendData;
+    xScale: number;
+    yScale: number;
+    zScale: number;
+    pickable: boolean;
+    constructor(name: string, shape: string, scene: Scene, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
+    goToFrame(n: number): void;
+    update(): boolean;
+    resetAnimation(): void;
+    setLooping(looping: boolean): void;
+}
+export declare abstract class CoordinatePlot extends Plot {
     protected _coords: number[][];
     protected _coordColors: string[];
     protected _groups: string[];
     protected _groupNames: string[];
     protected _size: number;
-    protected _scene: Scene;
-    name: string;
-    shape: string;
-    mesh: Mesh;
-    meshes: Mesh[];
+    pickable: boolean;
     selection: number[];
-    legendData: LegendData;
-    xScale: number;
-    yScale: number;
-    zScale: number;
     dpInfo: string[];
     constructor(name: string, shape: string, scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
-    updateSize(): void;
-    update(): boolean;
-    resetAnimation(): void;
-    setLooping(looping: boolean): void;
     getPick(pickResult: PickingInfo): {
         target: TransformNode;
         info: string;
@@ -188,10 +194,13 @@ export declare class Plots {
     protected _showLegend: boolean;
     private _hasAnim;
     private _loopingAnim;
+    private _buttonBar;
+    private _turntableBtn;
     private _loopBtn;
+    private _streamControlBtn;
+    private _animationSlider;
     private _axes;
     private _downloadObj;
-    private _buttonBar;
     private _annotationManager;
     private _backgroundColor;
     private _recording;
@@ -216,6 +225,7 @@ export declare class Plots {
     Python: boolean;
     shapeLegendTitle: string;
     uiLayer: AdvancedDynamicTexture;
+    animPaused: boolean;
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
@@ -226,6 +236,10 @@ export declare class Plots {
     private _tryPublish;
     private _cancelPublish;
     private _resetAnimation;
+    pauseAnimation(): void;
+    playAnimation(): void;
+    toggleTurntable(): void;
+    setAnimationFrame(): void;
     private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;
@@ -235,6 +249,7 @@ export declare class Plots {
         dim: number[];
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
+    addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
     private _updateLegend;
     private _drawStandaloneShapeLegend;
     private _createPlotLegend;
