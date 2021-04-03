@@ -39,6 +39,7 @@ export class HeatMap extends CoordinatePlot {
     ) {
         super(name, "heatmap", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createHeatMap();
+        this.allLoaded = true;
     }
     private _createHeatMap(): void {
         let boxes = [];

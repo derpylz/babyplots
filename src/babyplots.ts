@@ -178,6 +178,7 @@ export interface LegendData {
 export abstract class Plot {
     protected _scene: Scene;
 
+    allLoaded: boolean = false;
     name: string;
     shape: string;
     mesh: Mesh;
@@ -350,6 +351,7 @@ export class Plots {
     private _hasAnim: boolean = false;
     private _loopingAnim: boolean = false;
     private _loopBtn: HTMLElement;
+    private _streamControlBtn: HTMLDivElement;
     private _axes: Axes[] = [];
     private _downloadObj: {} = {};
     private _buttonBar: HTMLDivElement;
@@ -389,6 +391,8 @@ export class Plots {
     shapeLegendTitle: string = "";
     /** AdvancedDynamicTexture for the full screen UI */
     uiLayer: AdvancedDynamicTexture;
+    /** Play or pause state of all animations */
+    animPaused: boolean = false;
 
 
     /**
@@ -462,6 +466,7 @@ export class Plots {
         let styleElem = document.createElement("style");
         styleElem.appendChild(document.createTextNode(styleText));
         document.getElementsByTagName('head')[0].appendChild(styleElem);
+        
         // create ui elements
         let buttonBar = document.createElement("div");
         buttonBar.id = "buttonBar_" + this._uniqID;
@@ -470,6 +475,27 @@ export class Plots {
         buttonBar.style.left = this.canvas.clientLeft + 5 + "px";
         this.canvas.parentNode.appendChild(buttonBar);
         this._buttonBar = buttonBar;
+
+        // animation and streaming buttons
+        let streamCtrlBtn = document.createElement("div");
+        streamCtrlBtn.className = "button streamctrl loading hidden";
+        streamCtrlBtn.onclick = () => (this._streamControlBtn.className === "button streamctrl pause") ? this.pauseAnimation() : this.playAnimation();
+        let streamCtrlLoading = document.createElement("div");
+        streamCtrlLoading.className = "btn-label loading";
+        streamCtrlLoading.innerHTML = buttonSVGs.loading;
+        streamCtrlBtn.appendChild(streamCtrlLoading);
+        let streamCtrlPlay = document.createElement("div");
+        streamCtrlPlay.className = "btn-label play";
+        streamCtrlPlay.innerHTML = buttonSVGs.play;
+        streamCtrlBtn.appendChild(streamCtrlPlay);
+        let streamCtrlPause = document.createElement("div");
+        streamCtrlPause.className = "btn-label pause";
+        streamCtrlPause.innerHTML = buttonSVGs.pause;
+        streamCtrlBtn.appendChild(streamCtrlPause);
+        this._buttonBar.appendChild(streamCtrlBtn);
+
+        this._streamControlBtn = streamCtrlBtn;
+
         // prepare download object
         this._downloadObj = {
             plots: []
@@ -867,6 +893,16 @@ export class Plots {
         this._axes[0].update(this.camera, true);
     }
 
+    pauseAnimation() {
+        this.animPaused = true;
+        this._streamControlBtn.className = "button streamctrl play";
+    }
+
+    playAnimation() {
+        this.animPaused = false;
+        this._streamControlBtn.className = "button streamctrl pause";
+    }
+
     private _toggleLoopAnimation() {
         if (this._loopingAnim) {
             this._loopingAnim = false;
@@ -900,12 +936,16 @@ export class Plots {
             this.camera.alpha += this.rotationRate;
         }
         // update plots with animations
-        if (this._hasAnim) {
+        if (this._hasAnim && !this.animPaused) {
             let anyAnim = false;
             for (let idx = 0; idx < this.plots.length; idx++) {
-                let animState = this.plots[idx].update();
+                const animPlot = this.plots[idx];
+                let animState = animPlot.update();
                 if (animState) {
                     anyAnim = true;
+                    if (animPlot.allLoaded && this._streamControlBtn.className === "button streamctrl loading") {
+                        this._streamControlBtn.className = "button streamctrl pause";
+                    }
                 }
             }
             this._hasAnim = anyAnim;
@@ -1613,7 +1653,7 @@ export class Plots {
         fileIteratorEnd: number,
         frameDelay: number,
         options: {}
-    ) {
+    ): Plots {
         // default options
         let opts = {
             meshRotation: [0, 0, 0]
@@ -1661,6 +1701,15 @@ export class Plots {
         // this._updateLegend(this.uiLayer);
         // this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);
         this.camera.wheelPrecision = 1;
+
+        this._streamControlBtn.className = "button streamctrl loading";
+
+        // let replayBtn = document.createElement("div");
+        // replayBtn.className = "button"
+        // replayBtn.innerHTML = buttonSVGs.replay;
+        // replayBtn.onclick = this._resetAnimation.bind(this);
+        // let loopBtn = document.createElement("div");
+        
         return this;
     }
 

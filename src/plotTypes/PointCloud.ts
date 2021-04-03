@@ -99,6 +99,7 @@ export class PointCloud extends CoordinatePlot {
             }
         }
         this._createPointCloud();
+        this.allLoaded = true;
     }
     /**
      * Positions spheres according to coordinates in a SPS

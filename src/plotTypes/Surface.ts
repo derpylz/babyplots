@@ -39,6 +39,7 @@ export class Surface extends CoordinatePlot {
     ) {
         super(name, "surface", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createSurface();
+        this.allLoaded = true;
     }
     private _createSurface(): void {
         var surface = new Mesh("surface", this._scene);

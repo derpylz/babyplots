@@ -85,6 +85,7 @@ export class ImgStack extends Plot {
         this._intensityMode = intensityMode;
         this.meshes = [];
         this._createImgStack();
+        this.allLoaded = true;
     }
 
     private _createImgStack(): void {

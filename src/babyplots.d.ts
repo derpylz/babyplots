@@ -137,6 +137,7 @@ export interface LegendData {
 }
 export declare abstract class Plot {
     protected _scene: Scene;
+    allLoaded: boolean;
     name: string;
     shape: string;
     mesh: Mesh;
@@ -193,6 +194,7 @@ export declare class Plots {
     private _hasAnim;
     private _loopingAnim;
     private _loopBtn;
+    private _streamControlBtn;
     private _axes;
     private _downloadObj;
     private _buttonBar;
@@ -220,6 +222,7 @@ export declare class Plots {
     Python: boolean;
     shapeLegendTitle: string;
     uiLayer: AdvancedDynamicTexture;
+    animPaused: boolean;
     constructor(canvasElement: string, options?: {});
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
@@ -230,6 +233,8 @@ export declare class Plots {
     private _tryPublish;
     private _cancelPublish;
     private _resetAnimation;
+    pauseAnimation(): void;
+    playAnimation(): void;
     private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;
@@ -239,7 +244,7 @@ export declare class Plots {
         dim: number[];
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
-    addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): this;
+    addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
     private _updateLegend;
     private _drawStandaloneShapeLegend;
     private _createPlotLegend;

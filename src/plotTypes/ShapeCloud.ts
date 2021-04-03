@@ -59,6 +59,7 @@ export class ShapeCloud extends CoordinatePlot {
             this.dpInfo = dpInfo;
         }
         this._createShapeCloud();
+        this.allLoaded = true;
     }
     /**
      * Creates shapes at coordinates

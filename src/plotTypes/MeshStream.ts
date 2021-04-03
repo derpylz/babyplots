@@ -22,7 +22,7 @@ import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import { LegendData, Plot } from "../babyplots";
-import { Axis, Color3, Space, Vector3 } from "@babylonjs/core/Maths/math";
+import { Axis, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
 import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
@@ -36,11 +36,10 @@ export class MeshStream extends Plot {
     private _camera: ArcRotateCamera;
     private _rotation: number[];
     
-    allLoaded: boolean = false;
     frameIndex: number = 0;
     loading: boolean = true;
     frameTotal: number;
-    playing: boolean;
+    playing: boolean = true;
     frameDelay: number;
     worldextends: { min: Vector3; max: Vector3; };
 
@@ -141,8 +140,16 @@ export class MeshStream extends Plot {
         return container;
     }
 
+    goToFrame(n: number): void {
+        if (this.allLoaded && n >= 0 && n < this.frameTotal) {
+            this._containers[this.frameIndex].removeAllFromScene();
+            this._containers[n].addAllToScene();
+            this.frameIndex = n;
+        }
+    }
+
     update(): boolean {
-        if (this.allLoaded) {
+        if (this.allLoaded && this.playing) {
             let timeNow = performance.now();
             if (timeNow - this._prevTime > this.frameDelay) {
                 this._prevTime = timeNow;

@@ -11,7 +11,6 @@ export declare class MeshStream extends Plot {
     private _containers;
     private _camera;
     private _rotation;
-    allLoaded: boolean;
     frameIndex: number;
     loading: boolean;
     frameTotal: number;
@@ -24,5 +23,6 @@ export declare class MeshStream extends Plot {
     constructor(scene: Scene, camera: ArcRotateCamera, rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, legendData: LegendData, xScale: number, yScale: number, zScale: number, frameDelay: number, rotation: number[], name?: string);
     _createMeshStream(): Promise<void>;
     _loadMesh(filename: string): Promise<AssetContainer>;
+    goToFrame(n: number): void;
     update(): boolean;
 }
