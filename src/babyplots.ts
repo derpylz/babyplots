@@ -350,11 +350,12 @@ export class Plots {
     protected _showLegend: boolean = true;
     private _hasAnim: boolean = false;
     private _loopingAnim: boolean = false;
+    private _buttonBar: HTMLDivElement;
+    private _turntableBtn: HTMLDivElement;
     private _loopBtn: HTMLElement;
     private _streamControlBtn: HTMLDivElement;
     private _axes: Axes[] = [];
     private _downloadObj: {} = {};
-    private _buttonBar: HTMLDivElement;
     private _annotationManager: AnnotationManager;
     private _backgroundColor: string;
     private _recording: boolean = false;
@@ -658,12 +659,13 @@ export class Plots {
      * 
      * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
      */
-    createButtons(whichBtns = ["json", "label", "publish", "record"]): void {
+    createButtons(whichBtns = ["json", "label", "publish", "record", "turntable"]): void {
         if (whichBtns.indexOf("json") !== -1) {
             let jsonBtn = document.createElement("div");
             jsonBtn.className = "button";
             jsonBtn.onclick = this._downloadJson.bind(this);
             jsonBtn.innerHTML = buttonSVGs.toJson;
+            jsonBtn.title = "Download the plot as json file.";
             this._buttonBar.appendChild(jsonBtn);
         }
         if (whichBtns.indexOf("label") !== -1) {
@@ -671,6 +673,7 @@ export class Plots {
             labelBtn.className = "button";
             labelBtn.onclick = this._annotationManager.toggleLabelControl.bind(this._annotationManager);
             labelBtn.innerHTML = buttonSVGs.labels;
+            labelBtn.title = "Show or hide the label manager.";
             this._buttonBar.appendChild(labelBtn);
         }
         if (whichBtns.indexOf("record") !== -1) {
@@ -678,6 +681,7 @@ export class Plots {
             recordBtn.className = "button";
             recordBtn.onclick = this._startRecording.bind(this);
             recordBtn.innerHTML = buttonSVGs.record;
+            recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
         }
         if (whichBtns.indexOf("publish") !== -1) {
@@ -685,7 +689,20 @@ export class Plots {
             publishBtn.className = "button";
             publishBtn.onclick = this._createPublishForm.bind(this);
             publishBtn.innerHTML = buttonSVGs.publish;
+            publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
+        }
+        if (whichBtns.indexOf("turntable") !== -1) {
+            let turntableBtn = document.createElement("div");
+            turntableBtn.className = "button";
+            turntableBtn.onclick = () => this.toggleTurntable();
+            turntableBtn.innerHTML = buttonSVGs.turntable;
+            turntableBtn.title = "Toggle turntable animation."
+            this._buttonBar.appendChild(turntableBtn);
+            this._turntableBtn = turntableBtn;
+            if (this.turntable) {
+                turntableBtn.className = "button active";
+            }
         }
     }
 
@@ -901,6 +918,15 @@ export class Plots {
     playAnimation() {
         this.animPaused = false;
         this._streamControlBtn.className = "button streamctrl pause";
+    }
+
+    toggleTurntable() {
+        this.turntable = !this.turntable;
+        if (this.turntable) {
+            this._turntableBtn.className = "button active";
+        } else {
+            this._turntableBtn.className = "button";
+        }
     }
 
     private _toggleLoopAnimation() {
@@ -1656,7 +1682,8 @@ export class Plots {
     ): Plots {
         // default options
         let opts = {
-            meshRotation: [0, 0, 0]
+            meshRotation: [0, 0, 0],
+            meshOffset: [0, 0, 0]
         }
         // apply user options
         Object.assign(opts, options);
@@ -1669,8 +1696,9 @@ export class Plots {
             fileIteratorStart: fileIteratorStart,
             fileIteratorEnd: fileIteratorEnd,
             frameDelay: frameDelay,
-            meshRotation: opts.meshRotation
-        })
+            meshRotation: opts.meshRotation,
+            meshOffset: opts.meshOffset
+        });
 
         let legendData: LegendData = {
             showLegend: false,
@@ -1679,7 +1707,7 @@ export class Plots {
             colorScale: "",
             inverted: false,
             position: undefined
-        }
+        };
 
         let plot = new MeshStream(
             this.scene,

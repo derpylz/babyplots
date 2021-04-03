@@ -193,11 +193,12 @@ export declare class Plots {
     protected _showLegend: boolean;
     private _hasAnim;
     private _loopingAnim;
+    private _buttonBar;
+    private _turntableBtn;
     private _loopBtn;
     private _streamControlBtn;
     private _axes;
     private _downloadObj;
-    private _buttonBar;
     private _annotationManager;
     private _backgroundColor;
     private _recording;
@@ -235,6 +236,7 @@ export declare class Plots {
     private _resetAnimation;
     pauseAnimation(): void;
     playAnimation(): void;
+    toggleTurntable(): void;
     private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;

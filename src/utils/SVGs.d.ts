@@ -9,6 +9,7 @@ export declare const buttonSVGs: {
     play: string;
     pause: string;
     loading: string;
+    turntable: string;
 };
 export declare const legendSVGs: {
     heatmap: string;

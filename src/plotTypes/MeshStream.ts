@@ -35,7 +35,8 @@ export class MeshStream extends Plot {
     private _containers: AssetContainer[] = [];
     private _camera: ArcRotateCamera;
     private _rotation: number[];
-    
+    private _offset: number[];
+
     frameIndex: number = 0;
     loading: boolean = true;
     frameTotal: number;
@@ -56,7 +57,8 @@ export class MeshStream extends Plot {
         yScale: number = 1,
         zScale: number = 1,
         frameDelay: number = 200,
-        rotation: number[],
+        rotation: number[] = [],
+        offset: number[] = [],
         name: string = "mesh stream"
     ) {
         super(name, "meshStream", scene, legendData, xScale, yScale, zScale);
@@ -64,6 +66,7 @@ export class MeshStream extends Plot {
         this._rootUrl = rootUrl;
         this.frameDelay = frameDelay;
         this._rotation = rotation;
+        this._offset = offset;
         for (let iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
@@ -134,6 +137,14 @@ export class MeshStream extends Plot {
                 rootMesh.rotate(Axis.X, this._rotation[0], Space.LOCAL);
                 rootMesh.rotate(Axis.Y, this._rotation[1], Space.LOCAL);
                 rootMesh.rotate(Axis.Z, this._rotation[2], Space.LOCAL);
+            }
+            if (this._offset.length === 3) {
+                let rootMesh = container.meshes[0];
+                rootMesh.position = new Vector3(
+                    this._offset[0],
+                    this._offset[1],
+                    this._offset[2]
+                );
             }
             return container;
         });
