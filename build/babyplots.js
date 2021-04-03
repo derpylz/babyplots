@@ -414,6 +414,12 @@ var Plots = (function () {
                     intensityMode: plot["intensityMode"]
                 });
             }
+            else if (plot["plotType"] === "meshStream") {
+                this.addMeshStream(plot["rootUrl"], plot["filePrefix"], plot["fileSuffix"], plot["fileIteratorStart"], plot["fileIteratorEnd"], plot["frameDelay"], {
+                    meshRotation: plot["meshRotation"],
+                    meshOffset: plot["meshOffset"]
+                });
+            }
             else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(plot["coordinates"], plot["plotType"], plot["colorBy"], plot["colorVar"], {
                     name: plot["name"],
