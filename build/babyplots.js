@@ -411,7 +411,9 @@ var Plots = (function () {
                     tickBreaks: plot["tickBreaks"],
                     showTickLines: plot["showTickLines"],
                     tickLineColors: plot["tickLineColors"],
-                    intensityMode: plot["intensityMode"]
+                    intensityMode: plot["intensityMode"],
+                    channelColors: plot["channelColors"],
+                    channelOpacities: plot["channelOpacities"]
                 });
             }
             else if (plot["plotType"] === "meshStream") {
@@ -921,7 +923,8 @@ var Plots = (function () {
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
             intensityMode: "alpha",
-            channelColors: ["#ff0000", "#00ff00", "#0000ff"]
+            channelColors: ["#ff0000", "#00ff00", "#0000ff"],
+            channelOpacities: [1, 1, 1]
         };
         Object.assign(opts, options);
         this._downloadObj["plots"].push({
@@ -945,7 +948,8 @@ var Plots = (function () {
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
             intensityMode: opts.intensityMode,
-            channelColors: opts.channelColors
+            channelColors: opts.channelColors,
+            channelOpacities: [1, 1, 1]
         });
         var legendData = {
             showLegend: false,
@@ -960,7 +964,7 @@ var Plots = (function () {
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
         legendData.legendTitleFontColor = opts.legendTitleFontColor;
-        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale, opts.channelColors);
+        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale, opts.channelColors, opts.channelOpacities);
         this.plots.push(plot);
         this._updateLegend(this.uiLayer);
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);

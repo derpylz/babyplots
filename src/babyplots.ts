@@ -582,7 +582,9 @@ export class Plots {
                         tickBreaks: plot["tickBreaks"],
                         showTickLines: plot["showTickLines"],
                         tickLineColors: plot["tickLineColors"],
-                        intensityMode: plot["intensityMode"]
+                        intensityMode: plot["intensityMode"],
+                        channelColors: plot["channelColors"],
+                        channelOpacities: plot["channelOpacities"]
                     }
                 )
             } else if (plot["plotType"] === "meshStream") {

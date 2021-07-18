@@ -27,11 +27,12 @@ var babyplots_1 = require("../babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, channelColors, name) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, channelColors, channelOpacities, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         if (channelColors === void 0) { channelColors = ["#ff0000", "#00ff00", "#0000ff"]; }
+        if (channelOpacities === void 0) { channelOpacities = [1, 1, 1]; }
         if (name === void 0) { name = "image stack"; }
         var _this = this;
         var colSize = attributes.dim[0];
@@ -69,6 +70,7 @@ var ImgStack = (function (_super) {
         _this._backgroundColor = backgroundColor;
         _this._intensityMode = intensityMode;
         _this._channelColors = channelColors;
+        _this._channelOpacities = channelOpacities;
         _this.meshes = [];
         _this._createImgStack();
         _this.allLoaded = true;
@@ -97,7 +99,7 @@ var ImgStack = (function (_super) {
                 for (var i = 0; i < alphaLevels; i++) {
                     alphaPositions.push([]);
                     alphaColors.push([]);
-                    alphaIntensities.push((i + 1) * (1 / alphaLevels));
+                    alphaIntensities.push((i + 1) * (1 / alphaLevels) * this._channelOpacities[c]);
                 }
                 for (var p = 0; p < channelCoords.length; p++) {
                     for (var intens = 0; intens < alphaIntensities.length; intens++) {
