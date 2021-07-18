@@ -920,7 +920,8 @@ var Plots = (function () {
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
-            intensityMode: "alpha"
+            intensityMode: "alpha",
+            channelColors: ["#ff0000", "#00ff00", "#0000ff"]
         };
         Object.assign(opts, options);
         this._downloadObj["plots"].push({
@@ -943,7 +944,8 @@ var Plots = (function () {
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            intensityMode: opts.intensityMode
+            intensityMode: opts.intensityMode,
+            channelColors: opts.channelColors
         });
         var legendData = {
             showLegend: false,
@@ -958,7 +960,7 @@ var Plots = (function () {
         legendData.legendTitle = opts.legendTitle;
         legendData.legendTitleFontSize = opts.legendTitleFontSize;
         legendData.legendTitleFontColor = opts.legendTitleFontColor;
-        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale);
+        var plot = new ImgStack_1.ImgStack(this.scene, values, indices, attributes, legendData, opts.size, this._backgroundColor, opts.intensityMode, this._xScale, this._yScale, this._zScale, opts.channelColors);
         this.plots.push(plot);
         this._updateLegend(this.uiLayer);
         this._cameraFitPlot([0, attributes.dim[2]], [0, attributes.dim[0]], [0, attributes.dim[1]]);

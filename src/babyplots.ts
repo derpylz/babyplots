@@ -1190,7 +1190,9 @@ export class Plots {
             tickBreaks: [2, 2, 2],
             showTickLines: [[false, false], [false, false], [false, false]],
             tickLineColors: [["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"], ["#aaaaaa", "#aaaaaa"]],
-            intensityMode: "alpha"
+            intensityMode: "alpha",
+            channelColors: ["#ff0000", "#00ff00", "#0000ff"],
+            channelOpacities: [1, 1, 1]
         }
         // apply user options
         Object.assign(opts, options);
@@ -1215,7 +1217,9 @@ export class Plots {
             tickBreaks: opts.tickBreaks,
             showTickLines: opts.showTickLines,
             tickLineColors: opts.tickLineColors,
-            intensityMode: opts.intensityMode
+            intensityMode: opts.intensityMode,
+            channelColors: opts.channelColors,
+            channelOpacities: [1, 1, 1]
         })
         let legendData: LegendData = {
             showLegend: false,
@@ -1242,7 +1246,9 @@ export class Plots {
             opts.intensityMode,
             this._xScale,
             this._yScale,
-            this._zScale
+            this._zScale,
+            opts.channelColors,
+            opts.channelOpacities
         );
         this.plots.push(plot);
         this._updateLegend(this.uiLayer);

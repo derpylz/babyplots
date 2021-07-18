@@ -27,10 +27,11 @@ var babyplots_1 = require("../babyplots");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
-    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, name) {
+    function ImgStack(scene, values, indices, attributes, legendData, size, backgroundColor, intensityMode, xScale, yScale, zScale, channelColors, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
+        if (channelColors === void 0) { channelColors = ["#ff0000", "#00ff00", "#0000ff"]; }
         if (name === void 0) { name = "image stack"; }
         var _this = this;
         var colSize = attributes.dim[0];
@@ -67,6 +68,7 @@ var ImgStack = (function (_super) {
         _this._channelCoordIntensities = Intensities;
         _this._backgroundColor = backgroundColor;
         _this._intensityMode = intensityMode;
+        _this._channelColors = channelColors;
         _this.meshes = [];
         _this._createImgStack();
         _this.allLoaded = true;
@@ -81,16 +83,7 @@ var ImgStack = (function (_super) {
                 continue;
             }
             var channelCoords = this._channelCoords[c];
-            var channelColor = void 0;
-            if (c == 0) {
-                channelColor = "#ff0000";
-            }
-            else if (c == 1) {
-                channelColor = "#00ff00";
-            }
-            else {
-                channelColor = "#0000ff";
-            }
+            var channelColor = this._channelColors[c];
             var channelColorRGB = chroma_js_1.default(channelColor).rgb();
             channelColorRGB[0] = channelColorRGB[0] / 255;
             channelColorRGB[1] = channelColorRGB[1] / 255;

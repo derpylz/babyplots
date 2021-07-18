@@ -32,6 +32,8 @@ export class ImgStack extends Plot {
     private _intensityMode: string;
     private _channelCoords: number[][][];
     private _channelCoordIntensities: number[][];
+    private _channelColors: string[];
+    private _channelOpacities: number[];
 
     size: number;
 
@@ -47,6 +49,8 @@ export class ImgStack extends Plot {
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1,
+        channelColors: string[] = ["#ff0000", "#00ff00", "#0000ff"],
+        channelOpacities: number[] = [1, 1, 1],
         name: string = "image stack"
     ) {
         let colSize = attributes.dim[0];
@@ -83,6 +87,8 @@ export class ImgStack extends Plot {
         this._channelCoordIntensities = Intensities;
         this._backgroundColor = backgroundColor;
         this._intensityMode = intensityMode;
+        this._channelColors = channelColors;
+        this._channelOpacities = channelOpacities;
         this.meshes = [];
         this._createImgStack();
         this.allLoaded = true;
@@ -97,14 +103,7 @@ export class ImgStack extends Plot {
                 continue;
             }
             const channelCoords = this._channelCoords[c];
-            let channelColor: string;
-            if (c == 0) {
-                channelColor = "#ff0000";
-            } else if (c == 1) {
-                channelColor = "#00ff00";
-            } else {
-                channelColor = "#0000ff";
-            }
+            let channelColor = this._channelColors[c];
             let channelColorRGB = chroma(channelColor).rgb();
             channelColorRGB[0] = channelColorRGB[0] / 255;
             channelColorRGB[1] = channelColorRGB[1] / 255;
@@ -118,7 +117,7 @@ export class ImgStack extends Plot {
                 for (let i = 0; i < alphaLevels; i++) {
                     alphaPositions.push([]);
                     alphaColors.push([]);
-                    alphaIntensities.push((i + 1) * (1 / alphaLevels));
+                    alphaIntensities.push((i + 1) * (1 / alphaLevels) * this._channelOpacities[c]);
                 }
 
                 for (let p = 0; p < channelCoords.length; p++) {
