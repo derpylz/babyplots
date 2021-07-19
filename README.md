@@ -83,6 +83,12 @@ npm run dist
 
 Join our [Discord server](https://discord.gg/bbWxP8q), or submit an issue here in the repository!
 
+## Support the work on babyplots
+
+Using babyplots will always be free for everybody. But if you really like it and want to show your appreciation, you may buy us a coffee :)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D45DB4K)
+
 ## Also see:
 
 Libraries used in babyplots:
