@@ -48,10 +48,10 @@ var PointCloud = (function (_super) {
         if (hasAnimation) {
             if (animationTargets) {
                 for (var i = 0; i < animationTargets.length; i++) {
-                    if (animationTargets[i].length == 2) {
-                        animationTargets[i].push(0);
+                    if (animationTargets[i].length === 2) {
+                        animationTargets[i].splice(1, 0, 0);
                     }
-                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(animationTargets[i][0] * _this.xScale, 0, animationTargets[i][1] * _this.yScale);
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][1] * _this.yScale, coordinates[i][2] * _this.zScale).subtractFromFloats(animationTargets[i][0] * _this.xScale, animationTargets[i][1] * _this.yScale, animationTargets[i][2] * _this.zScale);
                     _this._animationVectors.push(fv);
                     _this._animationVectorFract.push(fv.divide(new math_1.Vector3(_this._animationFrames, _this._animationFrames, _this._animationFrames)));
                 }
@@ -60,8 +60,8 @@ var PointCloud = (function (_super) {
             else {
                 animationTargets = JSON.parse(JSON.stringify(coordinates));
                 for (var i = 0; i < animationTargets.length; i++) {
-                    animationTargets[i][2] = 0;
-                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][2] * _this.zScale, coordinates[i][1] * _this.yScale).subtractFromFloats(animationTargets[i][0] * _this.xScale, 0, animationTargets[i][1] * _this.yScale);
+                    animationTargets[i][1] = 0;
+                    var fv = new math_1.Vector3(coordinates[i][0] * _this.xScale, coordinates[i][1] * _this.yScale, coordinates[i][2] * _this.zScale).subtractFromFloats(animationTargets[i][0] * _this.xScale, animationTargets[i][1] * _this.yScale, animationTargets[i][2] * _this.zScale);
                     _this._animationVectors.push(fv);
                     _this._animationVectorFract.push(fv.divide(new math_1.Vector3(_this._animationFrames, _this._animationFrames, _this._animationFrames)));
                 }
@@ -78,14 +78,14 @@ var PointCloud = (function (_super) {
         var colors = [];
         if (this._hasAnimation) {
             for (var p = 0; p < this._coords.length; p++) {
-                positions.push(this._animationTargets[p][0] * this.xScale, this._animationTargets[p][2] * this.zScale, this._animationTargets[p][1] * this.yScale);
+                positions.push(this._animationTargets[p][0] * this.xScale, this._animationTargets[p][1] * this.yScale, this._animationTargets[p][2] * this.zScale);
                 var col = math_1.Color4.FromHexString(this._coordColors[p]);
                 colors.push(col.r, col.g, col.b, col.a);
             }
         }
         else {
             for (var p = 0; p < this._coords.length; p++) {
-                positions.push(this._coords[p][0] * this.xScale, this._coords[p][2] * this.zScale, this._coords[p][1] * this.yScale);
+                positions.push(this._coords[p][0] * this.xScale, this._coords[p][1] * this.yScale, this._coords[p][2] * this.zScale);
                 var col = math_1.Color4.FromHexString(this._coordColors[p]);
                 colors.push(col.r, col.g, col.b, col.a);
             }
@@ -113,8 +113,8 @@ var PointCloud = (function (_super) {
             var numberOfVertices = positions.length / 3;
             for (var i = 0; i < numberOfVertices; i++) {
                 positions[i * 3] = this._animationTargets[i][0] * this.xScale;
-                positions[i * 3 + 1] = this._animationTargets[i][2] * this.zScale;
-                positions[i * 3 + 2] = this._animationTargets[i][1] * this.yScale;
+                positions[i * 3 + 1] = this._animationTargets[i][1] * this.zScale;
+                positions[i * 3 + 2] = this._animationTargets[i][2] * this.yScale;
             }
         };
         this.mesh.updateMeshPositions(positionFunction.bind(this), true);
@@ -157,8 +157,8 @@ var PointCloud = (function (_super) {
                         var numberOfVertices = positions.length / 3;
                         for (var i = 0; i < numberOfVertices; i++) {
                             positions[i * 3] = this._coords[i][0] * this.xScale;
-                            positions[i * 3 + 1] = this._coords[i][2] * this.zScale;
-                            positions[i * 3 + 2] = this._coords[i][1] * this.yScale;
+                            positions[i * 3 + 1] = this._coords[i][1] * this.yScale;
+                            positions[i * 3 + 2] = this._coords[i][2] * this.zScale;
                         }
                     };
                     this.mesh.updateMeshPositions(positionFunction.bind(this), true);

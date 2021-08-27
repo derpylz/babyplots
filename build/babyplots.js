@@ -271,6 +271,7 @@ var Plots = (function () {
         this._yScale = 1;
         this._zScale = 1;
         this._fsUIDirty = true;
+        this._zUp = false;
         this.plots = [];
         this.ymax = 0;
         this.R = false;
@@ -285,7 +286,8 @@ var Plots = (function () {
             zScale: 1,
             turntable: false,
             rotationRate: 0.01,
-            shapeLegendTitle: ""
+            shapeLegendTitle: "",
+            zUp: false,
         };
         Object.assign(opts, options);
         this.turntable = opts.turntable;
@@ -300,6 +302,10 @@ var Plots = (function () {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
+        this._zUp = opts.zUp;
+        if (opts.zUp) {
+            this.camera.upVector = new math_1.Vector3(0, 0, 1);
+        }
         this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
         this._xScale = opts.xScale;
         this._yScale = opts.yScale;
@@ -390,6 +396,9 @@ var Plots = (function () {
         }
         if (plotData["shapeLegendTitle"] !== undefined) {
             this.shapeLegendTitle = plotData["shapeLegendTitle"];
+        }
+        if (plotData["zUp"] !== undefined) {
+            this._zUp = plotData["zUp"];
         }
         for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             var plot = plotData["plots"][plotIdx];
@@ -552,6 +561,7 @@ var Plots = (function () {
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
+        this._downloadObj["zUp"] = this._zUp;
     };
     Plots.prototype._downloadJson = function () {
         var dlElement = document.createElement("a");

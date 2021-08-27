@@ -214,6 +214,7 @@ export declare class Plots {
     private _uniqID;
     private _shapeLegendPosition;
     private _fsUIDirty;
+    private _zUp;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;

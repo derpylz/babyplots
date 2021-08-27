@@ -371,6 +371,7 @@ export class Plots {
     private _uniqID: string;
     private _shapeLegendPosition: string;
     private _fsUIDirty: boolean = true;
+    private _zUp: boolean = false;
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -417,7 +418,8 @@ export class Plots {
             zScale: 1,
             turntable: false,
             rotationRate: 0.01,
-            shapeLegendTitle: ""
+            shapeLegendTitle: "",
+            zUp: false,
         }
         Object.assign(opts, options);
 
@@ -437,7 +439,11 @@ export class Plots {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
-
+        this._zUp = opts.zUp;
+        if (opts.zUp) {
+            this.camera.upVector = new Vector3(0, 0, 1);
+        }
+        
         // background color
         this.scene.clearColor = Color4.FromHexString(opts.backgroundColor);
 
@@ -557,6 +563,9 @@ export class Plots {
         }
         if (plotData["shapeLegendTitle"] !== undefined) {
             this.shapeLegendTitle = plotData["shapeLegendTitle"];
+        }
+        if (plotData["zUp"] !== undefined) {
+            this._zUp = plotData["zUp"];
         }
         for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             const plot = plotData["plots"][plotIdx];
@@ -749,6 +758,7 @@ export class Plots {
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
+        this._downloadObj["zUp"] = this._zUp;
     }
 
     private _downloadJson() {
