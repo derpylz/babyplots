@@ -26,6 +26,7 @@ import { Axis, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
 import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
+import { PBRMaterial } from "@babylonjs/core";
 
 
 export class MeshStream extends Plot {
@@ -36,6 +37,8 @@ export class MeshStream extends Plot {
     private _camera: ArcRotateCamera;
     private _rotation: number[];
     private _offset: number[];
+    private _clearCoat: boolean;
+    private _clearCoatIntensity: number;
 
     frameIndex: number = 0;
     frameTotal: number;
@@ -57,6 +60,8 @@ export class MeshStream extends Plot {
         frameDelay: number = 200,
         rotation: number[] = [],
         offset: number[] = [],
+        clearCoat: boolean = false,
+        clearCoatIntensity: number = 1,
         name: string = "mesh stream"
     ) {
         super(name, "meshStream", scene, legendData, xScale, yScale, zScale);
@@ -65,6 +70,8 @@ export class MeshStream extends Plot {
         this.frameDelay = frameDelay;
         this._rotation = rotation;
         this._offset = offset;
+        this._clearCoat = clearCoat;
+        this._clearCoatIntensity = clearCoatIntensity;
         for (let iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
@@ -75,58 +82,39 @@ export class MeshStream extends Plot {
     async _createMeshStream(): Promise<void> {
         // load meshes one by one, store them and display them as they come in
 
-        // start loading first mesh container
         let loadingContainers: Promise<AssetContainer>[] = [];
-        let t0 = performance.now();
-        loadingContainers.push(this._loadMesh(this._filenames[0]));
-
-        // load subsequent containers
-        for (let idx = 1; idx < this._filenames.length; idx++) {
+        // load containers
+        for (let idx = 0; idx < this._filenames.length; idx++) {
             const filename = this._filenames[idx];
             // start loading container
             loadingContainers.push(this._loadMesh(filename));
-            // wait until previous mesh is loaded
-            const prevContainer = await loadingContainers[loadingContainers.length - 2];
-            const remTime = this.frameDelay - (performance.now() - t0);
-            if (remTime > 0) {
-                await _sleep(remTime);
-            }
-            this._containers.push(prevContainer);
-            if (idx > 1) {
-                // remove the meshes before the previous frame from the scene
-                this._containers[this._containers.length - 2].removeAllFromScene();
-            }
-            // add the previous meshes to the scene
-            prevContainer.addAllToScene();
-            this.frameIndex++;
-            t0 = performance.now();
-            if (idx === 1) {
-                // position camera
-                this.worldextends = this._scene.getWorldExtends();
-                let mm = this.worldextends.min.add(this.worldextends.max);
-                let midpoint = mm.divide(new Vector3(2, 2, 2));
-                this._camera.target = midpoint;
-                this._camera.alpha = 0;
-                this._camera.beta = 1;
-                this._camera.useFramingBehavior = true;
-                let framingBehavior = this._camera.getBehaviorByName("Framing") as FramingBehavior;
-                framingBehavior.framingTime = 0;
-                framingBehavior.elevationReturnTime = -1;
-                this._camera.lowerRadiusLimit = 0;
-                framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
-            }
         }
-        const prevContainer = await loadingContainers[this._filenames.length - 2];
-        const lastContainer = await loadingContainers[this._filenames.length - 1];
-        this._containers.push(lastContainer);
-        prevContainer.removeAllFromScene();
-        lastContainer.addAllToScene();
+        const firstScene = await loadingContainers[0];
+        firstScene.addAllToScene();
+        this._containers.push(firstScene)
+        // position camera
+        this.worldextends = this._scene.getWorldExtends();
+        let mm = this.worldextends.min.add(this.worldextends.max);
+        let midpoint = mm.multiply(new Vector3(0.5, 0.5, 0.5));
+        this._camera.target = midpoint.addInPlaceFromFloats(
+            this._offset[0], this._offset[1], this._offset[2]
+        );
+        this._camera.alpha = 0;
+        this._camera.beta = 1;
+        this._camera.useFramingBehavior = true;
+        let framingBehavior = this._camera.getBehaviorByName("Framing") as FramingBehavior;
+        framingBehavior.framingTime = 0;
+        framingBehavior.elevationReturnTime = -1;
+        this._camera.lowerRadiusLimit = 0;
+        framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
+        this._containers = this._containers.concat(await Promise.all(loadingContainers));
         this.allLoaded = true;
         this.frameIndex = 0;
+        firstScene.removeAllFromScene();
     }
 
     async _loadMesh(filename: string): Promise<AssetContainer> {
-        let container = await SceneLoader.LoadAssetContainerAsync(
+        let container = SceneLoader.LoadAssetContainerAsync(
             this._rootUrl, filename, this._scene
         ).then(container => {
             if (this._rotation.length === 3) {
@@ -136,14 +124,22 @@ export class MeshStream extends Plot {
                 rootMesh.rotate(Axis.Y, this._rotation[1], Space.LOCAL);
                 rootMesh.rotate(Axis.Z, this._rotation[2], Space.LOCAL);
             }
-            if (this._offset.length === 3) {
-                let rootMesh = container.meshes[0];
-                rootMesh.position = new Vector3(
-                    this._offset[0],
-                    this._offset[1],
-                    this._offset[2]
-                );
+            // if (this._offset.length === 3) {
+            //     let rootMesh = container.meshes[0];
+            //     rootMesh.position = new Vector3(
+            //         this._offset[0],
+            //         this._offset[1],
+            //         this._offset[2]
+            //     );
+            // }
+            if (this._clearCoat) {
+                let materials = container.materials;
+                materials.forEach((mat, _) => {
+                    (mat as PBRMaterial).clearCoat.isEnabled = true;
+                    (mat as PBRMaterial).clearCoat.intensity = this._clearCoatIntensity;
+                });
             }
+            this.frameIndex++;
             return container;
         });
         return container;

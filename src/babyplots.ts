@@ -1740,7 +1740,9 @@ export class Plots {
         // default options
         let opts = {
             meshRotation: [0, 0, 0],
-            meshOffset: [0, 0, 0]
+            meshOffset: [0, 0, 0],
+            clearCoat: false,
+            clearCoatIntensity: 1,
         }
         // apply user options
         Object.assign(opts, options);
@@ -1754,7 +1756,9 @@ export class Plots {
             fileIteratorEnd: fileIteratorEnd,
             frameDelay: frameDelay,
             meshRotation: opts.meshRotation,
-            meshOffset: opts.meshOffset
+            meshOffset: opts.meshOffset,
+            clearCoat: opts.clearCoat,
+            clearCoatIntensity: opts.clearCoatIntensity
         });
 
         let legendData: LegendData = {
@@ -1780,6 +1784,9 @@ export class Plots {
             this._zScale,
             frameDelay,
             opts.meshRotation,
+            opts.meshOffset,
+            opts.clearCoat,
+            opts.clearCoatIntensity
         );
         this._hasAnim = true;
         this.plots.push(plot);

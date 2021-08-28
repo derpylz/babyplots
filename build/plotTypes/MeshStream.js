@@ -58,13 +58,15 @@ var math_1 = require("@babylonjs/core/Maths/math");
 require("@babylonjs/loaders/glTF");
 var MeshStream = (function (_super) {
     __extends(MeshStream, _super);
-    function MeshStream(scene, camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, offset, name) {
+    function MeshStream(scene, camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, offset, clearCoat, clearCoatIntensity, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         if (frameDelay === void 0) { frameDelay = 200; }
         if (rotation === void 0) { rotation = []; }
         if (offset === void 0) { offset = []; }
+        if (clearCoat === void 0) { clearCoat = false; }
+        if (clearCoatIntensity === void 0) { clearCoatIntensity = 1; }
         if (name === void 0) { name = "mesh stream"; }
         var _this = _super.call(this, name, "meshStream", scene, legendData, xScale, yScale, zScale) || this;
         _this._filenames = [];
@@ -76,6 +78,8 @@ var MeshStream = (function (_super) {
         _this.frameDelay = frameDelay;
         _this._rotation = rotation;
         _this._offset = offset;
+        _this._clearCoat = clearCoat;
+        _this._clearCoatIntensity = clearCoatIntensity;
         for (var iter = fileIteratorStart; iter <= fileIteratorEnd; iter++) {
             _this._filenames.push(filePrefix + iter.toString() + fileSuffix);
         }
@@ -85,65 +89,40 @@ var MeshStream = (function (_super) {
     }
     MeshStream.prototype._createMeshStream = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loadingContainers, t0, idx, filename, prevContainer_1, remTime, mm, midpoint, framingBehavior, prevContainer, lastContainer;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var loadingContainers, idx, filename, firstScene, mm, midpoint, framingBehavior, _a, _b, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         loadingContainers = [];
-                        t0 = performance.now();
-                        loadingContainers.push(this._loadMesh(this._filenames[0]));
-                        idx = 1;
-                        _a.label = 1;
+                        for (idx = 0; idx < this._filenames.length; idx++) {
+                            filename = this._filenames[idx];
+                            loadingContainers.push(this._loadMesh(filename));
+                        }
+                        return [4, loadingContainers[0]];
                     case 1:
-                        if (!(idx < this._filenames.length)) return [3, 6];
-                        filename = this._filenames[idx];
-                        loadingContainers.push(this._loadMesh(filename));
-                        return [4, loadingContainers[loadingContainers.length - 2]];
+                        firstScene = _d.sent();
+                        firstScene.addAllToScene();
+                        this._containers.push(firstScene);
+                        this.worldextends = this._scene.getWorldExtends();
+                        mm = this.worldextends.min.add(this.worldextends.max);
+                        midpoint = mm.multiply(new math_1.Vector3(0.5, 0.5, 0.5));
+                        this._camera.target = midpoint.addInPlaceFromFloats(this._offset[0], this._offset[1], this._offset[2]);
+                        this._camera.alpha = 0;
+                        this._camera.beta = 1;
+                        this._camera.useFramingBehavior = true;
+                        framingBehavior = this._camera.getBehaviorByName("Framing");
+                        framingBehavior.framingTime = 0;
+                        framingBehavior.elevationReturnTime = -1;
+                        this._camera.lowerRadiusLimit = 0;
+                        framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
+                        _a = this;
+                        _c = (_b = this._containers).concat;
+                        return [4, Promise.all(loadingContainers)];
                     case 2:
-                        prevContainer_1 = _a.sent();
-                        remTime = this.frameDelay - (performance.now() - t0);
-                        if (!(remTime > 0)) return [3, 4];
-                        return [4, _sleep(remTime)];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
-                    case 4:
-                        this._containers.push(prevContainer_1);
-                        if (idx > 1) {
-                            this._containers[this._containers.length - 2].removeAllFromScene();
-                        }
-                        prevContainer_1.addAllToScene();
-                        this.frameIndex++;
-                        t0 = performance.now();
-                        if (idx === 1) {
-                            this.worldextends = this._scene.getWorldExtends();
-                            mm = this.worldextends.min.add(this.worldextends.max);
-                            midpoint = mm.divide(new math_1.Vector3(2, 2, 2));
-                            this._camera.target = midpoint;
-                            this._camera.alpha = 0;
-                            this._camera.beta = 1;
-                            this._camera.useFramingBehavior = true;
-                            framingBehavior = this._camera.getBehaviorByName("Framing");
-                            framingBehavior.framingTime = 0;
-                            framingBehavior.elevationReturnTime = -1;
-                            this._camera.lowerRadiusLimit = 0;
-                            framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
-                        }
-                        _a.label = 5;
-                    case 5:
-                        idx++;
-                        return [3, 1];
-                    case 6: return [4, loadingContainers[this._filenames.length - 2]];
-                    case 7:
-                        prevContainer = _a.sent();
-                        return [4, loadingContainers[this._filenames.length - 1]];
-                    case 8:
-                        lastContainer = _a.sent();
-                        this._containers.push(lastContainer);
-                        prevContainer.removeAllFromScene();
-                        lastContainer.addAllToScene();
+                        _a._containers = _c.apply(_b, [_d.sent()]);
                         this.allLoaded = true;
                         this.frameIndex = 0;
+                        firstScene.removeAllFromScene();
                         return [2];
                 }
             });
@@ -154,25 +133,25 @@ var MeshStream = (function (_super) {
             var container;
             var _this = this;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4, sceneLoader_1.SceneLoader.LoadAssetContainerAsync(this._rootUrl, filename, this._scene).then(function (container) {
-                            if (_this._rotation.length === 3) {
-                                var rootMesh = container.meshes[0];
-                                rootMesh.rotationQuaternion = null;
-                                rootMesh.rotate(math_1.Axis.X, _this._rotation[0], math_1.Space.LOCAL);
-                                rootMesh.rotate(math_1.Axis.Y, _this._rotation[1], math_1.Space.LOCAL);
-                                rootMesh.rotate(math_1.Axis.Z, _this._rotation[2], math_1.Space.LOCAL);
-                            }
-                            if (_this._offset.length === 3) {
-                                var rootMesh = container.meshes[0];
-                                rootMesh.position = new math_1.Vector3(_this._offset[0], _this._offset[1], _this._offset[2]);
-                            }
-                            return container;
-                        })];
-                    case 1:
-                        container = _a.sent();
-                        return [2, container];
-                }
+                container = sceneLoader_1.SceneLoader.LoadAssetContainerAsync(this._rootUrl, filename, this._scene).then(function (container) {
+                    if (_this._rotation.length === 3) {
+                        var rootMesh = container.meshes[0];
+                        rootMesh.rotationQuaternion = null;
+                        rootMesh.rotate(math_1.Axis.X, _this._rotation[0], math_1.Space.LOCAL);
+                        rootMesh.rotate(math_1.Axis.Y, _this._rotation[1], math_1.Space.LOCAL);
+                        rootMesh.rotate(math_1.Axis.Z, _this._rotation[2], math_1.Space.LOCAL);
+                    }
+                    if (_this._clearCoat) {
+                        var materials = container.materials;
+                        materials.forEach(function (mat, _) {
+                            mat.clearCoat.isEnabled = true;
+                            mat.clearCoat.intensity = _this._clearCoatIntensity;
+                        });
+                    }
+                    _this.frameIndex++;
+                    return container;
+                });
+                return [2, container];
             });
         });
     };

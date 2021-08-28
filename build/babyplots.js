@@ -1343,7 +1343,9 @@ var Plots = (function () {
     Plots.prototype.addMeshStream = function (rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, frameDelay, options) {
         var opts = {
             meshRotation: [0, 0, 0],
-            meshOffset: [0, 0, 0]
+            meshOffset: [0, 0, 0],
+            clearCoat: false,
+            clearCoatIntensity: 1,
         };
         Object.assign(opts, options);
         this._downloadObj["plots"].push({
@@ -1355,7 +1357,9 @@ var Plots = (function () {
             fileIteratorEnd: fileIteratorEnd,
             frameDelay: frameDelay,
             meshRotation: opts.meshRotation,
-            meshOffset: opts.meshOffset
+            meshOffset: opts.meshOffset,
+            clearCoat: opts.clearCoat,
+            clearCoatIntensity: opts.clearCoatIntensity
         });
         var legendData = {
             showLegend: false,
@@ -1365,7 +1369,7 @@ var Plots = (function () {
             inverted: false,
             position: undefined
         };
-        var plot = new MeshStream_1.MeshStream(this.scene, this.camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation);
+        var plot = new MeshStream_1.MeshStream(this.scene, this.camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation, opts.meshOffset, opts.clearCoat, opts.clearCoatIntensity);
         this._hasAnim = true;
         this.plots.push(plot);
         this.camera.wheelPrecision = 1;
