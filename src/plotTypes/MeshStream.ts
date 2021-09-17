@@ -92,21 +92,6 @@ export class MeshStream extends Plot {
         const firstScene = await loadingContainers[0];
         firstScene.addAllToScene();
         this._containers.push(firstScene)
-        // position camera
-        this.worldextends = this._scene.getWorldExtends();
-        let mm = this.worldextends.min.add(this.worldextends.max);
-        let midpoint = mm.multiply(new Vector3(0.5, 0.5, 0.5));
-        this._camera.target = midpoint.addInPlaceFromFloats(
-            this._offset[0], this._offset[1], this._offset[2]
-        );
-        this._camera.alpha = 0;
-        this._camera.beta = 1;
-        this._camera.useFramingBehavior = true;
-        let framingBehavior = this._camera.getBehaviorByName("Framing") as FramingBehavior;
-        framingBehavior.framingTime = 0;
-        framingBehavior.elevationReturnTime = -1;
-        this._camera.lowerRadiusLimit = 0;
-        framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
         this._containers = this._containers.concat(await Promise.all(loadingContainers));
         this.allLoaded = true;
         this.frameIndex = 0;
@@ -124,14 +109,14 @@ export class MeshStream extends Plot {
                 rootMesh.rotate(Axis.Y, this._rotation[1], Space.LOCAL);
                 rootMesh.rotate(Axis.Z, this._rotation[2], Space.LOCAL);
             }
-            // if (this._offset.length === 3) {
-            //     let rootMesh = container.meshes[0];
-            //     rootMesh.position = new Vector3(
-            //         this._offset[0],
-            //         this._offset[1],
-            //         this._offset[2]
-            //     );
-            // }
+            if (this._offset.length === 3) {
+                let rootMesh = container.meshes[0];
+                rootMesh.position = new Vector3(
+                    this._offset[0],
+                    this._offset[1],
+                    this._offset[2]
+                );
+            }
             if (this._clearCoat) {
                 let materials = container.materials;
                 materials.forEach((mat, _) => {

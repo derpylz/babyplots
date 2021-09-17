@@ -45,11 +45,14 @@
         100,
         {
           meshRotation: [Math.PI /2, 0, 0],
-          meshOffset: [300, -226, 0],
+          meshOffset: [-300, 0, -300],
           clearCoat: true,
           clearCoatIntensity: 0.5,
         }
       );
+      vis.camera.radius = 800;
+      vis.camera.alpha = 0;
+      vis.camera.beta = 1;
       vis.doRender();
       vis.createButtons(["turntable", "json"]);
       window.onresize = function () {
