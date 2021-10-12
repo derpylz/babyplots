@@ -25,7 +25,6 @@ import { LegendData, Plot } from "../babyplots";
 import { Axis, Space, Vector3 } from "@babylonjs/core/Maths/math";
 
 import "@babylonjs/loaders/glTF";
-import { FramingBehavior } from "@babylonjs/core/Behaviors/Cameras/framingBehavior";
 import { PBRMaterial } from "@babylonjs/core";
 
 

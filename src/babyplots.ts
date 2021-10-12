@@ -650,7 +650,8 @@ export class Plots {
                         rownames: plot["rownames"],
                         shape: plot["shape"],
                         shading: plot["shading"],
-                        dpInfo: plot["dpInfo"]
+                        dpInfo: plot["dpInfo"],
+                        addClusterLabels: plot["addClusterLabels"]
                     }
                 )
             }
@@ -1323,6 +1324,7 @@ export class Plots {
             shape: null,
             shading: true,
             dpInfo: null,
+            addClusterLabels: false,
             // deprecated animation option names:
             folded: null,
             foldedEmbedding: null,
@@ -1398,7 +1400,8 @@ export class Plots {
             rownames: opts.rownames,
             shape: opts.shape,
             shading: opts.shading,
-            dpInfo: opts.dpInfo
+            dpInfo: opts.dpInfo,
+            addClusterLabesl: opts.addClusterLabels
         })
 
         let coordColors: string[] = [];
@@ -1584,7 +1587,9 @@ export class Plots {
                     this._xScale,
                     this._yScale,
                     this._zScale,
-                    opts.name
+                    opts.name,
+                    opts.addClusterLabels,
+                    this._annotationManager
                 );
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [

@@ -382,6 +382,8 @@ export class AnnotationManager {
             pos = new Vector3(0, this._ymax + 2, 0);
         }
 
+        text = text.replace(/[\s\.]/g, "\n");
+        text = text.replace(/_/g, " ");
         let newLabel = new Label(text, pos, this._scene, this._fgColor);
 
         this.labels.push(newLabel);

@@ -14,6 +14,9 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PointCloud = void 0;
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
@@ -21,16 +24,16 @@ var math_1 = require("@babylonjs/core/Maths/math");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var babyplots_1 = require("../babyplots");
+var chroma_js_1 = __importDefault(require("chroma-js"));
 var PointCloud = (function (_super) {
     __extends(PointCloud, _super);
-    function PointCloud(scene, coordinates, colorVar, size, legendData, hasAnimation, animationTargets, animationDelay, animationDuration, xScale, yScale, zScale, name) {
+    function PointCloud(scene, coordinates, colorVar, size, legendData, hasAnimation, animationTargets, animationDelay, animationDuration, xScale, yScale, zScale, name, addLabels, annotationManager) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         if (name === void 0) { name = "point cloud"; }
+        if (addLabels === void 0) { addLabels = false; }
         var _this = _super.call(this, name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
-        _this._pointPicking = false;
-        _this._selectionCallback = function (selection) { return false; };
         _this._looping = false;
         _this._animDirection = 1;
         _this._animationVectors = [];
@@ -69,6 +72,9 @@ var PointCloud = (function (_super) {
             }
         }
         _this._createPointCloud();
+        if (addLabels && annotationManager) {
+            _this._addLabels(annotationManager);
+        }
         _this.allLoaded = true;
         return _this;
     }
@@ -106,6 +112,47 @@ var PointCloud = (function (_super) {
                 this.mesh.material.alpha = newAlpha;
             }
         });
+    };
+    PointCloud.prototype._addLabels = function (annotationManager) {
+        if (!this.legendData.discrete)
+            return;
+        var colors;
+        if (this.legendData.colorScale === "custom") {
+            colors = chroma_js_1.default.scale(this.legendData.customColorScale).mode('lch').colors(this.legendData.breaks.length);
+        }
+        else {
+            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[this.legendData.colorScale]).mode('lch').colors(this.legendData.breaks.length);
+        }
+        var pointGroups = [];
+        var pointGroupColors = [];
+        var pointGroupNames = [];
+        for (var i = 0; i < this._coordColors.length; i++) {
+            var color = this._coordColors[i];
+            var colorIdx = pointGroupColors.indexOf(color);
+            if (colorIdx === -1) {
+                colorIdx = pointGroupColors.length;
+                pointGroupColors.push(color);
+                var colorNameIdx = colors.indexOf(color.slice(0, -2));
+                if (colorNameIdx === -1) {
+                    colorNameIdx = colors.indexOf(color);
+                    if (colorNameIdx === -1)
+                        continue;
+                }
+                ;
+                pointGroupNames.push(this.legendData.breaks[colorNameIdx]);
+                pointGroups.push([]);
+            }
+            pointGroups[colorIdx].push(this._coords[i]);
+        }
+        var pointGroupCentroids = [];
+        var sumFun = function (prev, curr) { return [prev[0] + curr[0], prev[1] + curr[1], prev[2] + curr[2]]; };
+        for (var i = 0; i < pointGroups.length; i++) {
+            var pointGroup = pointGroups[i];
+            var sum = pointGroup.reduce(sumFun);
+            var centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
+            annotationManager.addLabel(pointGroupNames[i], centroid);
+            annotationManager.fixLabels();
+        }
     };
     PointCloud.prototype.resetAnimation = function () {
         this._hasAnimation = true;

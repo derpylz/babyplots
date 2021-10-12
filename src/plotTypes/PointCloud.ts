@@ -24,10 +24,10 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { FloatArray } from "@babylonjs/core/types";
 import { LegendData, CoordinatePlot } from "../babyplots";
+import { AnnotationManager } from "../utils/Label";
+import chroma from "chroma-js";
 
 export class PointCloud extends CoordinatePlot {
-    private _pointPicking: boolean = false;
-    private _selectionCallback = function (selection: number[]) { return false; };
     private _hasAnimation: boolean;
     private _looping: boolean = false;
     private _animDirection: number = 1;
@@ -50,7 +50,9 @@ export class PointCloud extends CoordinatePlot {
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1,
-        name: string = "point cloud"
+        name: string = "point cloud",
+        addLabels: boolean = false,
+        annotationManager?: AnnotationManager
     ) {
         super(name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._hasAnimation = hasAnimation;
@@ -99,6 +101,9 @@ export class PointCloud extends CoordinatePlot {
             }
         }
         this._createPointCloud();
+        if (addLabels && annotationManager) {
+            this._addLabels(annotationManager);
+        }
         this.allLoaded = true;
     }
     /**
@@ -149,6 +154,45 @@ export class PointCloud extends CoordinatePlot {
                 this.mesh.material.alpha = newAlpha;
             }
         });
+    }
+
+    private _addLabels(annotationManager: AnnotationManager): void {
+        if (!this.legendData.discrete) return;
+        let colors: string[];
+        if (this.legendData.colorScale === "custom") {
+            colors = chroma.scale(this.legendData.customColorScale).mode('lch').colors(this.legendData.breaks.length);
+        }
+        else {
+            colors = chroma.scale(chroma.brewer[this.legendData.colorScale]).mode('lch').colors(this.legendData.breaks.length);
+        }
+        let pointGroups: number[][][] = [];
+        let pointGroupColors: string[] = [];
+        let pointGroupNames: string[] = [];
+        for (let i = 0; i < this._coordColors.length; i++) {
+            const color = this._coordColors[i];
+            let colorIdx = pointGroupColors.indexOf(color);
+            if (colorIdx === -1) {
+                colorIdx = pointGroupColors.length;
+                pointGroupColors.push(color);
+                let colorNameIdx = colors.indexOf(color.slice(0, -2));
+                if (colorNameIdx === -1) {
+                    colorNameIdx = colors.indexOf(color);
+                    if (colorNameIdx === -1) continue;
+                };
+                pointGroupNames.push(this.legendData.breaks[colorNameIdx]);
+                pointGroups.push([]);
+            }
+            pointGroups[colorIdx].push(this._coords[i]);
+        }
+        let pointGroupCentroids = [];
+        const sumFun = (prev: number[], curr: number[]) => [prev[0] + curr[0], prev[1] + curr[1], prev[2] + curr[2]];
+        for (let i = 0; i < pointGroups.length; i++) {
+            const pointGroup = pointGroups[i];
+            const sum = pointGroup.reduce(sumFun);
+            const centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
+            annotationManager.addLabel(pointGroupNames[i], centroid);
+            annotationManager.fixLabels();
+        }
     }
 
     resetAnimation(): void {

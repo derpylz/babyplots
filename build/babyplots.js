@@ -467,7 +467,8 @@ var Plots = (function () {
                     rownames: plot["rownames"],
                     shape: plot["shape"],
                     shading: plot["shading"],
-                    dpInfo: plot["dpInfo"]
+                    dpInfo: plot["dpInfo"],
+                    addClusterLabels: plot["addClusterLabels"]
                 });
             }
         }
@@ -1018,6 +1019,7 @@ var Plots = (function () {
             shape: null,
             shading: true,
             dpInfo: null,
+            addClusterLabels: false,
             folded: null,
             foldedEmbedding: null,
             foldAnimDelay: null,
@@ -1088,7 +1090,8 @@ var Plots = (function () {
             rownames: opts.rownames,
             shape: opts.shape,
             shading: opts.shading,
-            dpInfo: opts.dpInfo
+            dpInfo: opts.dpInfo,
+            addClusterLabesl: opts.addClusterLabels
         });
         var coordColors = [];
         var legendData;
@@ -1244,7 +1247,7 @@ var Plots = (function () {
         var boundingBox;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name, opts.addClusterLabels, this._annotationManager);
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,

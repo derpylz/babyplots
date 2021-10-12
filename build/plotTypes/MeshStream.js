@@ -89,7 +89,7 @@ var MeshStream = (function (_super) {
     }
     MeshStream.prototype._createMeshStream = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loadingContainers, idx, filename, firstScene, mm, midpoint, framingBehavior, _a, _b, _c;
+            var loadingContainers, idx, filename, firstScene, _a, _b, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
@@ -103,18 +103,6 @@ var MeshStream = (function (_super) {
                         firstScene = _d.sent();
                         firstScene.addAllToScene();
                         this._containers.push(firstScene);
-                        this.worldextends = this._scene.getWorldExtends();
-                        mm = this.worldextends.min.add(this.worldextends.max);
-                        midpoint = mm.multiply(new math_1.Vector3(0.5, 0.5, 0.5));
-                        this._camera.target = midpoint.addInPlaceFromFloats(this._offset[0], this._offset[1], this._offset[2]);
-                        this._camera.alpha = 0;
-                        this._camera.beta = 1;
-                        this._camera.useFramingBehavior = true;
-                        framingBehavior = this._camera.getBehaviorByName("Framing");
-                        framingBehavior.framingTime = 0;
-                        framingBehavior.elevationReturnTime = -1;
-                        this._camera.lowerRadiusLimit = 0;
-                        framingBehavior.zoomOnBoundingInfo(this.worldextends.min, this.worldextends.max);
                         _a = this;
                         _c = (_b = this._containers).concat;
                         return [4, Promise.all(loadingContainers)];
@@ -140,6 +128,10 @@ var MeshStream = (function (_super) {
                         rootMesh.rotate(math_1.Axis.X, _this._rotation[0], math_1.Space.LOCAL);
                         rootMesh.rotate(math_1.Axis.Y, _this._rotation[1], math_1.Space.LOCAL);
                         rootMesh.rotate(math_1.Axis.Z, _this._rotation[2], math_1.Space.LOCAL);
+                    }
+                    if (_this._offset.length === 3) {
+                        var rootMesh = container.meshes[0];
+                        rootMesh.position = new math_1.Vector3(_this._offset[0], _this._offset[1], _this._offset[2]);
                     }
                     if (_this._clearCoat) {
                         var materials = container.materials;

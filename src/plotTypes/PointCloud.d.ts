@@ -1,8 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { LegendData, CoordinatePlot } from "../babyplots";
+import { AnnotationManager } from "../utils/Label";
 export declare class PointCloud extends CoordinatePlot {
-    private _pointPicking;
-    private _selectionCallback;
     private _hasAnimation;
     private _looping;
     private _animDirection;
@@ -12,8 +11,9 @@ export declare class PointCloud extends CoordinatePlot {
     private _animationFrames;
     private _animationVectorFract;
     private _animationDelay;
-    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, hasAnimation?: boolean, animationTargets?: number[][], animationDelay?: number, animationDuration?: number, xScale?: number, yScale?: number, zScale?: number, name?: string);
+    constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, hasAnimation?: boolean, animationTargets?: number[][], animationDelay?: number, animationDuration?: number, xScale?: number, yScale?: number, zScale?: number, name?: string, addLabels?: boolean, annotationManager?: AnnotationManager);
     private _createPointCloud;
+    private _addLabels;
     resetAnimation(): void;
     setLooping(looping: boolean): void;
     update(): boolean;
