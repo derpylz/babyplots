@@ -1091,7 +1091,7 @@ var Plots = (function () {
             shape: opts.shape,
             shading: opts.shading,
             dpInfo: opts.dpInfo,
-            addClusterLabesl: opts.addClusterLabels
+            addClusterLabels: opts.addClusterLabels
         });
         var coordColors = [];
         var legendData;

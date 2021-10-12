@@ -1401,7 +1401,7 @@ export class Plots {
             shape: opts.shape,
             shading: opts.shading,
             dpInfo: opts.dpInfo,
-            addClusterLabesl: opts.addClusterLabels
+            addClusterLabels: opts.addClusterLabels
         })
 
         let coordColors: string[] = [];
