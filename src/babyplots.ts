@@ -371,7 +371,7 @@ export class Plots {
     private _uniqID: string;
     private _shapeLegendPosition: string;
     private _fsUIDirty: boolean = true;
-    private _zUp: boolean = false;
+    private _upAxis: string = "+y";
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -419,7 +419,7 @@ export class Plots {
             turntable: false,
             rotationRate: 0.01,
             shapeLegendTitle: "",
-            zUp: false,
+            upAxis: "+y",
         }
         Object.assign(opts, options);
 
@@ -439,10 +439,8 @@ export class Plots {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
-        this._zUp = opts.zUp;
-        if (opts.zUp) {
-            this.camera.upVector = new Vector3(0, 0, 1);
-        }
+        this._upAxis = opts.upAxis;
+        this._updateCameraUpVector();
         
         // background color
         this.scene.clearColor = Color4.FromHexString(opts.backgroundColor);
@@ -536,6 +534,30 @@ export class Plots {
         }).bind(this);
     }
 
+    private _updateCameraUpVector() {
+        switch (this._upAxis) {
+            case "+x":
+                this.camera.upVector = new Vector3(1, 0, 0);
+                break;
+            case "-x":
+                this.camera.upVector = new Vector3(-1, 0, 0);
+                break;
+            case "+z":
+                this.camera.upVector = new Vector3(0, 0, 1);
+                break;
+            case "-z":
+                this.camera.upVector = new Vector3(0, 0, -1);
+                break;
+            case "-y":
+                this.camera.upVector = new Vector3(0, -1, 0);
+                break;
+            case "+y":
+            default:
+                this.camera.upVector = new Vector3(0, 1, 0);
+                break;
+        }
+    }
+
     /**
      * Load a visualization from a saved JSON object. The R, JavaScript and Python implementations of babyplots as well as the NPC allow the export of visualizations as JSON files. Loading of a saved visualization using fromJSON() overwrites previously set properties of the Plots object.
      * 
@@ -564,8 +586,9 @@ export class Plots {
         if (plotData["shapeLegendTitle"] !== undefined) {
             this.shapeLegendTitle = plotData["shapeLegendTitle"];
         }
-        if (plotData["zUp"] !== undefined) {
-            this._zUp = plotData["zUp"];
+        if (plotData["upAxis"] !== undefined) {
+            this._upAxis = plotData["upAxis"];
+            this._updateCameraUpVector();
         }
         for (let plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             const plot = plotData["plots"][plotIdx];
@@ -759,7 +782,7 @@ export class Plots {
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
-        this._downloadObj["zUp"] = this._zUp;
+        this._downloadObj["upAxis"] = this._upAxis;
     }
 
     private _downloadJson() {

@@ -214,7 +214,7 @@ export declare class Plots {
     private _uniqID;
     private _shapeLegendPosition;
     private _fsUIDirty;
-    private _zUp;
+    private _upAxis;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -228,6 +228,7 @@ export declare class Plots {
     uiLayer: AdvancedDynamicTexture;
     animPaused: boolean;
     constructor(canvasElement: string, options?: {});
+    private _updateCameraUpVector;
     fromJSON(plotData: {}): void;
     createButtons(whichBtns?: string[]): void;
     private _prepDownloadObj;

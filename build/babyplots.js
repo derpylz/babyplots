@@ -271,7 +271,7 @@ var Plots = (function () {
         this._yScale = 1;
         this._zScale = 1;
         this._fsUIDirty = true;
-        this._zUp = false;
+        this._upAxis = "+y";
         this.plots = [];
         this.ymax = 0;
         this.R = false;
@@ -287,7 +287,7 @@ var Plots = (function () {
             turntable: false,
             rotationRate: 0.01,
             shapeLegendTitle: "",
-            zUp: false,
+            upAxis: "+y",
         };
         Object.assign(opts, options);
         this.turntable = opts.turntable;
@@ -302,9 +302,27 @@ var Plots = (function () {
         this.scene.activeCamera = this.camera;
         this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
-        this._zUp = opts.zUp;
-        if (opts.zUp) {
-            this.camera.upVector = new math_1.Vector3(0, 0, 1);
+        this._upAxis = opts.upAxis;
+        switch (opts.upAxis) {
+            case "+x":
+                this.camera.upVector = new math_1.Vector3(1, 0, 0);
+                break;
+            case "-x":
+                this.camera.upVector = new math_1.Vector3(-1, 0, 0);
+                break;
+            case "+z":
+                this.camera.upVector = new math_1.Vector3(0, 0, 1);
+                break;
+            case "-z":
+                this.camera.upVector = new math_1.Vector3(0, 0, -1);
+                break;
+            case "-y":
+                this.camera.upVector = new math_1.Vector3(0, -1, 0);
+                break;
+            case "+y":
+            default:
+                this.camera.upVector = new math_1.Vector3(0, 1, 0);
+                break;
         }
         this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
         this._xScale = opts.xScale;
@@ -397,8 +415,8 @@ var Plots = (function () {
         if (plotData["shapeLegendTitle"] !== undefined) {
             this.shapeLegendTitle = plotData["shapeLegendTitle"];
         }
-        if (plotData["zUp"] !== undefined) {
-            this._zUp = plotData["zUp"];
+        if (plotData["upAxis"] !== undefined) {
+            this._upAxis = plotData["upAxis"];
         }
         for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             var plot = plotData["plots"][plotIdx];
@@ -562,7 +580,7 @@ var Plots = (function () {
         this._downloadObj["cameraAlpha"] = this.camera.alpha;
         this._downloadObj["cameraBeta"] = this.camera.beta;
         this._downloadObj["cameraRadius"] = this.camera.radius;
-        this._downloadObj["zUp"] = this._zUp;
+        this._downloadObj["upAxis"] = this._upAxis;
     };
     Plots.prototype._downloadJson = function () {
         var dlElement = document.createElement("a");
