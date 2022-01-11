@@ -1784,7 +1784,7 @@ export class Plots {
     ): Plots {
         // default options
         let opts = {
-            meshScaling: [0, 0, 0],
+            meshScaling: [1, 1, 1],
             meshRotation: [0, 0, 0],
             meshOffset: [0, 0, 0]
         }

@@ -58,7 +58,7 @@ var math_1 = require("@babylonjs/core/Maths/math");
 require("@babylonjs/loaders/glTF");
 var MeshStream = (function (_super) {
     __extends(MeshStream, _super);
-    function MeshStream(scene, camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, offset, clearCoat, clearCoatIntensity, name) {
+    function MeshStream(scene, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, xScale, yScale, zScale, frameDelay, rotation, offset, clearCoat, clearCoatIntensity, name) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
@@ -73,7 +73,6 @@ var MeshStream = (function (_super) {
         _this._prevTime = performance.now();
         _this._containers = [];
         _this.frameIndex = 0;
-        _this._camera = camera;
         _this._rootUrl = rootUrl;
         _this.frameDelay = frameDelay;
         _this._rotation = rotation;
@@ -184,7 +183,4 @@ var MeshStream = (function (_super) {
     return MeshStream;
 }(babyplots_1.Plot));
 exports.MeshStream = MeshStream;
-function _sleep(ms) {
-    return new Promise(function (resolve) { return setTimeout(resolve, ms); });
-}
 //# sourceMappingURL=MeshStream.js.map

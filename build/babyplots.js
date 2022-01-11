@@ -114,7 +114,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CoordinatePlot = exports.Plot = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CoordinatePlot = exports.Plot = exports.CustomLoadingScreen = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -131,6 +131,17 @@ var logging_1 = require("./utils/logging");
 var axios = require('axios').default;
 var Label_1 = require("./utils/Label");
 var Axes_1 = require("./utils/Axes");
+var CustomLoadingScreen = (function () {
+    function CustomLoadingScreen(loadingUIText) {
+        this.loadingUIText = loadingUIText;
+    }
+    CustomLoadingScreen.prototype.displayLoadingUI = function () {
+    };
+    CustomLoadingScreen.prototype.hideLoadingUI = function () {
+    };
+    return CustomLoadingScreen;
+}());
+exports.CustomLoadingScreen = CustomLoadingScreen;
 var Plot = (function () {
     function Plot(name, shape, scene, legendData, xScale, yScale, zScale) {
         if (xScale === void 0) { xScale = 1; }
@@ -225,6 +236,7 @@ var PointCloud_1 = require("./plotTypes/PointCloud");
 var Surface_1 = require("./plotTypes/Surface");
 var HeatMap_1 = require("./plotTypes/HeatMap");
 var MeshStream_1 = require("./plotTypes/MeshStream");
+var MeshObject_1 = require("./plotTypes/MeshObject");
 var styleText_1 = require("./utils/styleText");
 var SVGs_1 = require("./utils/SVGs");
 exports.PLOTTYPES = {
@@ -303,28 +315,10 @@ var Plots = (function () {
         this.camera.inputs.attached.keyboard.detachControl();
         this.camera.wheelPrecision = 50;
         this._upAxis = opts.upAxis;
-        switch (opts.upAxis) {
-            case "+x":
-                this.camera.upVector = new math_1.Vector3(1, 0, 0);
-                break;
-            case "-x":
-                this.camera.upVector = new math_1.Vector3(-1, 0, 0);
-                break;
-            case "+z":
-                this.camera.upVector = new math_1.Vector3(0, 0, 1);
-                break;
-            case "-z":
-                this.camera.upVector = new math_1.Vector3(0, 0, -1);
-                break;
-            case "-y":
-                this.camera.upVector = new math_1.Vector3(0, -1, 0);
-                break;
-            case "+y":
-            default:
-                this.camera.upVector = new math_1.Vector3(0, 1, 0);
-                break;
-        }
+        this._updateCameraUpVector();
         this.scene.clearColor = math_1.Color4.FromHexString(opts.backgroundColor);
+        var loadingScreen = new CustomLoadingScreen("Loading");
+        this._engine.loadingScreen = loadingScreen;
         this._xScale = opts.xScale;
         this._yScale = opts.yScale;
         this._zScale = opts.zScale;
@@ -392,6 +386,29 @@ var Plots = (function () {
             }
         }).bind(this);
     }
+    Plots.prototype._updateCameraUpVector = function () {
+        switch (this._upAxis) {
+            case "+x":
+                this.camera.upVector = new math_1.Vector3(1, 0, 0);
+                break;
+            case "-x":
+                this.camera.upVector = new math_1.Vector3(-1, 0, 0);
+                break;
+            case "+z":
+                this.camera.upVector = new math_1.Vector3(0, 0, 1);
+                break;
+            case "-z":
+                this.camera.upVector = new math_1.Vector3(0, 0, -1);
+                break;
+            case "-y":
+                this.camera.upVector = new math_1.Vector3(0, -1, 0);
+                break;
+            case "+y":
+            default:
+                this.camera.upVector = new math_1.Vector3(0, 1, 0);
+                break;
+        }
+    };
     Plots.prototype.fromJSON = function (plotData) {
         if (plotData["turntable"] !== undefined) {
             this.turntable = plotData["turntable"];
@@ -417,6 +434,7 @@ var Plots = (function () {
         }
         if (plotData["upAxis"] !== undefined) {
             this._upAxis = plotData["upAxis"];
+            this._updateCameraUpVector();
         }
         for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
             var plot = plotData["plots"][plotIdx];
@@ -441,6 +459,13 @@ var Plots = (function () {
                     intensityMode: plot["intensityMode"],
                     channelColors: plot["channelColors"],
                     channelOpacities: plot["channelOpacities"]
+                });
+            }
+            else if (plot["plotType"] === "meshObject") {
+                this.addMeshObject(plot["meshString"], {
+                    meshScaling: plot["meshScaling"],
+                    meshRotation: plot["meshRotation"],
+                    meshOffset: plot["meshOffset"]
                 });
             }
             else if (plot["plotType"] === "meshStream") {
@@ -1361,6 +1386,32 @@ var Plots = (function () {
         this._cameraFitPlot(rangeX, rangeY, rangeZ);
         return this;
     };
+    Plots.prototype.addMeshObject = function (meshString, options) {
+        var opts = {
+            meshScaling: [1, 1, 1],
+            meshRotation: [0, 0, 0],
+            meshOffset: [0, 0, 0]
+        };
+        Object.assign(opts, options);
+        this._downloadObj["plots"].push({
+            plotType: "meshObject",
+            meshString: meshString,
+            meshScaling: opts.meshScaling,
+            meshRotation: opts.meshRotation,
+            meshOffset: opts.meshOffset
+        });
+        var legendData = {
+            showLegend: false,
+            discrete: false,
+            breaks: [],
+            colorScale: "",
+            inverted: false,
+            position: undefined
+        };
+        var plot = new MeshObject_1.MeshObject(this.scene, meshString, legendData, this._xScale, this._yScale, this._zScale, opts.meshScaling, opts.meshRotation, opts.meshOffset);
+        this.plots.push(plot);
+        return this;
+    };
     Plots.prototype.addMeshStream = function (rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, frameDelay, options) {
         var opts = {
             meshRotation: [0, 0, 0],
@@ -1390,7 +1441,7 @@ var Plots = (function () {
             inverted: false,
             position: undefined
         };
-        var plot = new MeshStream_1.MeshStream(this.scene, this.camera, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation, opts.meshOffset, opts.clearCoat, opts.clearCoatIntensity);
+        var plot = new MeshStream_1.MeshStream(this.scene, rootUrl, filePrefix, fileSuffix, fileIteratorStart, fileIteratorEnd, legendData, this._xScale, this._yScale, this._zScale, frameDelay, opts.meshRotation, opts.meshOffset, opts.clearCoat, opts.clearCoatIntensity);
         this._hasAnim = true;
         this.plots.push(plot);
         this.camera.wheelPrecision = 1;
