@@ -175,6 +175,18 @@ export interface LegendData {
     legendTitleFontColor?: string;
 }
 
+
+export class CustomLoadingScreen implements ILoadingScreen {
+    //optional, but needed due to interface definitions
+    public loadingUIBackgroundColor: string
+    constructor(public loadingUIText: string) { }
+    public displayLoadingUI() {
+    }
+
+    public hideLoadingUI() {
+    }
+}
+
 export abstract class Plot {
     protected _scene: Scene;
 
@@ -207,7 +219,7 @@ export abstract class Plot {
         this.zScale = zScale;
     }
 
-    goToFrame(n: number): void {}
+    goToFrame(n: number): void { }
     update(): boolean { return false }
     resetAnimation(): void { }
     setLooping(looping: boolean): void { }
@@ -219,7 +231,7 @@ export abstract class CoordinatePlot extends Plot {
     protected _groups: string[];
     protected _groupNames: string[];
     protected _size: number = 1;
-    
+
     pickable: boolean = true;
     selection: number[]; // contains indices of cells in selection cube
     dpInfo: string[];
@@ -306,10 +318,12 @@ import { PointCloud } from "./plotTypes/PointCloud";
 import { Surface } from "./plotTypes/Surface";
 import { HeatMap } from "./plotTypes/HeatMap";
 import { MeshStream } from "./plotTypes/MeshStream";
+import { MeshObject } from "./plotTypes/MeshObject";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./utils/styleText";
 import { buttonSVGs, legendSVGs } from "./utils/SVGs";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { ILoadingScreen } from "@babylonjs/core/Loading/loadingScreen";
 
 export const PLOTTYPES = {
     'pointCloud': ['coordinates', 'colorBy', 'colorVar'],
@@ -441,9 +455,13 @@ export class Plots {
         this.camera.wheelPrecision = 50;
         this._upAxis = opts.upAxis;
         this._updateCameraUpVector();
-        
+
         // background color
         this.scene.clearColor = Color4.FromHexString(opts.backgroundColor);
+
+        // Loading screen
+        var loadingScreen = new CustomLoadingScreen("Loading");
+        this._engine.loadingScreen = loadingScreen;
 
         // Axis scales
         this._xScale = opts.xScale;
@@ -473,7 +491,7 @@ export class Plots {
         let styleElem = document.createElement("style");
         styleElem.appendChild(document.createTextNode(styleText));
         document.getElementsByTagName('head')[0].appendChild(styleElem);
-        
+
         // create ui elements
         let buttonBar = document.createElement("div");
         buttonBar.id = "buttonBar_" + this._uniqID;
@@ -617,6 +635,15 @@ export class Plots {
                         intensityMode: plot["intensityMode"],
                         channelColors: plot["channelColors"],
                         channelOpacities: plot["channelOpacities"]
+                    }
+                )
+            } else if (plot["plotType"] === "meshObject") {
+                this.addMeshObject(
+                    plot["meshString"],
+                    {
+                        meshScaling: plot["meshScaling"],
+                        meshRotation: plot["meshRotation"],
+                        meshOffset: plot["meshOffset"]
                     }
                 )
             } else if (plot["plotType"] === "meshStream") {
@@ -1017,7 +1044,7 @@ export class Plots {
         if (!this._hasAnim) {
             this._resetAnimation();
         }
-        
+
     }
 
     private _startRecording() {
@@ -1745,6 +1772,59 @@ export class Plots {
     }
 
     /**
+     * 
+     * @param meshString A glTF object string
+     * @param options An object with general and plot type specific options.
+     * 
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addMeshStream).
+     */
+    addMeshObject(
+        meshString: string,
+        options: {}
+    ): Plots {
+        // default options
+        let opts = {
+            meshScaling: [0, 0, 0],
+            meshRotation: [0, 0, 0],
+            meshOffset: [0, 0, 0]
+        }
+        // apply user options
+        Object.assign(opts, options);
+        // prepare object for download as json button
+        this._downloadObj["plots"].push({
+            plotType: "meshObject",
+            meshString: meshString,
+            meshScaling: opts.meshScaling,
+            meshRotation: opts.meshRotation,
+            meshOffset: opts.meshOffset
+        });
+
+        let legendData: LegendData = {
+            showLegend: false,
+            discrete: false,
+            breaks: [],
+            colorScale: "",
+            inverted: false,
+            position: undefined
+        };
+
+        let plot = new MeshObject(
+            this.scene,
+            meshString,
+            legendData,
+            this._xScale,
+            this._yScale,
+            this._zScale,
+            opts.meshScaling,
+            opts.meshRotation,
+            opts.meshOffset
+        );
+
+        this.plots.push(plot);
+        return this
+    }
+
+    /**
      * Streams meshes from a url and displays them sequentially.
      * 
      * @param rootUrl 
@@ -1800,7 +1880,6 @@ export class Plots {
 
         let plot = new MeshStream(
             this.scene,
-            this.camera,
             rootUrl,
             filePrefix,
             fileSuffix,
@@ -1831,7 +1910,7 @@ export class Plots {
         // replayBtn.innerHTML = buttonSVGs.replay;
         // replayBtn.onclick = this._resetAnimation.bind(this);
         // let loopBtn = document.createElement("div");
-        
+
         return this;
     }
 

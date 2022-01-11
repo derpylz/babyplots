@@ -17,7 +17,6 @@
  * 
  */
 
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { AssetContainer } from "@babylonjs/core/assetContainer";
 import { Scene } from "@babylonjs/core/scene";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
@@ -33,7 +32,6 @@ export class MeshStream extends Plot {
     private _filenames: string[] = [];
     private _prevTime: number = performance.now();
     private _containers: AssetContainer[] = [];
-    private _camera: ArcRotateCamera;
     private _rotation: number[];
     private _offset: number[];
     private _clearCoat: boolean;
@@ -46,7 +44,6 @@ export class MeshStream extends Plot {
 
     constructor(
         scene: Scene,
-        camera: ArcRotateCamera,
         rootUrl: string,
         filePrefix: string,
         fileSuffix: string,
@@ -64,7 +61,6 @@ export class MeshStream extends Plot {
         name: string = "mesh stream"
     ) {
         super(name, "meshStream", scene, legendData, xScale, yScale, zScale);
-        this._camera = camera;
         this._rootUrl = rootUrl;
         this.frameDelay = frameDelay;
         this._rotation = rotation;
@@ -163,8 +159,4 @@ export class MeshStream extends Plot {
         }
         return true;
     }
-}
-
-function _sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }

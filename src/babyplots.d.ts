@@ -135,6 +135,13 @@ export interface LegendData {
     legendTitleFontSize?: number;
     legendTitleFontColor?: string;
 }
+export declare class CustomLoadingScreen implements ILoadingScreen {
+    loadingUIText: string;
+    loadingUIBackgroundColor: string;
+    constructor(loadingUIText: string);
+    displayLoadingUI(): void;
+    hideLoadingUI(): void;
+}
 export declare abstract class Plot {
     protected _scene: Scene;
     allLoaded: boolean;
@@ -178,6 +185,7 @@ export declare function matrixMax(matrix: number[][]): number;
 export declare function matrixMin(matrix: number[][]): number;
 export declare function getUniqueVals(source: string[]): string[];
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { ILoadingScreen } from "@babylonjs/core/Loading/loadingScreen";
 export declare const PLOTTYPES: {
     pointCloud: string[];
     shapeCloud: string[];
@@ -251,6 +259,7 @@ export declare class Plots {
         dim: number[];
     }, options: {}): this;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
+    addMeshObject(meshString: string, options: {}): Plots;
     addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
     private _updateLegend;
     private _drawStandaloneShapeLegend;
