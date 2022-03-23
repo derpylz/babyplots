@@ -24,7 +24,7 @@ declare class Label {
     size: number;
     color: string;
     fixed: boolean;
-    constructor(text: string, position: Vector3, scene: Scene, color?: string);
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number);
     setText(text: string): void;
     update(camera: ArcRotateCamera, scene: Scene): void;
     fix(): void;
@@ -61,7 +61,7 @@ export declare class AnnotationManager {
     redrawInfo(): void;
     displayInfo(text: string, target: TransformNode): void;
     clearInfo(): void;
-    addLabel(text: string, position?: number[]): number;
+    addLabel(text: string, position?: number[], color?: string, size?: number): number;
     addLabels(labelList: [[number, number, number, string]]): void;
     private _editLabelText;
     private _removeLabel;

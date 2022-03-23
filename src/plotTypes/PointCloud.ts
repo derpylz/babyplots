@@ -191,8 +191,8 @@ export class PointCloud extends CoordinatePlot {
             const sum = pointGroup.reduce(sumFun);
             const centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
             annotationManager.addLabel(pointGroupNames[i], centroid);
-            annotationManager.fixLabels();
         }
+        annotationManager.fixLabels();
     }
 
     resetAnimation(): void {

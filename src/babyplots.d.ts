@@ -192,6 +192,8 @@ export declare const PLOTTYPES: {
     surface: string[];
     heatMap: string[];
     imageStack: string[];
+    meshObject: string[];
+    Line: string[];
 };
 export declare function isValidPlot(plotData: {}): boolean;
 export declare class Plots {

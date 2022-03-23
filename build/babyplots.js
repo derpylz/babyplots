@@ -237,6 +237,7 @@ var Surface_1 = require("./plotTypes/Surface");
 var HeatMap_1 = require("./plotTypes/HeatMap");
 var MeshStream_1 = require("./plotTypes/MeshStream");
 var MeshObject_1 = require("./plotTypes/MeshObject");
+var Line_1 = require("./plotTypes/Line");
 var styleText_1 = require("./utils/styleText");
 var SVGs_1 = require("./utils/SVGs");
 exports.PLOTTYPES = {
@@ -244,7 +245,9 @@ exports.PLOTTYPES = {
     'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
-    'imageStack': ['values', 'indices', 'attributes']
+    'imageStack': ['values', 'indices', 'attributes'],
+    'meshObject': ['meshString'],
+    'Line': ['coordinates', 'colorBy', 'colorVar']
 };
 function isValidPlot(plotData) {
     for (var plotIdx = 0; plotIdx < plotData["plots"].length; plotIdx++) {
@@ -1063,6 +1066,9 @@ var Plots = (function () {
             shading: true,
             dpInfo: null,
             addClusterLabels: false,
+            labels: null,
+            labelSize: undefined,
+            labelColor: undefined,
             folded: null,
             foldedEmbedding: null,
             foldAnimDelay: null,
@@ -1134,7 +1140,10 @@ var Plots = (function () {
             shape: opts.shape,
             shading: opts.shading,
             dpInfo: opts.dpInfo,
-            addClusterLabels: opts.addClusterLabels
+            addClusterLabels: opts.addClusterLabels,
+            labels: opts.labels,
+            labelSize: opts.labelSize,
+            labelColor: opts.labelColor
         });
         var coordColors = [];
         var legendData;
@@ -1352,6 +1361,27 @@ var Plots = (function () {
                 rangeY = [
                     matrixMin(coordinates) * this._yScale,
                     matrixMax(coordinates) * this._yScale
+                ];
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ];
+                break;
+            case "line":
+                plot = new Line_1.Line(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name, opts.labels, opts.labelSize, opts.labelColor, this._annotationManager);
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                rangeX = [
+                    boundingBox.minimumWorld.x,
+                    boundingBox.maximumWorld.x
+                ];
+                rangeY = [
+                    boundingBox.minimumWorld.y,
+                    boundingBox.maximumWorld.y
+                ];
+                rangeZ = [
+                    boundingBox.minimumWorld.z,
+                    boundingBox.maximumWorld.z
                 ];
                 scale = [
                     this._xScale,

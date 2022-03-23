@@ -151,8 +151,8 @@ var PointCloud = (function (_super) {
             var sum = pointGroup.reduce(sumFun);
             var centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
             annotationManager.addLabel(pointGroupNames[i], centroid);
-            annotationManager.fixLabels();
         }
+        annotationManager.fixLabels();
     };
     PointCloud.prototype.resetAnimation = function () {
         this._hasAnimation = true;
