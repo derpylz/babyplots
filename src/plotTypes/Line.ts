@@ -24,7 +24,9 @@ import { AnnotationManager } from "../utils/Label";
 import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 
 export class Line extends CoordinatePlot {
-    labels:string[]
+    labels: string[]
+    labelSize: number
+    labelColor: string
 
     private _hasAnimation: boolean;
     private _looping: boolean = false;
@@ -45,12 +47,16 @@ export class Line extends CoordinatePlot {
         zScale: number = 1,
         name: string = "line",
         labels?: string[],
+        labelSize?: number,
+        labelColor?: string,
         annotationManager?: AnnotationManager
     ) {
         super(name, "line", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._hasAnimation = hasAnimation;
         if (labels && labels.length === coordinates.length && annotationManager) {
             this.labels = labels;
+            this.labelSize = labelSize;
+            this.labelColor = labelColor;
             this._addLabels(annotationManager);
         }
         this._createLine();
@@ -72,7 +78,7 @@ export class Line extends CoordinatePlot {
         }
         let lines = LinesBuilder.CreateLines(
             "lines",
-            {points: lineCoords, colors: lineColors}
+            { points: lineCoords, colors: lineColors }
         )
 
         this.mesh = lines;
@@ -80,7 +86,11 @@ export class Line extends CoordinatePlot {
 
     private _addLabels(annotationManager: AnnotationManager): void {
         for (let i = 0; i < this.labels.length; i++) {
-            annotationManager.addLabel(this.labels[i], this._coords[i]);
+            let col = this.labelColor;
+            if (this.labelColor === "match") {
+                col = this._coordColors[i];
+            }
+            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize);
         }
         annotationManager.fixLabels();
     }

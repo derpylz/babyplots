@@ -145,10 +145,13 @@ class Label {
     color: string = "black";
     fixed: boolean = false;
 
-    constructor(text: string, position: Vector3, scene: Scene, color?: string) {
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number) {
+        if (size !== undefined) {
+            this.size = size;
+        }
         let plane = PlaneBuilder.CreatePlane('label', {
-            width: 5,
-            height: 5
+            width: this.size * 0.05,
+            height: this.size * 0.05
         }, scene);
 
         if (color !== undefined) {
@@ -371,7 +374,7 @@ export class AnnotationManager {
      * @param text Label title
      * @param [moveCallback] On dragging of label in 3d plot, the final position will be passed to this function
      */
-    addLabel(text: string, position?: number[]): number {
+    addLabel(text: string, position?: number[], color?: string, size?: number): number {
         this._addLabelTextInput.value = "";
         let labelIdx = this.labels.length;
 
@@ -384,7 +387,11 @@ export class AnnotationManager {
 
         text = text.replace(/[\s\.]/g, "\n");
         text = text.replace(/_/g, " ");
-        let newLabel = new Label(text, pos, this._scene, this._fgColor);
+        let col = this._fgColor;
+        if (color !== undefined) {
+            col = color;
+        }
+        let newLabel = new Label(text, pos, this._scene, col, size);
 
         this.labels.push(newLabel);
 

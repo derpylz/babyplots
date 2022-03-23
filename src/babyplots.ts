@@ -1379,6 +1379,8 @@ export class Plots {
             dpInfo: null,
             addClusterLabels: false,
             labels: null,
+            labelSize: undefined,
+            labelColor: undefined,
             // deprecated animation option names:
             folded: null,
             foldedEmbedding: null,
@@ -1456,7 +1458,9 @@ export class Plots {
             shading: opts.shading,
             dpInfo: opts.dpInfo,
             addClusterLabels: opts.addClusterLabels,
-            labels: opts.labels
+            labels: opts.labels,
+            labelSize: opts.labelSize,
+            labelColor: opts.labelColor
         })
 
         let coordColors: string[] = [];
@@ -1762,6 +1766,8 @@ export class Plots {
                     this._zScale,
                     opts.name,
                     opts.labels,
+                    opts.labelSize,
+                    opts.labelColor,
                     this._annotationManager
                 )
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;

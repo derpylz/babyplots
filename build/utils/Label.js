@@ -99,13 +99,16 @@ var dpInfo = (function () {
     return dpInfo;
 }());
 var Label = (function () {
-    function Label(text, position, scene, color) {
+    function Label(text, position, scene, color, size) {
         this.size = 100;
         this.color = "black";
         this.fixed = false;
+        if (size !== undefined) {
+            this.size = size;
+        }
         var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label', {
-            width: 5,
-            height: 5
+            width: this.size * 0.05,
+            height: this.size * 0.05
         }, scene);
         if (color !== undefined) {
             this.color = color;
@@ -283,7 +286,7 @@ var AnnotationManager = (function () {
         }
         this.dpInfos = [];
     };
-    AnnotationManager.prototype.addLabel = function (text, position) {
+    AnnotationManager.prototype.addLabel = function (text, position, color, size) {
         this._addLabelTextInput.value = "";
         var labelIdx = this.labels.length;
         var pos;
@@ -295,7 +298,11 @@ var AnnotationManager = (function () {
         }
         text = text.replace(/[\s\.]/g, "\n");
         text = text.replace(/_/g, " ");
-        var newLabel = new Label(text, pos, this._scene, this._fgColor);
+        var col = this._fgColor;
+        if (color !== undefined) {
+            col = color;
+        }
+        var newLabel = new Label(text, pos, this._scene, col, size);
         this.labels.push(newLabel);
         var editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
