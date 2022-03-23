@@ -18,7 +18,7 @@
  */
 
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
+import { Vector3, Color4 } from "@babylonjs/core/Maths/math";
 import { LegendData, CoordinatePlot } from "../babyplots";
 import { AnnotationManager } from "../utils/Label";
 import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";

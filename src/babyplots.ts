@@ -319,6 +319,7 @@ import { Surface } from "./plotTypes/Surface";
 import { HeatMap } from "./plotTypes/HeatMap";
 import { MeshStream } from "./plotTypes/MeshStream";
 import { MeshObject } from "./plotTypes/MeshObject";
+import { Line } from "./plotTypes/Line";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./utils/styleText";
 import { buttonSVGs, legendSVGs } from "./utils/SVGs";
@@ -330,7 +331,9 @@ export const PLOTTYPES = {
     'shapeCloud': ['coordinates', 'colorBy', 'colorVar'],
     'surface': ['coordinates', 'colorBy', 'colorVar'],
     'heatMap': ['coordinates', 'colorBy', 'colorVar'],
-    'imageStack': ['values', 'indices', 'attributes']
+    'imageStack': ['values', 'indices', 'attributes'],
+    'meshObject': ['meshString'],
+    'Line': ['coordinates', 'colorBy', 'colorVar']
 }
 
 /**
@@ -1375,6 +1378,7 @@ export class Plots {
             shading: true,
             dpInfo: null,
             addClusterLabels: false,
+            labels: null,
             // deprecated animation option names:
             folded: null,
             foldedEmbedding: null,
@@ -1451,7 +1455,8 @@ export class Plots {
             shape: opts.shape,
             shading: opts.shading,
             dpInfo: opts.dpInfo,
-            addClusterLabels: opts.addClusterLabels
+            addClusterLabels: opts.addClusterLabels,
+            labels: opts.labels
         })
 
         let coordColors: string[] = [];
@@ -1742,6 +1747,42 @@ export class Plots {
                     this._zScale,
                 ]
                 break
+            case "line":
+                plot = new Line(
+                    this.scene,
+                    coordinates,
+                    coordColors,
+                    opts.size,
+                    legendData,
+                    opts.hasAnimation,
+                    opts.animationDelay,
+                    opts.animationDuration,
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                    opts.name,
+                    opts.labels,
+                    this._annotationManager
+                )
+                boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+                rangeX = [
+                    boundingBox.minimumWorld.x,
+                    boundingBox.maximumWorld.x
+                ]
+                rangeY = [
+                    boundingBox.minimumWorld.y,
+                    boundingBox.maximumWorld.y
+                ]
+                rangeZ = [
+                    boundingBox.minimumWorld.z,
+                    boundingBox.maximumWorld.z
+                ]
+                scale = [
+                    this._xScale,
+                    this._yScale,
+                    this._zScale,
+                ]
+                break;
         }
 
         if (opts.animationLoop) {
