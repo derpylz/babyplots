@@ -662,7 +662,7 @@ export class Plots {
                         meshOffset: plot["meshOffset"]
                     }
                 )
-            } else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
+            } else if (["pointCloud", "heatMap", "surface", "shapeCloud", "line"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(
                     plot["coordinates"],
                     plot["plotType"],
@@ -704,7 +704,10 @@ export class Plots {
                         shape: plot["shape"],
                         shading: plot["shading"],
                         dpInfo: plot["dpInfo"],
-                        addClusterLabels: plot["addClusterLabels"]
+                        addClusterLabels: plot["addClusterLabels"],
+                        labels: plot["labels"],
+                        labelSize: plot["labelSize"],
+                        labelColor: plot["labelColor"]
                     }
                 )
             }
@@ -2452,7 +2455,7 @@ export class Plots {
      * 
      * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
      */
-    addLabels(labelList: [[number, number, number, string]]): void {
+    addLabels(labelList: [[number, number, number, string, string?, number?]]): void {
         this._annotationManager.addLabels(labelList);
     }
 

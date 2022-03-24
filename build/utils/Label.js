@@ -99,7 +99,8 @@ var dpInfo = (function () {
     return dpInfo;
 }());
 var Label = (function () {
-    function Label(text, position, scene, color, size) {
+    function Label(text, position, scene, color, size, plotCreated) {
+        if (plotCreated === void 0) { plotCreated = false; }
         this.size = 100;
         this.color = "black";
         this.fixed = false;
@@ -113,6 +114,7 @@ var Label = (function () {
         if (color !== undefined) {
             this.color = color;
         }
+        this.plotCreated = plotCreated;
         plane.position = position;
         var advancedTexture = advancedDynamicTexture_1.AdvancedDynamicTexture.CreateForMesh(plane);
         var background = new controls_1.Rectangle();
@@ -167,7 +169,9 @@ var Label = (function () {
             this._label.position.x,
             this._label.position.y,
             this._label.position.z,
-            this._text.text
+            this._text.text,
+            this.color,
+            this.size
         ];
     };
     return Label;
@@ -286,7 +290,8 @@ var AnnotationManager = (function () {
         }
         this.dpInfos = [];
     };
-    AnnotationManager.prototype.addLabel = function (text, position, color, size) {
+    AnnotationManager.prototype.addLabel = function (text, position, color, size, plotCreated) {
+        if (plotCreated === void 0) { plotCreated = false; }
         this._addLabelTextInput.value = "";
         var labelIdx = this.labels.length;
         var pos;
@@ -302,7 +307,7 @@ var AnnotationManager = (function () {
         if (color !== undefined) {
             col = color;
         }
-        var newLabel = new Label(text, pos, this._scene, col, size);
+        var newLabel = new Label(text, pos, this._scene, col, size, plotCreated);
         this.labels.push(newLabel);
         var editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
@@ -333,7 +338,7 @@ var AnnotationManager = (function () {
             var label = labelList[i];
             var text = label[3];
             var position = label.slice(0, 3);
-            this.addLabel(text, position);
+            this.addLabel(text, position, label[4], label[5]);
         }
     };
     AnnotationManager.prototype._editLabelText = function (ev) {
@@ -365,6 +370,10 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype.exportLabels = function () {
         var labels = [];
         for (var i = 0; i < this.labels.length; i++) {
+            var l = this.labels[i];
+            if (l.plotCreated) {
+                continue;
+            }
             labels.push(this.labels[i].export());
         }
         return labels;

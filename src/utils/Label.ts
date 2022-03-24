@@ -144,8 +144,9 @@ class Label {
     size: number = 100;
     color: string = "black";
     fixed: boolean = false;
+    plotCreated: boolean;
 
-    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number) {
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated  = false) {
         if (size !== undefined) {
             this.size = size;
         }
@@ -157,6 +158,8 @@ class Label {
         if (color !== undefined) {
             this.color = color;
         }
+
+        this.plotCreated = plotCreated
 
         plane.position = position;
 
@@ -220,12 +223,14 @@ class Label {
         this._label.dispose();
     }
 
-    export(): [number, number, number, string] {
+    export(): [number, number, number, string, string, number] {
         return [
             this._label.position.x,
             this._label.position.y,
             this._label.position.z,
-            this._text.text
+            this._text.text,
+            this.color,
+            this.size
         ]
     }
 }
@@ -374,7 +379,7 @@ export class AnnotationManager {
      * @param text Label title
      * @param [moveCallback] On dragging of label in 3d plot, the final position will be passed to this function
      */
-    addLabel(text: string, position?: number[], color?: string, size?: number): number {
+    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated = false): number {
         this._addLabelTextInput.value = "";
         let labelIdx = this.labels.length;
 
@@ -391,7 +396,7 @@ export class AnnotationManager {
         if (color !== undefined) {
             col = color;
         }
-        let newLabel = new Label(text, pos, this._scene, col, size);
+        let newLabel = new Label(text, pos, this._scene, col, size, plotCreated);
 
         this.labels.push(newLabel);
 
@@ -426,12 +431,12 @@ export class AnnotationManager {
      * 
      * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
      */
-    addLabels(labelList: [[number, number, number, string]]): void {
+    addLabels(labelList: [number, number, number, string, string?, number?][]): void {
         for (let i = 0; i < labelList.length; i++) {
             const label = labelList[i];
             let text = label[3];
             let position = label.slice(0, 3) as number[];
-            this.addLabel(text, position);
+            this.addLabel(text, position, label[4], label[5]);
         }
     }
 
@@ -462,22 +467,26 @@ export class AnnotationManager {
         thisForm.parentNode.removeChild(thisForm);
     }
 
-    exportLabels(): any[] {
-        let labels = [];
+    exportLabels(): [number, number, number, string, string, number][] {
+        let labels: [number, number, number, string, string, number][] = [];
         for (let i = 0; i < this.labels.length; i++) {
+            const l = this.labels[i];
+            if (l.plotCreated) {
+                continue
+            }
             labels.push(this.labels[i].export());
         }
         return labels;
     }
 
-    fixLabels() {
+    fixLabels(): void {
         for (let i = 0; i < this.labels.length; i++) {
             this.labels[i].fix();
         }
         this.fixedLabels = true;
     }
 
-    unfixLabels() {
+    unfixLabels(): void {
         for (let i = 0; i < this.labels.length; i++) {
             this.labels[i].unfix();
         }

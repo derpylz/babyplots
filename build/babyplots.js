@@ -477,7 +477,7 @@ var Plots = (function () {
                     meshOffset: plot["meshOffset"]
                 });
             }
-            else if (["pointCloud", "heatMap", "surface", "shapeCloud"].indexOf(plot["plotType"]) !== -1) {
+            else if (["pointCloud", "heatMap", "surface", "shapeCloud", "line"].indexOf(plot["plotType"]) !== -1) {
                 this.addPlot(plot["coordinates"], plot["plotType"], plot["colorBy"], plot["colorVar"], {
                     name: plot["name"],
                     size: plot["size"],
@@ -514,7 +514,10 @@ var Plots = (function () {
                     shape: plot["shape"],
                     shading: plot["shading"],
                     dpInfo: plot["dpInfo"],
-                    addClusterLabels: plot["addClusterLabels"]
+                    addClusterLabels: plot["addClusterLabels"],
+                    labels: plot["labels"],
+                    labelSize: plot["labelSize"],
+                    labelColor: plot["labelColor"]
                 });
             }
         }

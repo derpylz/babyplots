@@ -24,13 +24,14 @@ declare class Label {
     size: number;
     color: string;
     fixed: boolean;
-    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number);
+    plotCreated: boolean;
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated?: boolean);
     setText(text: string): void;
     update(camera: ArcRotateCamera, scene: Scene): void;
     fix(): void;
     unfix(): void;
     dispose(): void;
-    export(): [number, number, number, string];
+    export(): [number, number, number, string, string, number];
 }
 export declare class AnnotationManager {
     private _canvas;
@@ -61,11 +62,11 @@ export declare class AnnotationManager {
     redrawInfo(): void;
     displayInfo(text: string, target: TransformNode): void;
     clearInfo(): void;
-    addLabel(text: string, position?: number[], color?: string, size?: number): number;
-    addLabels(labelList: [[number, number, number, string]]): void;
+    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated?: boolean): number;
+    addLabels(labelList: [number, number, number, string, string?, number?][]): void;
     private _editLabelText;
     private _removeLabel;
-    exportLabels(): any[];
+    exportLabels(): [number, number, number, string, string, number][];
     fixLabels(): void;
     unfixLabels(): void;
 }

@@ -90,7 +90,7 @@ export class Line extends CoordinatePlot {
             if (this.labelColor === "match") {
                 col = this._coordColors[i];
             }
-            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize);
+            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize, true);
         }
         annotationManager.fixLabels();
     }

@@ -271,5 +271,5 @@ export declare class Plots {
     resize(width?: number, height?: number): Plots;
     thumbnail(size: number, saveCallback: (data: string) => void): void;
     dispose(): void;
-    addLabels(labelList: [[number, number, number, string]]): void;
+    addLabels(labelList: [[number, number, number, string, string?, number?]]): void;
 }

@@ -150,7 +150,7 @@ var PointCloud = (function (_super) {
             var pointGroup = pointGroups[i];
             var sum = pointGroup.reduce(sumFun);
             var centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
-            annotationManager.addLabel(pointGroupNames[i], centroid);
+            annotationManager.addLabel(pointGroupNames[i], centroid, undefined, undefined, true);
         }
         annotationManager.fixLabels();
     };
