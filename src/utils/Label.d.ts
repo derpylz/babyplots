@@ -3,6 +3,7 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths/math";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Plot } from "./Plot";
 declare class dpInfo {
     private _background;
     private _textBlock;
@@ -24,8 +25,8 @@ declare class Label {
     size: number;
     color: string;
     fixed: boolean;
-    plotCreated: boolean;
-    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated?: boolean);
+    plotCreated: Plot;
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated?: Plot);
     setText(text: string): void;
     update(camera: ArcRotateCamera, scene: Scene): void;
     fix(): void;
@@ -43,7 +44,6 @@ export declare class AnnotationManager {
     private _editLabelForms;
     private _addLabelTextInput;
     private _showLabels;
-    private _arrows;
     private _showArrows;
     private _bgColor;
     private _fgColor;
@@ -58,14 +58,14 @@ export declare class AnnotationManager {
     update(): void;
     toggleLabelControl(): void;
     private _addLabelBtnClick;
-    addArrow(from: number[], to: number[]): void;
     redrawInfo(): void;
     displayInfo(text: string, target: TransformNode): void;
     clearInfo(): void;
-    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated?: boolean): number;
-    addLabels(labelList: [number, number, number, string, string?, number?][]): void;
+    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated?: Plot): number;
+    addLabels(labelList: [number, number, number, string, string?, number?][]): number[];
     private _editLabelText;
-    private _removeLabel;
+    private _removeLabelByUI;
+    removeLabel(index: number): void;
     exportLabels(): [number, number, number, string, string, number][];
     fixLabels(): void;
     unfixLabels(): void;

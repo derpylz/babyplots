@@ -17,7 +17,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Line = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
 var Line = (function (_super) {
     __extends(Line, _super);
@@ -62,11 +62,11 @@ var Line = (function (_super) {
             if (this.labelColor === "match") {
                 col = this._coordColors[i];
             }
-            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize, true);
+            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize, this);
         }
         annotationManager.fixLabels();
     };
     return Line;
-}(babyplots_1.CoordinatePlot));
+}(Plot_1.CoordinatePlot));
 exports.Line = Line;
 //# sourceMappingURL=Line.js.map

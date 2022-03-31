@@ -1,5 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Plot, LegendData } from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { Plot } from "../utils/Plot";
 export declare class ImgStack extends Plot {
     private _backgroundColor;
     private _intensityMode;

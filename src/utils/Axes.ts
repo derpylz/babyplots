@@ -25,7 +25,27 @@ import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { Vector3, Axis, Color3} from "@babylonjs/core/Maths/math";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { AxisData } from "../babyplots";
+
+/**
+ * Interface for object containing information about axis setup.
+ */
+ export interface AxisData {
+    showAxes: boolean[];
+    static: boolean;
+    axisLabels: string[];
+    range: number[][];
+    color: string[];
+    scale: number[];
+    tickBreaks: number[];
+    showTickLines: boolean[][];
+    tickLineColor: string[][];
+    showPlanes: boolean[];
+    planeColor: string[];
+    plotType: string;
+    colnames: string[];
+    rownames: string[];
+}
+
 
 /**
  * Class to store and update plot axes.

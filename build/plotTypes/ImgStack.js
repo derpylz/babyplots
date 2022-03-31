@@ -23,7 +23,7 @@ var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var math_1 = require("@babylonjs/core/Maths/math");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
     __extends(ImgStack, _super);
@@ -158,6 +158,6 @@ var ImgStack = (function (_super) {
         }
     };
     return ImgStack;
-}(babyplots_1.Plot));
+}(Plot_1.Plot));
 exports.ImgStack = ImgStack;
 //# sourceMappingURL=ImgStack.js.map

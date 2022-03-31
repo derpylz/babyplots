@@ -1,6 +1,21 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { AxisData } from "../babyplots";
+export interface AxisData {
+    showAxes: boolean[];
+    static: boolean;
+    axisLabels: string[];
+    range: number[][];
+    color: string[];
+    scale: number[];
+    tickBreaks: number[];
+    showTickLines: boolean[][];
+    tickLineColor: string[][];
+    showPlanes: boolean[];
+    planeColor: string[];
+    plotType: string;
+    colnames: string[];
+    rownames: string[];
+}
 export declare class Axes {
     private _axes;
     private _axisLabels;

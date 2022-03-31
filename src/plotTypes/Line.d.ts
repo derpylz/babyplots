@@ -1,5 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
-import { LegendData, CoordinatePlot } from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { CoordinatePlot } from "../utils/Plot";
 import { AnnotationManager } from "../utils/Label";
 export declare class Line extends CoordinatePlot {
     labels: string[];

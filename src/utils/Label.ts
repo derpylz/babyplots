@@ -30,34 +30,35 @@ import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import chroma from "chroma-js";
+import { Plot } from "./Plot";
 
-class Arrow {
-    private _lines: LinesMesh;
-    private _tip: Mesh;
+// class Arrow {
+//     private _lines: LinesMesh;
+//     private _tip: Mesh;
 
-    size: number = 1;
+//     size: number = 1;
 
-    constructor(from: Vector3, to: Vector3, scene: Scene, color?: string) {
-        let lines = LinesBuilder.CreateLineSystem('ls', {
-            lines: [[from, to]],
-            updatable: true
-        }, scene);
+//     constructor(from: Vector3, to: Vector3, scene: Scene, color?: string) {
+//         let lines = LinesBuilder.CreateLineSystem('ls', {
+//             lines: [[from, to]],
+//             updatable: true
+//         }, scene);
 
-        lines.color = new Color3(0, 0, 0);
-        if (color !== undefined) {
-            lines.color = Color3.FromHexString(color);
-        }
-        this._lines = lines;
-        let tip = CylinderBuilder.CreateCylinder("tip", {
-            diameterTop: 0,
-            diameterBottom: this.size,
-            tessellation: 36
-        }, scene);
-        tip.position = to;
-        this._tip = tip;
+//         lines.color = new Color3(0, 0, 0);
+//         if (color != null) {
+//             lines.color = Color3.FromHexString(color);
+//         }
+//         this._lines = lines;
+//         let tip = CylinderBuilder.CreateCylinder("tip", {
+//             diameterTop: 0,
+//             diameterBottom: this.size,
+//             tessellation: 36
+//         }, scene);
+//         tip.position = to;
+//         this._tip = tip;
 
-    }
-}
+//     }
+// }
 
 class dpInfo {
     private _background: Rectangle;
@@ -144,10 +145,10 @@ class Label {
     size: number = 100;
     color: string = "black";
     fixed: boolean = false;
-    plotCreated: boolean;
+    plotCreated: Plot;
 
-    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated  = false) {
-        if (size !== undefined) {
+    constructor(text: string, position: Vector3, scene: Scene, color?: string, size?: number, plotCreated?: Plot) {
+        if (size != null) {
             this.size = size;
         }
         let plane = PlaneBuilder.CreatePlane('label', {
@@ -155,7 +156,7 @@ class Label {
             height: this.size * 0.05
         }, scene);
 
-        if (color !== undefined) {
+        if (color != null) {
             this.color = color;
         }
 
@@ -245,7 +246,7 @@ export class AnnotationManager {
     private _editLabelForms: HTMLDivElement[] = [];
     private _addLabelTextInput: HTMLInputElement;
     private _showLabels: boolean = false;
-    private _arrows: Arrow[] = [];
+    // private _arrows: Arrow[] = [];
     private _showArrows: boolean = false;
     private _bgColor: string;
     private _fgColor: string;
@@ -305,9 +306,9 @@ export class AnnotationManager {
     }
 
     update() {
-        if (this._showArrows) {
+        // if (this._showArrows) {
 
-        }
+        // }
         if (this._showLabels) {
             for (let i = 0; i < this.labels.length; i++) {
                 const label = this.labels[i];
@@ -331,13 +332,13 @@ export class AnnotationManager {
         this.addLabel(this._addLabelTextInput.value);
     }
 
-    addArrow(from: number[], to: number[]) {
-        this._arrows.push(new Arrow(
-            Vector3.FromArray(from),
-            Vector3.FromArray(to),
-            this._scene
-        ));
-    }
+    // addArrow(from: number[], to: number[]) {
+    //     this._arrows.push(new Arrow(
+    //         Vector3.FromArray(from),
+    //         Vector3.FromArray(to),
+    //         this._scene
+    //     ));
+    // }
 
     redrawInfo() {
         for (let i = this.dpInfos.length - 1; i >= 0; i--) {
@@ -377,9 +378,14 @@ export class AnnotationManager {
     /**
      * Add a 3d label to the plot
      * @param text Label title
-     * @param [moveCallback] On dragging of label in 3d plot, the final position will be passed to this function
+     * @param position Array with x, y and z coordinates for the label
+     * @param color Color of the label
+     * @param size Size of the label
+     * @param plotCreated True if the label is created by a plot function, should not be manually set true.
+     * 
+     * @return Index of the label
      */
-    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated = false): number {
+    addLabel(text: string, position?: number[], color?: string, size?: number, plotCreated?: Plot): number {
         this._addLabelTextInput.value = "";
         let labelIdx = this.labels.length;
 
@@ -393,13 +399,18 @@ export class AnnotationManager {
         text = text.replace(/[\s\.]/g, "\n");
         text = text.replace(/_/g, " ");
         let col = this._fgColor;
-        if (color !== undefined) {
+        if (color != null) {
             col = color;
         }
         let newLabel = new Label(text, pos, this._scene, col, size, plotCreated);
 
         this.labels.push(newLabel);
-
+        this._showLabels = true;
+        
+        if (plotCreated !== undefined) {
+            return labelIdx;
+        }
+        
         let editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
         let editLabelLabel = document.createElement("label");
@@ -415,14 +426,13 @@ export class AnnotationManager {
         editLabelForm.appendChild(editLabelInput);
         let rmvLabelBtn = document.createElement("button");
         rmvLabelBtn.innerText = "Remove Label"
-        rmvLabelBtn.onclick = this._removeLabel.bind(this);
+        rmvLabelBtn.onclick = this._removeLabelByUI.bind(this);
         rmvLabelBtn.dataset.labelnum = labelIdx.toString();
         editLabelForm.appendChild(rmvLabelBtn);
         editLabelForm.dataset.labelnum = labelIdx.toString();
         this._editLabelForms.push(editLabelForm);
         this._editLabelContainer.appendChild(editLabelForm);
 
-        this._showLabels = true;
         return labelIdx;
     }
 
@@ -431,13 +441,15 @@ export class AnnotationManager {
      * 
      * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
      */
-    addLabels(labelList: [number, number, number, string, string?, number?][]): void {
+    addLabels(labelList: [number, number, number, string, string?, number?][]): number[] {
+        let labelIndices: number[] = [];
         for (let i = 0; i < labelList.length; i++) {
             const label = labelList[i];
-            let text = label[3];
             let position = label.slice(0, 3) as number[];
-            this.addLabel(text, position, label[4], label[5]);
+            let text = label[3];
+            labelIndices.push(this.addLabel(text, position, label[4], label[5]));
         }
+        return labelIndices;
     }
 
     private _editLabelText(ev: Event): void {
@@ -445,50 +457,51 @@ export class AnnotationManager {
         this.labels[parseInt(inputElem.dataset.labelnum)].setText(inputElem.value);
     }
 
-    private _removeLabel(ev: Event) {
+    private _removeLabelByUI(ev: Event) {
         let btn = ev.target as HTMLButtonElement;
         let labelNum = parseInt(btn.dataset.labelnum);
-        this.labels[labelNum].dispose();
-        this.labels.splice(labelNum, 1);
-        let thisForm: HTMLDivElement;
+        this.removeLabel(labelNum);
+    }
+
+    removeLabel(index: number): void {
+        // remove label
+        if(this.labels[index] === undefined) return;
+        this.labels[index].dispose();
+        this.labels[index] = undefined;
+        // remove UI of removed label
         this._editLabelForms.forEach(eLabelForm => {
-            if (parseInt(eLabelForm.dataset.labelnum) == labelNum) {
-                thisForm = eLabelForm;
-            } else if (parseInt(eLabelForm.dataset.labelnum) > labelNum) {
-                let oldNum = parseInt(eLabelForm.dataset.labelnum)
-                let newNum = (oldNum - 1).toString()
-                eLabelForm.dataset.labelnum = newNum;
-                let oInput = eLabelForm.querySelector('input[data-labelnum="' + oldNum + '"]') as HTMLInputElement;
-                oInput.dataset.labelnum = newNum;
-                let oBtn = eLabelForm.querySelector('button[data-labelnum="' + oldNum + '"]') as HTMLButtonElement;
-                oBtn.dataset.labelnum = newNum;
+            if (parseInt(eLabelForm.dataset.labelnum) === index) {
+                eLabelForm.parentNode.removeChild(eLabelForm);
             }
         });
-        thisForm.parentNode.removeChild(thisForm);
     }
 
     exportLabels(): [number, number, number, string, string, number][] {
         let labels: [number, number, number, string, string, number][] = [];
         for (let i = 0; i < this.labels.length; i++) {
             const l = this.labels[i];
-            if (l.plotCreated) {
-                continue
-            }
-            labels.push(this.labels[i].export());
+            if (l === undefined) continue;
+            if (l.plotCreated !== undefined) continue;
+            labels.push(l.export());
         }
         return labels;
     }
 
     fixLabels(): void {
         for (let i = 0; i < this.labels.length; i++) {
-            this.labels[i].fix();
+            const l = this.labels[i];
+            if (l === undefined) continue;
+            l.fix();
         }
         this.fixedLabels = true;
     }
 
     unfixLabels(): void {
         for (let i = 0; i < this.labels.length; i++) {
-            this.labels[i].unfix();
+            const l = this.labels[i];
+            if (l === undefined) continue;
+            if (l.plotCreated !== undefined) continue;
+            l.unfix();
         }
         this.fixedLabels = false;
     }

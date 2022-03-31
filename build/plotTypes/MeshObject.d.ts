@@ -1,6 +1,7 @@
 import { Vector3 } from "@babylonjs/core/Maths/math";
 import { Scene } from "@babylonjs/core/scene";
-import { LegendData, Plot } from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { Plot } from "../utils/Plot";
 import "@babylonjs/loaders/glTF";
 export declare class MeshObject extends Plot {
     worldextends: {

@@ -23,11 +23,15 @@ import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { FloatArray } from "@babylonjs/core/types";
-import { LegendData, CoordinatePlot } from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { CoordinatePlot } from "../utils/Plot";
 import { AnnotationManager } from "../utils/Label";
 import chroma from "chroma-js";
 
 export class PointCloud extends CoordinatePlot {
+    labelSize: number;
+    labelColor: string;
+
     private _hasAnimation: boolean;
     private _looping: boolean = false;
     private _animDirection: number = 1;
@@ -52,6 +56,8 @@ export class PointCloud extends CoordinatePlot {
         zScale: number = 1,
         name: string = "point cloud",
         addLabels: boolean = false,
+        labelSize?: number,
+        labelColor?: string,
         annotationManager?: AnnotationManager
     ) {
         super(name, "point", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
@@ -102,6 +108,8 @@ export class PointCloud extends CoordinatePlot {
         }
         this._createPointCloud();
         if (addLabels && annotationManager) {
+            this.labelSize = labelSize;
+            this.labelColor = labelColor;
             this._addLabels(annotationManager);
         }
         this.allLoaded = true;
@@ -184,13 +192,12 @@ export class PointCloud extends CoordinatePlot {
             }
             pointGroups[colorIdx].push(this._coords[i]);
         }
-        let pointGroupCentroids = [];
         const sumFun = (prev: number[], curr: number[]) => [prev[0] + curr[0], prev[1] + curr[1], prev[2] + curr[2]];
         for (let i = 0; i < pointGroups.length; i++) {
             const pointGroup = pointGroups[i];
             const sum = pointGroup.reduce(sumFun);
             const centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
-            annotationManager.addLabel(pointGroupNames[i], centroid, undefined, undefined, true);
+            annotationManager.addLabel(pointGroupNames[i], centroid, this.labelColor, this.labelSize, this);
         }
         annotationManager.fixLabels();
     }

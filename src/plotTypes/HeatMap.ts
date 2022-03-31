@@ -23,7 +23,8 @@ import { Color3, Vector3 } from "@babylonjs/core/Maths/math";
 import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { CoordinatePlot, LegendData} from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { CoordinatePlot } from "../utils/Plot";
 
 export class HeatMap extends CoordinatePlot {
     constructor(

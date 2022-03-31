@@ -97,7 +97,6 @@
 
 import { Scene } from "@babylonjs/core/scene";
 import { Engine } from "@babylonjs/core/Engines/engine";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
@@ -109,72 +108,15 @@ import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import chroma from "chroma-js";
 import download from "downloadjs";
 import { v4 as uuidv4 } from "uuid";
-import { warn, deprecationWarning } from "./utils/logging";
+import { deprecationWarning } from "./utils/logging";
 
 const axios = require('axios').default;
 
 import { AnnotationManager } from "./utils/Label";
 
-/**
- * Interface for object containing information about axis setup.
- */
-export interface AxisData {
-    showAxes: boolean[];
-    static: boolean;
-    axisLabels: string[];
-    range: number[][];
-    color: string[];
-    scale: number[];
-    tickBreaks: number[];
-    showTickLines: boolean[][];
-    tickLineColor: string[][];
-    showPlanes: boolean[];
-    planeColor: string[];
-    plotType: string;
-    colnames: string[];
-    rownames: string[];
-}
+import { LegendData, ShapeLegendData } from "./utils/LegendData";
 
-import { Axes } from "./utils/Axes";
-
-export interface shapeLegendData {
-    title: string;
-    spacing: number;
-    shapes: string[][];
-}
-
-/**
- * Per plot legend information.
- */
-export interface LegendData {
-    /** Show or hide plot legend. */
-    showLegend: boolean;
-    /** Discrete or continuous color scale. */
-    discrete: boolean;
-    /** Categories if discrete, min and max values if continuous color scale. */
-    breaks: string[];
-    /** Name of the color scale. */
-    colorScale: string;
-    /** Is the color scale flipped? */
-    inverted: boolean;
-    /** Left or right position of this legend. If undefined, right is default. */
-    position: string;
-    /** Display shape/plot type in legend */
-    showShape?: boolean;
-    /** If color scale is not a colorbrewer palette, provide colors to construct the palette here. */
-    customColorScale?: string[];
-    /** Font size of the legend text. */
-    fontSize?: number;
-    /** Color of the legend text. */
-    fontColor?: string;
-    /** Title for the color legend. */
-    legendTitle?: string;
-    /** Font size of the color legend title. */
-    legendTitleFontSize?: number;
-    /** Color of the color legend title. */
-    legendTitleFontColor?: string;
-}
-
+import { AxisData, Axes } from "./utils/Axes";
 
 export class CustomLoadingScreen implements ILoadingScreen {
     //optional, but needed due to interface definitions
@@ -185,76 +127,6 @@ export class CustomLoadingScreen implements ILoadingScreen {
 
     public hideLoadingUI() {
     }
-}
-
-export abstract class Plot {
-    protected _scene: Scene;
-
-    allLoaded: boolean = false;
-    name: string;
-    shape: string;
-    mesh: Mesh;
-    meshes: Mesh[];
-    legendData: LegendData;
-    xScale: number;
-    yScale: number;
-    zScale: number;
-    pickable: boolean = false;
-
-    constructor(
-        name: string,
-        shape: string,
-        scene: Scene,
-        legendData: LegendData,
-        xScale: number = 1,
-        yScale: number = 1,
-        zScale: number = 1,
-    ) {
-        this.name = name;
-        this.shape = shape;
-        this._scene = scene;
-        this.legendData = legendData;
-        this.xScale = xScale;
-        this.yScale = yScale;
-        this.zScale = zScale;
-    }
-
-    goToFrame(n: number): void { }
-    update(): boolean { return false }
-    resetAnimation(): void { }
-    setLooping(looping: boolean): void { }
-}
-
-export abstract class CoordinatePlot extends Plot {
-    protected _coords: number[][];
-    protected _coordColors: string[];
-    protected _groups: string[];
-    protected _groupNames: string[];
-    protected _size: number = 1;
-
-    pickable: boolean = true;
-    selection: number[]; // contains indices of cells in selection cube
-    dpInfo: string[];
-
-    constructor(
-        name: string,
-        shape: string,
-        scene: Scene,
-        coordinates: number[][],
-        colorVar: string[],
-        size: number,
-        legendData: LegendData,
-        xScale: number = 1,
-        yScale: number = 1,
-        zScale: number = 1
-    ) {
-        super(name, shape, scene, legendData, xScale, yScale, zScale);
-        this._coords = coordinates;
-        this._coordColors = colorVar;
-        this._size = size;
-    }
-
-    getPick(pickResult: PickingInfo): { target: TransformNode, info: string } { return null }
 }
 
 declare global {
@@ -312,6 +184,7 @@ export function getUniqueVals(source: string[]): string[] {
     return result;
 }
 
+import { Plot, CoordinatePlot } from "./utils/Plot";
 import { ImgStack } from "./plotTypes/ImgStack";
 import { ShapeCloud } from "./plotTypes/ShapeCloud";
 import { PointCloud } from "./plotTypes/PointCloud";
@@ -323,7 +196,6 @@ import { Line } from "./plotTypes/Line";
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { styleText } from "./utils/styleText";
 import { buttonSVGs, legendSVGs } from "./utils/SVGs";
-import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { ILoadingScreen } from "@babylonjs/core/Loading/loadingScreen";
 
 export const PLOTTYPES = {
@@ -1382,8 +1254,8 @@ export class Plots {
             dpInfo: null,
             addClusterLabels: false,
             labels: null,
-            labelSize: undefined,
-            labelColor: undefined,
+            labelSize: null,
+            labelColor: null,
             // deprecated animation option names:
             folded: null,
             foldedEmbedding: null,
@@ -1651,6 +1523,8 @@ export class Plots {
                     this._zScale,
                     opts.name,
                     opts.addClusterLabels,
+                    opts.labelSize,
+                    opts.labelColor,
                     this._annotationManager
                 );
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
@@ -2052,7 +1926,7 @@ export class Plots {
         }
 
 
-        let shapeLegendData: shapeLegendData = {
+        let shapeLegendData: ShapeLegendData = {
             title: this.shapeLegendTitle,
             spacing: shapeSpace,
             shapes: shapes
@@ -2078,7 +1952,7 @@ export class Plots {
         this._legend = uiLayer;
     }
 
-    private _drawStandaloneShapeLegend(uiLayer: AdvancedDynamicTexture, shapeSpace: number, shapeLegendData: shapeLegendData) {
+    private _drawStandaloneShapeLegend(uiLayer: AdvancedDynamicTexture, shapeSpace: number, shapeLegendData: ShapeLegendData) {
         let grid = new Grid();
         uiLayer.addControl(grid);
 
@@ -2103,7 +1977,7 @@ export class Plots {
         grid.addControl(shapeLegendGrid, 1, legendColumn);
     }
 
-    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture, shapeLegendData?: shapeLegendData): AdvancedDynamicTexture {
+    private _createPlotLegend(legendData: LegendData, uiLayer: AdvancedDynamicTexture, shapeLegendData?: ShapeLegendData): AdvancedDynamicTexture {
         if (!legendData.showLegend) {
             return uiLayer;
         }
@@ -2333,7 +2207,7 @@ export class Plots {
         return uiLayer;
     }
 
-    private _createShapeLegend(legendData: LegendData, shapeLegendData: shapeLegendData) {
+    private _createShapeLegend(legendData: LegendData, shapeLegendData: ShapeLegendData) {
         let shapeLegendGrid = new Grid();
         legendData.fontColor = legendData.fontColor || "black";
         legendData.fontSize = legendData.fontSize || 11;

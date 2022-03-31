@@ -20,7 +20,7 @@ var math_1 = require("@babylonjs/core/Maths/math");
 var boxBuilder_1 = require("@babylonjs/core/Meshes/Builders/boxBuilder");
 var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var HeatMap = (function (_super) {
     __extends(HeatMap, _super);
     function HeatMap(scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale, name) {
@@ -80,6 +80,6 @@ var HeatMap = (function (_super) {
         });
     };
     return HeatMap;
-}(babyplots_1.CoordinatePlot));
+}(Plot_1.CoordinatePlot));
 exports.HeatMap = HeatMap;
 //# sourceMappingURL=HeatMap.js.map

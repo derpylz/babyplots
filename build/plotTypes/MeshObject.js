@@ -18,7 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeshObject = void 0;
 var math_1 = require("@babylonjs/core/Maths/math");
 var sceneLoader_1 = require("@babylonjs/core/Loading/sceneLoader");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 require("@babylonjs/loaders/glTF");
 var MeshObject = (function (_super) {
     __extends(MeshObject, _super);
@@ -49,6 +49,6 @@ var MeshObject = (function (_super) {
         return _this;
     }
     return MeshObject;
-}(babyplots_1.Plot));
+}(Plot_1.Plot));
 exports.MeshObject = MeshObject;
 //# sourceMappingURL=MeshObject.js.map

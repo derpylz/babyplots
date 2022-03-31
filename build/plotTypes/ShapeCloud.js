@@ -23,7 +23,7 @@ var torusBuilder_1 = require("@babylonjs/core/Meshes/Builders/torusBuilder");
 var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder");
 var math_1 = require("@babylonjs/core/Maths/math");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var uuid_1 = require("uuid");
 var transformNode_1 = require("@babylonjs/core/Meshes/transformNode");
 var ShapeCloud = (function (_super) {
@@ -115,6 +115,6 @@ var ShapeCloud = (function (_super) {
         return pick;
     };
     return ShapeCloud;
-}(babyplots_1.CoordinatePlot));
+}(Plot_1.CoordinatePlot));
 exports.ShapeCloud = ShapeCloud;
 //# sourceMappingURL=ShapeCloud.js.map

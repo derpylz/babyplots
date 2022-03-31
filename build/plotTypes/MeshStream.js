@@ -53,7 +53,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeshStream = void 0;
 var sceneLoader_1 = require("@babylonjs/core/Loading/sceneLoader");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var math_1 = require("@babylonjs/core/Maths/math");
 require("@babylonjs/loaders/glTF");
 var MeshStream = (function (_super) {
@@ -181,6 +181,6 @@ var MeshStream = (function (_super) {
         return true;
     };
     return MeshStream;
-}(babyplots_1.Plot));
+}(Plot_1.Plot));
 exports.MeshStream = MeshStream;
 //# sourceMappingURL=MeshStream.js.map

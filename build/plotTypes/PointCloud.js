@@ -23,11 +23,11 @@ var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var math_1 = require("@babylonjs/core/Maths/math");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var PointCloud = (function (_super) {
     __extends(PointCloud, _super);
-    function PointCloud(scene, coordinates, colorVar, size, legendData, hasAnimation, animationTargets, animationDelay, animationDuration, xScale, yScale, zScale, name, addLabels, annotationManager) {
+    function PointCloud(scene, coordinates, colorVar, size, legendData, hasAnimation, animationTargets, animationDelay, animationDuration, xScale, yScale, zScale, name, addLabels, labelSize, labelColor, annotationManager) {
         if (xScale === void 0) { xScale = 1; }
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
@@ -73,6 +73,8 @@ var PointCloud = (function (_super) {
         }
         _this._createPointCloud();
         if (addLabels && annotationManager) {
+            _this.labelSize = labelSize;
+            _this.labelColor = labelColor;
             _this._addLabels(annotationManager);
         }
         _this.allLoaded = true;
@@ -144,13 +146,12 @@ var PointCloud = (function (_super) {
             }
             pointGroups[colorIdx].push(this._coords[i]);
         }
-        var pointGroupCentroids = [];
         var sumFun = function (prev, curr) { return [prev[0] + curr[0], prev[1] + curr[1], prev[2] + curr[2]]; };
         for (var i = 0; i < pointGroups.length; i++) {
             var pointGroup = pointGroups[i];
             var sum = pointGroup.reduce(sumFun);
             var centroid = [sum[0] / pointGroup.length, sum[1] / pointGroup.length, sum[2] / pointGroup.length];
-            annotationManager.addLabel(pointGroupNames[i], centroid, undefined, undefined, true);
+            annotationManager.addLabel(pointGroupNames[i], centroid, this.labelColor, this.labelSize, this);
         }
         annotationManager.fixLabels();
     };
@@ -216,6 +217,6 @@ var PointCloud = (function (_super) {
         return this._hasAnimation;
     };
     return PointCloud;
-}(babyplots_1.CoordinatePlot));
+}(Plot_1.CoordinatePlot));
 exports.PointCloud = PointCloud;
 //# sourceMappingURL=PointCloud.js.map

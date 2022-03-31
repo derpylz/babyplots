@@ -9,31 +9,7 @@ var planeBuilder_1 = require("@babylonjs/core/Meshes/Builders/planeBuilder");
 var pointerDragBehavior_1 = require("@babylonjs/core/Behaviors/Meshes/pointerDragBehavior");
 var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture");
 var controls_1 = require("@babylonjs/gui/2D/controls");
-var linesBuilder_1 = require("@babylonjs/core/Meshes/Builders/linesBuilder");
-var cylinderBuilder_1 = require("@babylonjs/core/Meshes/Builders/cylinderBuilder");
 var chroma_js_1 = __importDefault(require("chroma-js"));
-var Arrow = (function () {
-    function Arrow(from, to, scene, color) {
-        this.size = 1;
-        var lines = linesBuilder_1.LinesBuilder.CreateLineSystem('ls', {
-            lines: [[from, to]],
-            updatable: true
-        }, scene);
-        lines.color = new math_1.Color3(0, 0, 0);
-        if (color !== undefined) {
-            lines.color = math_1.Color3.FromHexString(color);
-        }
-        this._lines = lines;
-        var tip = cylinderBuilder_1.CylinderBuilder.CreateCylinder("tip", {
-            diameterTop: 0,
-            diameterBottom: this.size,
-            tessellation: 36
-        }, scene);
-        tip.position = to;
-        this._tip = tip;
-    }
-    return Arrow;
-}());
 var dpInfo = (function () {
     function dpInfo(text, target, uiLayer, backgroundColor, color) {
         this.disposed = false;
@@ -100,18 +76,17 @@ var dpInfo = (function () {
 }());
 var Label = (function () {
     function Label(text, position, scene, color, size, plotCreated) {
-        if (plotCreated === void 0) { plotCreated = false; }
         this.size = 100;
         this.color = "black";
         this.fixed = false;
-        if (size !== undefined) {
+        if (size != null) {
             this.size = size;
         }
         var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label', {
             width: this.size * 0.05,
             height: this.size * 0.05
         }, scene);
-        if (color !== undefined) {
+        if (color != null) {
             this.color = color;
         }
         this.plotCreated = plotCreated;
@@ -180,7 +155,6 @@ var AnnotationManager = (function () {
     function AnnotationManager(canvas, scene, ymax, camera, backgroundColor, fullScreenUI, uniqID) {
         this._editLabelForms = [];
         this._showLabels = false;
-        this._arrows = [];
         this._showArrows = false;
         this.dpInfos = [];
         this.labels = [];
@@ -231,8 +205,6 @@ var AnnotationManager = (function () {
         this._canvas.parentNode.appendChild(labelBox);
     };
     AnnotationManager.prototype.update = function () {
-        if (this._showArrows) {
-        }
         if (this._showLabels) {
             for (var i = 0; i < this.labels.length; i++) {
                 var label = this.labels[i];
@@ -253,9 +225,6 @@ var AnnotationManager = (function () {
     AnnotationManager.prototype._addLabelBtnClick = function (event) {
         event.preventDefault();
         this.addLabel(this._addLabelTextInput.value);
-    };
-    AnnotationManager.prototype.addArrow = function (from, to) {
-        this._arrows.push(new Arrow(math_1.Vector3.FromArray(from), math_1.Vector3.FromArray(to), this._scene));
     };
     AnnotationManager.prototype.redrawInfo = function () {
         for (var i = this.dpInfos.length - 1; i >= 0; i--) {
@@ -291,7 +260,6 @@ var AnnotationManager = (function () {
         this.dpInfos = [];
     };
     AnnotationManager.prototype.addLabel = function (text, position, color, size, plotCreated) {
-        if (plotCreated === void 0) { plotCreated = false; }
         this._addLabelTextInput.value = "";
         var labelIdx = this.labels.length;
         var pos;
@@ -304,11 +272,15 @@ var AnnotationManager = (function () {
         text = text.replace(/[\s\.]/g, "\n");
         text = text.replace(/_/g, " ");
         var col = this._fgColor;
-        if (color !== undefined) {
+        if (color != null) {
             col = color;
         }
         var newLabel = new Label(text, pos, this._scene, col, size, plotCreated);
         this.labels.push(newLabel);
+        this._showLabels = true;
+        if (plotCreated !== undefined) {
+            return labelIdx;
+        }
         var editLabelForm = document.createElement("div");
         editLabelForm.className = "label-form";
         var editLabelLabel = document.createElement("label");
@@ -324,69 +296,73 @@ var AnnotationManager = (function () {
         editLabelForm.appendChild(editLabelInput);
         var rmvLabelBtn = document.createElement("button");
         rmvLabelBtn.innerText = "Remove Label";
-        rmvLabelBtn.onclick = this._removeLabel.bind(this);
+        rmvLabelBtn.onclick = this._removeLabelByUI.bind(this);
         rmvLabelBtn.dataset.labelnum = labelIdx.toString();
         editLabelForm.appendChild(rmvLabelBtn);
         editLabelForm.dataset.labelnum = labelIdx.toString();
         this._editLabelForms.push(editLabelForm);
         this._editLabelContainer.appendChild(editLabelForm);
-        this._showLabels = true;
         return labelIdx;
     };
     AnnotationManager.prototype.addLabels = function (labelList) {
+        var labelIndices = [];
         for (var i = 0; i < labelList.length; i++) {
             var label = labelList[i];
-            var text = label[3];
             var position = label.slice(0, 3);
-            this.addLabel(text, position, label[4], label[5]);
+            var text = label[3];
+            labelIndices.push(this.addLabel(text, position, label[4], label[5]));
         }
+        return labelIndices;
     };
     AnnotationManager.prototype._editLabelText = function (ev) {
         var inputElem = ev.target;
         this.labels[parseInt(inputElem.dataset.labelnum)].setText(inputElem.value);
     };
-    AnnotationManager.prototype._removeLabel = function (ev) {
+    AnnotationManager.prototype._removeLabelByUI = function (ev) {
         var btn = ev.target;
         var labelNum = parseInt(btn.dataset.labelnum);
-        this.labels[labelNum].dispose();
-        this.labels.splice(labelNum, 1);
-        var thisForm;
+        this.removeLabel(labelNum);
+    };
+    AnnotationManager.prototype.removeLabel = function (index) {
+        if (this.labels[index] === undefined)
+            return;
+        this.labels[index].dispose();
+        this.labels[index] = undefined;
         this._editLabelForms.forEach(function (eLabelForm) {
-            if (parseInt(eLabelForm.dataset.labelnum) == labelNum) {
-                thisForm = eLabelForm;
-            }
-            else if (parseInt(eLabelForm.dataset.labelnum) > labelNum) {
-                var oldNum = parseInt(eLabelForm.dataset.labelnum);
-                var newNum = (oldNum - 1).toString();
-                eLabelForm.dataset.labelnum = newNum;
-                var oInput = eLabelForm.querySelector('input[data-labelnum="' + oldNum + '"]');
-                oInput.dataset.labelnum = newNum;
-                var oBtn = eLabelForm.querySelector('button[data-labelnum="' + oldNum + '"]');
-                oBtn.dataset.labelnum = newNum;
+            if (parseInt(eLabelForm.dataset.labelnum) === index) {
+                eLabelForm.parentNode.removeChild(eLabelForm);
             }
         });
-        thisForm.parentNode.removeChild(thisForm);
     };
     AnnotationManager.prototype.exportLabels = function () {
         var labels = [];
         for (var i = 0; i < this.labels.length; i++) {
             var l = this.labels[i];
-            if (l.plotCreated) {
+            if (l === undefined)
                 continue;
-            }
-            labels.push(this.labels[i].export());
+            if (l.plotCreated !== undefined)
+                continue;
+            labels.push(l.export());
         }
         return labels;
     };
     AnnotationManager.prototype.fixLabels = function () {
         for (var i = 0; i < this.labels.length; i++) {
-            this.labels[i].fix();
+            var l = this.labels[i];
+            if (l === undefined)
+                continue;
+            l.fix();
         }
         this.fixedLabels = true;
     };
     AnnotationManager.prototype.unfixLabels = function () {
         for (var i = 0; i < this.labels.length; i++) {
-            this.labels[i].unfix();
+            var l = this.labels[i];
+            if (l === undefined)
+                continue;
+            if (l.plotCreated !== undefined)
+                continue;
+            l.unfix();
         }
         this.fixedLabels = false;
     };

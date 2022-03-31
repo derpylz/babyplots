@@ -19,14 +19,15 @@
 
 import { Scene } from "@babylonjs/core/scene";
 import { Vector3, Color4 } from "@babylonjs/core/Maths/math";
-import { LegendData, CoordinatePlot } from "../babyplots";
+import { LegendData } from "../utils/LegendData";
+import { CoordinatePlot } from "../utils/Plot";
 import { AnnotationManager } from "../utils/Label";
 import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 
 export class Line extends CoordinatePlot {
-    labels: string[]
-    labelSize: number
-    labelColor: string
+    labels: string[];
+    labelSize: number;
+    labelColor: string;
 
     private _hasAnimation: boolean;
     private _looping: boolean = false;
@@ -90,7 +91,7 @@ export class Line extends CoordinatePlot {
             if (this.labelColor === "match") {
                 col = this._coordColors[i];
             }
-            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize, true);
+            annotationManager.addLabel(this.labels[i], this._coords[i], col, this.labelSize, this);
         }
         annotationManager.fixLabels();
     }

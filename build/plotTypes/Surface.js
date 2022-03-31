@@ -22,7 +22,7 @@ exports.Surface = void 0;
 var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
-var babyplots_1 = require("../babyplots");
+var Plot_1 = require("../utils/Plot");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var Surface = (function (_super) {
     __extends(Surface, _super);
@@ -76,6 +76,6 @@ var Surface = (function (_super) {
         });
     };
     return Surface;
-}(babyplots_1.CoordinatePlot));
+}(Plot_1.CoordinatePlot));
 exports.Surface = Surface;
 //# sourceMappingURL=Surface.js.map

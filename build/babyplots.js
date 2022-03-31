@@ -95,26 +95,11 @@
  * THE SOFTWARE.
  *
  */
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CoordinatePlot = exports.Plot = exports.CustomLoadingScreen = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CustomLoadingScreen = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
@@ -142,46 +127,6 @@ var CustomLoadingScreen = (function () {
     return CustomLoadingScreen;
 }());
 exports.CustomLoadingScreen = CustomLoadingScreen;
-var Plot = (function () {
-    function Plot(name, shape, scene, legendData, xScale, yScale, zScale) {
-        if (xScale === void 0) { xScale = 1; }
-        if (yScale === void 0) { yScale = 1; }
-        if (zScale === void 0) { zScale = 1; }
-        this.allLoaded = false;
-        this.pickable = false;
-        this.name = name;
-        this.shape = shape;
-        this._scene = scene;
-        this.legendData = legendData;
-        this.xScale = xScale;
-        this.yScale = yScale;
-        this.zScale = zScale;
-    }
-    Plot.prototype.goToFrame = function (n) { };
-    Plot.prototype.update = function () { return false; };
-    Plot.prototype.resetAnimation = function () { };
-    Plot.prototype.setLooping = function (looping) { };
-    return Plot;
-}());
-exports.Plot = Plot;
-var CoordinatePlot = (function (_super) {
-    __extends(CoordinatePlot, _super);
-    function CoordinatePlot(name, shape, scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) {
-        if (xScale === void 0) { xScale = 1; }
-        if (yScale === void 0) { yScale = 1; }
-        if (zScale === void 0) { zScale = 1; }
-        var _this = _super.call(this, name, shape, scene, legendData, xScale, yScale, zScale) || this;
-        _this._size = 1;
-        _this.pickable = true;
-        _this._coords = coordinates;
-        _this._coordColors = colorVar;
-        _this._size = size;
-        return _this;
-    }
-    CoordinatePlot.prototype.getPick = function (pickResult) { return null; };
-    return CoordinatePlot;
-}(Plot));
-exports.CoordinatePlot = CoordinatePlot;
 Array.prototype.min = function () {
     if (this.length > 65536) {
         var r_1 = this[0];
@@ -1070,8 +1015,8 @@ var Plots = (function () {
             dpInfo: null,
             addClusterLabels: false,
             labels: null,
-            labelSize: undefined,
-            labelColor: undefined,
+            labelSize: null,
+            labelColor: null,
             folded: null,
             foldedEmbedding: null,
             foldAnimDelay: null,
@@ -1302,7 +1247,7 @@ var Plots = (function () {
         var boundingBox;
         switch (plotType) {
             case "pointCloud":
-                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name, opts.addClusterLabels, this._annotationManager);
+                plot = new PointCloud_1.PointCloud(this.scene, coordinates, coordColors, opts.size, legendData, opts.hasAnimation, opts.animationTargets, opts.animationDelay, opts.animationDuration, this._xScale, this._yScale, this._zScale, opts.name, opts.addClusterLabels, opts.labelSize, opts.labelColor, this._annotationManager);
                 boundingBox = plot.mesh.getBoundingInfo().boundingBox;
                 rangeX = [
                     boundingBox.minimumWorld.x,
