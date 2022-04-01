@@ -42,7 +42,13 @@ export abstract class Plot {
     setLooping(looping: boolean): void { }
     dispose(): void {
         if (this.mesh !== undefined) {
-
+            this.mesh.dispose()
+        }
+        if (this.meshes !== undefined) {
+            for (let i = 0; i < this.meshes.length; i++) {
+                const m = this.meshes[i];
+                m.dispose();
+            }
         }
     }
 }

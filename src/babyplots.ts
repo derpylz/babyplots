@@ -412,7 +412,7 @@ export class Plots {
             plots: []
         };
 
-        this.scene.onPointerDown = (function (_evt: any, pickResult: PickingInfo) {
+        this.scene.onPointerPick = (function (_evt: any, pickResult: PickingInfo) {
             // (this as Plots)._annotationManager.clearInfo();
             for (let i = 0; i < (this as Plots).plots.length; i++) {
                 let plot = (this as Plots).plots[i];
@@ -991,19 +991,6 @@ export class Plots {
         // update labels
         this._annotationManager.update();
 
-        // for (let pltIdx = 0; pltIdx < this.plots.length; pltIdx++) {
-        //     const plot = this.plots[pltIdx];
-        //     plot.update();          
-        // }
-        // if (this._mouseOverCheck) {
-        //     const pickResult = this._scene.pick(this._scene.pointerX, this._scene.pointerY);
-        //     const faceId = pickResult.faceId;
-        //     if (faceId == -1) {
-        //         return;
-        //     }
-        //     const idx = this._SPS.pickedParticles[faceId].idx;
-        //     this._mouseOverCallback(idx);
-        // }
     }
 
 
@@ -2322,6 +2309,16 @@ export class Plots {
         btnbar.remove();
         let lblCntrl = document.getElementById("labelControl_" + this._uniqID);
         lblCntrl.remove();
+    }
+
+    removePlot(index: number): Plots {
+        let plot = this.plots[index];
+        if (plot === undefined) return;
+        this._annotationManager.removeLabelsByPlot(plot);
+        plot.dispose();
+        this.plots.splice(index);
+        this._downloadObj["plots"].splice(index);
+        return this;
     }
 
     /**

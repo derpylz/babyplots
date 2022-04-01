@@ -1,6 +1,6 @@
 {
   "name": "babyplots",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Easy interactive 3d plots.",
   "main": "build/babyplots.js",
   "scripts": {

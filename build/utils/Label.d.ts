@@ -65,6 +65,7 @@ export declare class AnnotationManager {
     addLabels(labelList: [number, number, number, string, string?, number?][]): number[];
     private _editLabelText;
     private _removeLabelByUI;
+    removeLabelsByPlot(plot: Plot): void;
     removeLabel(index: number): void;
     exportLabels(): [number, number, number, string, string, number][];
     fixLabels(): void;

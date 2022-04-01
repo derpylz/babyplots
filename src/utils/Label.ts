@@ -312,6 +312,7 @@ export class AnnotationManager {
         if (this._showLabels) {
             for (let i = 0; i < this.labels.length; i++) {
                 const label = this.labels[i];
+                if (label === undefined) continue;
                 label.update(this._camera, this._scene);
             }
         }
@@ -461,6 +462,16 @@ export class AnnotationManager {
         let btn = ev.target as HTMLButtonElement;
         let labelNum = parseInt(btn.dataset.labelnum);
         this.removeLabel(labelNum);
+    }
+
+    removeLabelsByPlot(plot: Plot): void {
+        for (let i = 0; i < this.labels.length; i++) {
+            const l = this.labels[i];
+            if (l === undefined) continue;
+            if(l.plotCreated === plot) {
+                this.removeLabel(i);
+            }
+        }
     }
 
     removeLabel(index: number): void {

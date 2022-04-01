@@ -321,7 +321,7 @@ var Plots = (function () {
         this._downloadObj = {
             plots: []
         };
-        this.scene.onPointerDown = (function (_evt, pickResult) {
+        this.scene.onPointerPick = (function (_evt, pickResult) {
             for (var i = 0; i < this.plots.length; i++) {
                 var plot = this.plots[i];
                 if (!plot.pickable) {
@@ -1844,6 +1844,16 @@ var Plots = (function () {
         btnbar.remove();
         var lblCntrl = document.getElementById("labelControl_" + this._uniqID);
         lblCntrl.remove();
+    };
+    Plots.prototype.removePlot = function (index) {
+        var plot = this.plots[index];
+        if (plot === undefined)
+            return;
+        this._annotationManager.removeLabelsByPlot(plot);
+        plot.dispose();
+        this.plots.splice(index);
+        this._downloadObj["plots"].splice(index);
+        return this;
     };
     Plots.prototype.addLabels = function (labelList) {
         this._annotationManager.addLabels(labelList);

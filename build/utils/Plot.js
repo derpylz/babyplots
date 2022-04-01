@@ -37,6 +37,13 @@ var Plot = (function () {
     Plot.prototype.setLooping = function (looping) { };
     Plot.prototype.dispose = function () {
         if (this.mesh !== undefined) {
+            this.mesh.dispose();
+        }
+        if (this.meshes !== undefined) {
+            for (var i = 0; i < this.meshes.length; i++) {
+                var m = this.meshes[i];
+                m.dispose();
+            }
         }
     };
     return Plot;

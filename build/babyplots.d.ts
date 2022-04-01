@@ -200,5 +200,6 @@ export declare class Plots {
     resize(width?: number, height?: number): Plots;
     thumbnail(size: number, saveCallback: (data: string) => void): void;
     dispose(): void;
+    removePlot(index: number): Plots;
     addLabels(labelList: [[number, number, number, string, string?, number?]]): void;
 }

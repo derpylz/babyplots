@@ -208,6 +208,8 @@ var AnnotationManager = (function () {
         if (this._showLabels) {
             for (var i = 0; i < this.labels.length; i++) {
                 var label = this.labels[i];
+                if (label === undefined)
+                    continue;
                 label.update(this._camera, this._scene);
             }
         }
@@ -322,6 +324,16 @@ var AnnotationManager = (function () {
         var btn = ev.target;
         var labelNum = parseInt(btn.dataset.labelnum);
         this.removeLabel(labelNum);
+    };
+    AnnotationManager.prototype.removeLabelsByPlot = function (plot) {
+        for (var i = 0; i < this.labels.length; i++) {
+            var l = this.labels[i];
+            if (l === undefined)
+                continue;
+            if (l.plotCreated === plot) {
+                this.removeLabel(i);
+            }
+        }
     };
     AnnotationManager.prototype.removeLabel = function (index) {
         if (this.labels[index] === undefined)
