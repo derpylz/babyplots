@@ -203,6 +203,10 @@ export class PointCloud extends CoordinatePlot {
     }
 
     resetAnimation(): void {
+        if (this._animationTargets == null) {
+            this._hasAnimation = false;
+            return;
+        }
         this._hasAnimation = true;
         let positionFunction = function (this: PointCloud, positions: FloatArray) {
             let numberOfVertices = positions.length / 3;

@@ -235,7 +235,6 @@
   <script>
 
     var vis = new Baby.Plots("renderCanvas", {});
-    vis.fromJSON(pointCloudSmData);
     // vis.addMeshObject(gltfString, {});
     // vis.turntable = true;
     // vis.addMeshStream(
@@ -271,7 +270,9 @@
         labels: ["cannon", "man", "rifle", "shoot", "shot"],
         labelColor: "match",
         labelSize: 50,
+        hasAnimation: true
     })
+    vis.fromJSON(pointCloudSmData);
     vis.doRender();
     vis.createButtons(["turntable", "json", "label"]);
     window.onresize = function () {

@@ -1098,7 +1098,7 @@ var Plots = (function () {
         var rangeX;
         var rangeY;
         var rangeZ;
-        this._hasAnim = opts.hasAnimation;
+        this._hasAnim = this._hasAnim || opts.hasAnimation;
         if (opts.hasAnimation) {
             var replayBtn = document.createElement("div");
             replayBtn.className = "button";

@@ -156,6 +156,10 @@ var PointCloud = (function (_super) {
         annotationManager.fixLabels();
     };
     PointCloud.prototype.resetAnimation = function () {
+        if (this._animationTargets == null) {
+            this._hasAnimation = false;
+            return;
+        }
         this._hasAnimation = true;
         var positionFunction = function (positions) {
             var numberOfVertices = positions.length / 3;

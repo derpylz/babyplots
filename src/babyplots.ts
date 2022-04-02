@@ -1330,7 +1330,7 @@ export class Plots {
         let rangeX: number[];
         let rangeY: number[];
         let rangeZ: number[];
-        this._hasAnim = opts.hasAnimation;
+        this._hasAnim = this._hasAnim || opts.hasAnimation;
         if (opts.hasAnimation) {
             let replayBtn = document.createElement("div");
             replayBtn.className = "button"
