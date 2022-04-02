@@ -57,8 +57,12 @@ export class Line extends CoordinatePlot {
     ) {
         super(name, "line", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._hasAnimation = hasAnimation;
-        this._animationDelay = this._animationDelay ?? animationDelay;
-        this._animationFrames = this._animationFrames ?? animationDuration;
+        if (animationDelay) {
+            this._animationDelay = animationDelay;
+        }
+        if (animationDuration) {
+            this._animationFrames = animationDuration;
+        }
         if (labels && labels.length === coordinates.length && annotationManager) {
             this.labels = labels;
             this.labelSize = labelSize;

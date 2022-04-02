@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>babyplots example</title>
   <script src="dist/CCapture.all.min.js"></script>
-  <script src="dist/examples/surface.js"></script>
-  <script src="dist/examples/heatMap.js"></script>
-  <script src="dist/examples/pointCloud.js"></script>
-  <script src="dist/examples/pointCloud_sm.js"></script>
-  <script src="dist/examples/shapeCloud.js"></script>
-  <script src="dist/examples/shapeCloudInfo.js"></script>
-  <script src="dist/examples/imagestack.js"></script>
+  <!-- <script src="dist/examples/surface.js"></script> -->
+  <!-- <script src="dist/examples/heatMap.js"></script> -->
+  <!-- <script src="dist/examples/pointCloud.js"></script> -->
+  <script src="dist/examples/semantleExample.js"></script>
+  <!-- <script src="dist/examples/shapeCloud.js"></script> -->
+  <!-- <script src="dist/examples/shapeCloudInfo.js"></script> -->
+  <!-- <script src="dist/examples/imagestack.js"></script> -->
   <script src="dist/babyplots.js"></script>
   <style>
     html,
@@ -254,25 +254,25 @@
     // vis.camera.radius = 800;
     // vis.camera.alpha = 0;
     // vis.camera.beta = 1;
-    vis.addPlot([
-        [6.671802, -4.664322, 4.977584],
-        [6.397511, -5.695337, 5.750157],
-        [6.834549, -4.452236, 5.134693],
-        [5.876275, -6.303131, 4.273763],
-        [5.795466, -6.470013, 4.276352]
-    ], "line", "values", [
-        0.285020,
-        0.317455,
-        0.417574,
-        0.602124,
-        1
-    ], {
-        labels: ["cannon", "man", "rifle", "shoot", "shot"],
-        labelColor: "match",
-        labelSize: 50,
-        hasAnimation: true
-    })
-    vis.fromJSON(pointCloudSmData);
+    // vis.addPlot([
+    //     [6.671802, -4.664322, 4.977584],
+    //     [6.397511, -5.695337, 5.750157],
+    //     [6.834549, -4.452236, 5.134693],
+    //     [5.876275, -6.303131, 4.273763],
+    //     [5.795466, -6.470013, 4.276352]
+    // ], "line", "values", [
+    //     0.285020,
+    //     0.317455,
+    //     0.417574,
+    //     0.602124,
+    //     1
+    // ], {
+    //     labels: ["cannon", "man", "rifle", "shoot", "shot"],
+    //     labelColor: "match",
+    //     labelSize: 50,
+    //     hasAnimation: true
+    // })
+    vis.fromJSON(semantleExampleData);
     vis.doRender();
     vis.createButtons(["turntable", "json", "label"]);
     window.onresize = function () {
