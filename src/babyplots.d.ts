@@ -166,6 +166,7 @@ export declare class Plots {
     shapeLegendTitle: string;
     uiLayer: AdvancedDynamicTexture;
     animPaused: boolean;
+    workerPath: string;
     constructor(canvasElement: string, options?: {});
     private _updateCameraUpVector;
     fromJSON(plotData: {}): void;

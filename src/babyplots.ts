@@ -286,6 +286,8 @@ export class Plots {
     uiLayer: AdvancedDynamicTexture;
     /** Play or pause state of all animations */
     animPaused: boolean = false;
+    /** Path to the directory containing the CCapture worker script */
+    workerPath: string;
 
 
     /**
@@ -309,12 +311,14 @@ export class Plots {
             rotationRate: 0.01,
             shapeLegendTitle: "",
             upAxis: "+y",
+            workerPath: "./",
         }
         Object.assign(opts, options);
 
         this.turntable = opts.turntable;
         this.rotationRate = opts.rotationRate;
         this.shapeLegendTitle = opts.shapeLegendTitle;
+        this.workerPath = opts.workerPath;
 
         // setup enginge and scene
         this._backgroundColor = opts.backgroundColor;
@@ -998,7 +1002,7 @@ export class Plots {
         if (this._recording) {
             // start recording:
             if (this._turned === 0) {
-                let worker = "./";
+                let worker = this.workerPath;
                 if (this.R) {
                     worker = "lib/babyplots-1/";
                 }
