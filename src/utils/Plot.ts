@@ -37,6 +37,16 @@ export abstract class Plot {
     zScale: number;
     pickable: boolean = false;
 
+    /**
+     * Basic constructor of a plot.
+     * @param name Name of the plot, default is plot type, used for legend
+     * @param shape For shapeCloud plots, shape of the points
+     * @param scene BabylonJS scene of the Plots instance
+     * @param legendData LegendData object
+     * @param xScale scaling factor for x-axis
+     * @param yScale scaling factor for y-axis
+     * @param zScale scaling factor for z-axis
+     */
     constructor(
         name: string,
         shape: string,
@@ -79,10 +89,26 @@ export abstract class CoordinatePlot extends Plot {
     protected _groupNames: string[];
     protected _size: number = 1;
 
+    /** Are points pickable */
     pickable: boolean = true;
-    selection: number[]; // contains indices of cells in selection cube
+    /** Contains indices of selected points */
+    selection: number[];
+    /** Info on data points to display when clicked (shapeCloud only) */
     dpInfo: string[];
 
+    /**
+     * Basic constructor of a plot with coordinates.
+     * @param name Name of the plot, default is plot type, used for legend
+     * @param shape For shapeCloud plots, shape of the points
+     * @param scene Babylonjs scene of the Plots instance
+     * @param coordinates Coordinates of the points
+     * @param colorVar Color variable of the points
+     * @param size Size of the points
+     * @param legendData LegendData object
+     * @param xScale scaling factor for x-axis
+     * @param yScale scaling factor for y-axis
+     * @param zScale scaling factor for z-axis
+     */
     constructor(
         name: string,
         shape: string,

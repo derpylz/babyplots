@@ -29,7 +29,9 @@ import { AnnotationManager } from "../utils/Label";
 import chroma from "chroma-js";
 
 export class PointCloud extends CoordinatePlot {
+    /** Size of label text */
     labelSize: number;
+    /** Color of label text */
     labelColor: string;
 
     private _hasAnimation: boolean;
@@ -41,6 +43,27 @@ export class PointCloud extends CoordinatePlot {
     private _animationFrames: number = 200;
     private _animationVectorFract: Vector3[] = [];
     private _animationDelay: number = 100;
+
+    /**
+     * Creates a pointCloud plot with a given set of coordinates and colors.
+     * @param scene Babylonjs scene
+     * @param coordinates Array of arrays of x,y,z coordinates
+     * @param colorVar Array of colors for each coordinate
+     * @param size Size of the points
+     * @param legendData LegendData object
+     * @param hasAnimation Animate between coordinates and animationTargets
+     * @param animationTargets Array of arrays of x,y,z coordinates for animation
+     * @param animationDelay Frames after which animation starts
+     * @param animationDuration Length of animation in frames
+     * @param xScale Scale factor for x coordinates
+     * @param yScale Scale factor for y coordinates
+     * @param zScale Scale factor for z coordinates
+     * @param name Name of the plot
+     * @param addLabels Add cluster labels to the plot
+     * @param labelSize Size of the labels
+     * @param labelColor Color of the labels
+     * @param annotationManager AnnotationManager object of the Plots instance
+     */
     constructor(
         scene: Scene,
         coordinates: number[][],
@@ -164,6 +187,10 @@ export class PointCloud extends CoordinatePlot {
         });
     }
 
+    /**
+     * Add cluster labels to the plot
+     * @param annotationManager AnnotationManager object of the Plots instance
+     */
     private _addLabels(annotationManager: AnnotationManager): void {
         if (!this.legendData.discrete) return;
         let colors: string[];
@@ -202,6 +229,9 @@ export class PointCloud extends CoordinatePlot {
         annotationManager.fixLabels();
     }
 
+    /**
+     * Reset animation to initial state
+     */
     resetAnimation(): void {
         if (this._animationTargets == null) {
             this._hasAnimation = false;
@@ -222,11 +252,19 @@ export class PointCloud extends CoordinatePlot {
         this._animDirection = 1;
     }
 
+    /**
+     * Set animation looping and reset animation.
+     * @param looping Should the animation loop?
+     */
     setLooping(looping: boolean): void {
         this._looping = looping;
         this.resetAnimation();
     }
 
+    /**
+     * Update function for animation, to be called every frame.
+     * @returns True if animation is still running, false if not.
+     */
     update(): boolean {
         if (this.mesh && this._hasAnimation) {
             if (this._animationCounter < this._animationDelay) {

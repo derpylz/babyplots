@@ -431,6 +431,9 @@ export class Plots {
         }).bind(this);
     }
 
+    /**
+     * Apply camera up-vector to camera.
+     */
     private _updateCameraUpVector() {
         switch (this._upAxis) {
             case "+x":
@@ -628,8 +631,11 @@ export class Plots {
      * "publish": creates a button that opens the publish to bp.bleb.li form.
      * 
      * "record": creates a button to record the plot as a gif. (Requires inclusion of CCapture.js and its gif.worker.js).
+     * 
+     * "turntable": creates a button to enable or disable the turntable mode.
      */
-    createButtons(whichBtns = ["json", "label", "publish", "record", "turntable"]): void {
+    createButtons(whichBtns = ["json", "label", "publish", "record", "turntable"]): Plots {
+        // Turntable button
         if (whichBtns.indexOf("turntable") !== -1) {
             let turntableBtn = document.createElement("div");
             turntableBtn.className = "button";
@@ -642,6 +648,7 @@ export class Plots {
                 turntableBtn.className = "button active";
             }
         }
+        // JSON download button
         if (whichBtns.indexOf("json") !== -1) {
             let jsonBtn = document.createElement("div");
             jsonBtn.className = "button";
@@ -650,6 +657,7 @@ export class Plots {
             jsonBtn.title = "Download the plot as json file.";
             this._buttonBar.appendChild(jsonBtn);
         }
+        // Label editor button
         if (whichBtns.indexOf("label") !== -1) {
             let labelBtn = document.createElement("div");
             labelBtn.className = "button";
@@ -658,6 +666,7 @@ export class Plots {
             labelBtn.title = "Show or hide the label manager.";
             this._buttonBar.appendChild(labelBtn);
         }
+        // Record plot animation as gif button
         if (whichBtns.indexOf("record") !== -1) {
             let recordBtn = document.createElement("div");
             recordBtn.className = "button";
@@ -666,6 +675,7 @@ export class Plots {
             recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
         }
+        // Publish to bp.bleb.li button
         if (whichBtns.indexOf("publish") !== -1) {
             let publishBtn = document.createElement("div");
             publishBtn.className = "button";
@@ -674,8 +684,14 @@ export class Plots {
             publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
         }
+        return this;
     }
 
+    /**
+     * Prepare the download object for the Plots instance.
+     * This is used to save the plot data in .json file format.
+     * The individual plots are added to this object by their respective addPlot function calls.
+     */
     private _prepDownloadObj() {
         this._downloadObj["turntable"] = this.turntable;
         this._downloadObj["rotationRate"] = this.rotationRate;
@@ -694,6 +710,9 @@ export class Plots {
         this._downloadObj["upAxis"] = this._upAxis;
     }
 
+    /**
+     * Download the plot data in .json file format.
+     */
     private _downloadJson() {
         let dlElement = document.createElement("a");
         this._prepDownloadObj();
@@ -706,8 +725,11 @@ export class Plots {
         document.body.removeChild(dlElement);
     }
 
+    /**
+     * Create the html form for publishing the plot to bp.bleb.li.
+     */
     private _createPublishForm() {
-
+        // do nothing if the form already exists
         if (this._publishFormOverlay !== undefined) {
             return
         }
@@ -798,7 +820,11 @@ export class Plots {
         this.canvas.parentNode.appendChild(formOverlay);
     }
 
+    /**
+     * On resize of the browser window, resize the publish form.
+     */
     private _resizePublishOverlay() {
+        // do nothing if the form does not exist
         if (this._publishFormOverlay === undefined) {
             return
         }
@@ -809,7 +835,11 @@ export class Plots {
         this._publishFormOverlay.style.height = r.height + "px";
     }
 
+    /**
+     * Try to publish the plot to bp.bleb.li.
+     */
     private _tryPublish() {
+        // Get a thumbnail of the plot
         this.thumbnail(80, (function (thumb_data) {
             this._prepDownloadObj();
             axios({
@@ -826,22 +856,21 @@ export class Plots {
                     thumb: thumb_data
                 },
 
-            })
-                .then((function (response) {
-                    let msg = document.getElementById("publishMessage_" + this._uniqID);
-                    msg.innerText = "Successfully published plot!";
-                    msg.className = "message success";
-                    document.getElementById("publishUsername_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishUsernameLabel_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishPassword_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishPasswordLabel_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishTitle_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishTitleLabel_" + this._uniqID).style.display = "none";
-                    document.getElementById("publishBtn_" + this._uniqID).style.display = "none";
-                    document.getElementById("cancelBtn_" + this._uniqID).style.display = "none";
-                    document.getElementById("closeBtn_" + this._uniqID).style.display = "block";
+            }).then((function (_response) {
+                let msg = document.getElementById("publishMessage_" + this._uniqID);
+                msg.innerText = "Successfully published plot!";
+                msg.className = "message success";
+                document.getElementById("publishUsername_" + this._uniqID).style.display = "none";
+                document.getElementById("publishUsernameLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishPassword_" + this._uniqID).style.display = "none";
+                document.getElementById("publishPasswordLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishTitle_" + this._uniqID).style.display = "none";
+                document.getElementById("publishTitleLabel_" + this._uniqID).style.display = "none";
+                document.getElementById("publishBtn_" + this._uniqID).style.display = "none";
+                document.getElementById("cancelBtn_" + this._uniqID).style.display = "none";
+                document.getElementById("closeBtn_" + this._uniqID).style.display = "block";
 
-                }).bind(this))
+            }).bind(this))
                 .catch((function (response) {
                     if (response.response.data["status"] === "not authorized") {
                         console.log("wrong credentials");
@@ -854,11 +883,17 @@ export class Plots {
         }).bind(this));
     }
 
+    /**
+     * Cancel the publishing and remove the form.
+     */
     private _cancelPublish() {
         this._publishFormOverlay.remove();
         this._publishFormOverlay = undefined;
     }
 
+    /**
+     * Reset the animation to the initial state.
+     */
     private _resetAnimation() {
         this._hasAnim = true;
         for (let idx = 0; idx < this.plots.length; idx++) {
@@ -881,34 +916,53 @@ export class Plots {
         this._axes[0].update(this.camera, true);
     }
 
-    pauseAnimation() {
+    /**
+     * Pause the animation at the current frame.
+     */
+    pauseAnimation(): Plots {
         this.animPaused = true;
         this._streamControlBtn.className = "button streamctrl play";
+        return this;
     }
 
-    playAnimation() {
+    /**
+     * Resume the animation from the current frame.
+     */
+    playAnimation(): Plots {
         this.animPaused = false;
         this._streamControlBtn.className = "button streamctrl pause";
+        return this;
     }
 
-    toggleTurntable() {
+    /**
+     * Toggle the turntable mode (rotation of the camera around the plot).
+     */
+    toggleTurntable(): Plots {
         this.turntable = !this.turntable;
         if (this.turntable) {
             this._turntableBtn.className = "button active";
         } else {
             this._turntableBtn.className = "button";
         }
+        return this;
     }
 
-    setAnimationFrame() {
+    /**
+     * Set the current frame of the animation to the value of the slider.
+     */
+    setAnimationFrame(): Plots {
         for (let idx = 0; idx < this.plots.length; idx++) {
             const animPlot = this.plots[idx];
             if (animPlot.allLoaded) {
                 animPlot.goToFrame(parseInt(this._animationSlider.value));
             }
         }
+        return this;
     }
 
+    /**
+     * Toggle the looping mode of the animation.
+     */
     private _toggleLoopAnimation() {
         if (this._loopingAnim) {
             this._loopingAnim = false;
@@ -929,12 +983,20 @@ export class Plots {
 
     }
 
+    /**
+     * Start the gif recording.
+     */
     private _startRecording() {
         this._recording = true;
     }
 
     /**
-     * Register before render
+     * Register before render:
+     * - rotate the camera around the plot if turntable mode is enabled
+     * - update the animation slider if the animation is playing
+     * - recalculate the bounding box of the plot if the animation is playing
+     * - update the fullscreen UI
+     * - update the annotation labels
      */
     private _prepRender(): void {
         // rotate camera around plot if turntable is true
@@ -998,6 +1060,10 @@ export class Plots {
     }
 
 
+    /**
+     * Register after render:
+     * - update the gif recording if recording is enabled
+     */
     private _afterRender(): void {
         if (this._recording) {
             // start recording:
@@ -1061,6 +1127,9 @@ export class Plots {
 
     /**
      * Zoom camera to fit the complete SPS into the field of view
+     * @param xRange The min and max coordinates of the x-axis
+     * @param yRange The min and max coordinates of the y-axis
+     * @param zRange The min and max coordinates of the z-axis
      */
     private _cameraFitPlot(xRange: number[], yRange: number[], zRange: number[]): void {
         let xSize = xRange[1] - xRange[0];
@@ -1104,7 +1173,7 @@ export class Plots {
         indices: number[],
         attributes: { dim: number[] },
         options: {}
-    ) {
+    ): Plots {
         // default options
         let opts = {
             size: 1,
@@ -2289,7 +2358,7 @@ export class Plots {
         this._fsUIDirty = true;
         this._resizePublishOverlay();
         this._engine.resize();
-        return this
+        return this;
     }
 
     /**
@@ -2298,8 +2367,9 @@ export class Plots {
      * @param size Width and height of square thumbnail in pixels
      * @param saveCallback Function that takes the created screenshot as base64 encoded string.
      */
-    thumbnail(size: number, saveCallback: (data: string) => void): void {
+    thumbnail(size: number, saveCallback: (data: string) => void): Plots {
         ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
+        return this;
     }
 
     /**
@@ -2330,8 +2400,9 @@ export class Plots {
      * 
      * @param labelList List of lists with the first three elements of the inner lists being the x, y and z coordinates, and the fourth the label text.
      */
-    addLabels(labelList: [[number, number, number, string, string?, number?]]): void {
+    addLabels(labelList: [[number, number, number, string, string?, number?]]): Plots {
         this._annotationManager.addLabels(labelList);
+        return this;
     }
 
 }
