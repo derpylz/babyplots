@@ -91,6 +91,9 @@ Using babyplots will always be free for everybody. But if you really like it and
 
 ## Also see:
 
+* Babyplots as an R package: https://bitbucket.org/derpylz/babyplots
+* Babyplots as a Python package: https://github.com/derpylz/babyplots_py
+
 Libraries used in babyplots:
 
 * [Babylon.js](https://www.babylonjs.com/), the rendering engine
@@ -99,7 +102,7 @@ Libraries used in babyplots:
 
 ## Author
 
-Babyplots was created by [Nils Trost](http://nils.blebli.de)
+Babyplots was created by [Nils Trost](https://github.com/derpylz)
 
 ## License
 
