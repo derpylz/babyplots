@@ -20,7 +20,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
+import { CreateLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { Vector3, Axis, Color3} from "@babylonjs/core/Maths/math";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
@@ -101,7 +101,7 @@ export class Axes {
         // Create X axis
         if (this.axisData.showAxes[0]) {
             // Create axis line
-            let axisX = LinesBuilder.CreateLines("axisX", {
+            let axisX = CreateLines("axisX", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmax, ymin, zmin)
@@ -139,7 +139,7 @@ export class Axes {
                 if (heatmap) {
                     tickPos = tickPos - 0.5 * this.axisData.scale[0];
                 }
-                let tick = LinesBuilder.CreateLines("xTicks", {
+                let tick = CreateLines("xTicks", {
                     points: [
                         new Vector3(tickPos, ymin, zmin + 0.05 * xmax),
                         new Vector3(tickPos, ymin, zmin),
@@ -161,7 +161,7 @@ export class Axes {
                 tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[0][0]) {
-                    let tickLine = LinesBuilder.CreateLines("xTickLines", {
+                    let tickLine = CreateLines("xTickLines", {
                         points: [
                             new Vector3(tickPos, ymax, zmin),
                             new Vector3(tickPos, ymin, zmin)
@@ -172,7 +172,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[0][1]) {
-                    let tickLine = LinesBuilder.CreateLines("xTickLines", {
+                    let tickLine = CreateLines("xTickLines", {
                         points: [
                             new Vector3(tickPos, ymin, zmax),
                             new Vector3(tickPos, ymin, zmin)
@@ -187,7 +187,7 @@ export class Axes {
         // create Y axis
         if (this.axisData.showAxes[1]) {
             // axis
-            let axisY = LinesBuilder.CreateLines("axisY", {
+            let axisY = CreateLines("axisY", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmin, ymax, zmin)
@@ -211,7 +211,7 @@ export class Axes {
             }
             for (let i = 0; i < yTicks.length; i++) {
                 let tickPos = yTicks[i];
-                let tick = LinesBuilder.CreateLines("yTicks", {
+                let tick = CreateLines("yTicks", {
                     points: [
                         new Vector3(xmin, tickPos, zmin + 0.05 * zmax),
                         new Vector3(xmin, tickPos, zmin),
@@ -228,7 +228,7 @@ export class Axes {
                 this._tickLabels.push(tickChar);
                 // tick lines
                 if (this.axisData.showTickLines[1][0]) {
-                    let tickLine = LinesBuilder.CreateLines("yTicksLines", {
+                    let tickLine = CreateLines("yTicksLines", {
                         points: [
                             new Vector3(xmax, tickPos, zmin),
                             new Vector3(xmin, tickPos, zmin)
@@ -239,7 +239,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[1][1]) {
-                    let tickLine = LinesBuilder.CreateLines("yTickLines", {
+                    let tickLine = CreateLines("yTickLines", {
                         points: [
                             new Vector3(xmin, tickPos, zmax),
                             new Vector3(xmin, tickPos, zmin)
@@ -254,7 +254,7 @@ export class Axes {
         // create Z axis
         if (this.axisData.showAxes[2]) {
             // axis
-            let axisZ = LinesBuilder.CreateLines("axisZ", {
+            let axisZ = CreateLines("axisZ", {
                 points: [
                     new Vector3(xmin, ymin, zmin),
                     new Vector3(xmin, ymin, zmax)
@@ -285,7 +285,7 @@ export class Axes {
                 if (heatmap) {
                     tickPos = tickPos - 0.5 * this.axisData.scale[2];
                 }
-                let tick = LinesBuilder.CreateLines("zTicks", {
+                let tick = CreateLines("zTicks", {
                     points: [
                         new Vector3(xmin + 0.05 * xmax, ymin, tickPos),
                         new Vector3(xmin, ymin, tickPos),
@@ -308,7 +308,7 @@ export class Axes {
                 this._tickLabels.push(tickChar);
                 // tick lines
                 if (this.axisData.showTickLines[2][0]) {
-                    let tickLine = LinesBuilder.CreateLines("zTickLines", {
+                    let tickLine = CreateLines("zTickLines", {
                         points: [
                             new Vector3(xmax, ymin, tickPos),
                             new Vector3(xmin, ymin, tickPos)
@@ -319,7 +319,7 @@ export class Axes {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[2][1]) {
-                    let tickLine = LinesBuilder.CreateLines("zTickLines", {
+                    let tickLine = CreateLines("zTickLines", {
                         points: [
                             new Vector3(xmin, ymax, tickPos),
                             new Vector3(xmin, ymin, tickPos)

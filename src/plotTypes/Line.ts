@@ -22,7 +22,7 @@ import { Vector3, Color4 } from "@babylonjs/core/Maths/math";
 import { LegendData } from "../utils/LegendData";
 import { CoordinatePlot } from "../utils/Plot";
 import { AnnotationManager } from "../utils/Label";
-import { LinesBuilder } from "@babylonjs/core/Meshes/Builders/linesBuilder";
+import { CreateLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 
 export class Line extends CoordinatePlot {
     labels: string[];
@@ -130,7 +130,7 @@ export class Line extends CoordinatePlot {
                 lineColors.push(Color4.FromHexString(pointColor));
             }
         }
-        let lines = LinesBuilder.CreateLines(
+        let lines = CreateLines(
             "lines",
             { points: lineCoords, colors: lineColors }
         )
@@ -167,7 +167,7 @@ export class Line extends CoordinatePlot {
             Color4.FromHexString(this._coordColors[1])
         );
 
-        let lines = LinesBuilder.CreateLines(
+        let lines = CreateLines(
             "lines",
             { points: lineCoords, colors: lineColors }
         )
@@ -220,7 +220,7 @@ export class Line extends CoordinatePlot {
                 lineColors.push(Color4.FromHexString(this._coordColors[currSegment + 1]));
 
                 this.mesh.dispose();
-                let lines = LinesBuilder.CreateLines(
+                let lines = CreateLines(
                     "lines",
                     { points: lineCoords, colors: lineColors }
                 )
@@ -245,7 +245,7 @@ export class Line extends CoordinatePlot {
                         const pointColor = this._coordColors[i];
                         lineColors.push(Color4.FromHexString(pointColor));
                     }
-                    let lines = LinesBuilder.CreateLines(
+                    let lines = CreateLines(
                         "lines",
                         { points: lineCoords, colors: lineColors }
                     )

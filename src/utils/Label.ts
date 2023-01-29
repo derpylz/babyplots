@@ -21,7 +21,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Vector3, Axis, Color3 } from "@babylonjs/core/Maths/math";
-import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
+import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Button, Rectangle, TextBlock } from "@babylonjs/gui/2D/controls";
@@ -151,7 +151,7 @@ class Label {
         if (size != null) {
             this.size = size;
         }
-        let plane = PlaneBuilder.CreatePlane('label', {
+        let plane = CreatePlane('label', {
             width: this.size * 0.05,
             height: this.size * 0.05
         }, scene);

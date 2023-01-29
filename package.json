@@ -1,6 +1,6 @@
 {
   "name": "babyplots",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Easy interactive 3d plots.",
   "main": "build/babyplots.js",
   "scripts": {
@@ -11,13 +11,13 @@
   "author": "Nils Trost",
   "license": "Apache-2.0",
   "dependencies": {
+    "@babylonjs/core": "^5.44.0",
+    "@babylonjs/gui": "^5.44.0",
+    "@babylonjs/loaders": "^5.44.0",
     "@types/ccapture.js": "^1.1.0",
     "@types/chroma-js": "^2.1.1",
     "@types/downloadjs": "^1.4.2",
     "@types/uuid": "^8.3.0",
-    "@babylonjs/core": "^4.2.0",
-    "@babylonjs/gui": "^4.2.0",
-    "@babylonjs/loaders": "^4.2.0",
     "axios": "^0.21.2",
     "ccapture.js": "^1.1.0",
     "chroma-js": "^2.1.0",

@@ -20,8 +20,8 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Color3, Vector3 } from "@babylonjs/core/Maths/math";
-import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-import { PlaneBuilder } from "@babylonjs/core/Meshes/Builders/planeBuilder";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { LegendData } from "../utils/LegendData";
 import { CoordinatePlot } from "../utils/Plot";
@@ -50,7 +50,7 @@ export class HeatMap extends CoordinatePlot {
                 const coord = rowCoords[column];
                 if (coord > 0) {
                     let height = coord * this.yScale;
-                    let box = BoxBuilder.CreateBox("box_" + row + "-" + column, {
+                    let box = CreateBox("box_" + row + "-" + column, {
                         height: height,
                         width: this.xScale * this._size,
                         depth: this.zScale * this._size
@@ -69,7 +69,7 @@ export class HeatMap extends CoordinatePlot {
                     boxes.push(box);
                 }
                 else {
-                    let box = PlaneBuilder.CreatePlane(
+                    let box = CreatePlane(
                         "box_" + row + "-" + column,
                         {
                             width: this.xScale * this._size,

@@ -100,7 +100,7 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
-import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";

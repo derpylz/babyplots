@@ -20,10 +20,10 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import "@babylonjs/core/Meshes/thinInstanceMesh";
-import { SphereBuilder } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
-import { BoxBuilder } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-import { TorusBuilder } from "@babylonjs/core/Meshes/Builders/torusBuilder";
-import { CylinderBuilder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
+import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreateTorus } from "@babylonjs/core/Meshes/Builders/torusBuilder";
+import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { Color3, Color4, Matrix, Vector3 } from "@babylonjs/core/Maths/math";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { LegendData } from "../utils/LegendData";
@@ -91,22 +91,22 @@ export class ShapeCloud extends CoordinatePlot {
 
         switch (this._shape) {
             case "box":
-                origMesh = BoxBuilder.CreateBox(mid, { size: this._size });
+                origMesh = CreateBox(mid, { size: this._size });
                 break;
             case "sphere":
-                origMesh = SphereBuilder.CreateSphere(mid, { diameter: this._size });
+                origMesh = CreateSphere(mid, { diameter: this._size });
                 break;
             case "cone":
-                origMesh = CylinderBuilder.CreateCylinder(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
+                origMesh = CreateCylinder(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
                 break;
             case "torus":
-                origMesh = TorusBuilder.CreateTorus(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
+                origMesh = CreateTorus(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
                 break;
             case "cylinder":
-                origMesh = CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
+                origMesh = CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = BoxBuilder.CreateBox(mid, { size: this._size });
+                origMesh = CreateBox(mid, { size: this._size });
                 break;
         }
         
