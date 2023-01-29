@@ -308,7 +308,7 @@ export class Plots {
             yScale: 1,
             zScale: 1,
             turntable: false,
-            rotationRate: 0.01,
+            rotationRate: 0.005,
             shapeLegendTitle: "",
             upAxis: "+y",
             workerPath: "./",
