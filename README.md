@@ -83,16 +83,10 @@ npm run dist
 
 Join our [Discord server](https://discord.gg/bbWxP8q), or submit an issue here in the repository!
 
-## Support the work on babyplots
-
-Using babyplots will always be free for everybody. But if you really like it and want to show your appreciation, you may buy us a coffee :)
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D45DB4K)
-
 ## Also see:
 
-* Babyplots as an R package: https://bitbucket.org/derpylz/babyplots
-* Babyplots as a Python package: https://github.com/derpylz/babyplots_py
+* Babyplots as an [R package](https://bitbucket.org/derpylz/babyplots)
+* Babyplots as a Python package: [PyPI](https://pypi.org/project/babyplots/), [Github](https://github.com/derpylz/babyplots_py)
 
 Libraries used in babyplots:
 
@@ -110,4 +104,8 @@ Released under the [Apache 2.0 License](LICENSE).
 
 Find the licenses of the included libraries [here](dist/babyplots.js.LICENSE.txt). Make sure to include this file if you use babyplots in your project.
 
+## Support the work on babyplots
 
+Using babyplots will always be free for everybody. But if you really like it and want to show your appreciation, you may buy us a coffee :)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D45DB4K)
