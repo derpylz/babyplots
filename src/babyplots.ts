@@ -261,6 +261,9 @@ export class Plots {
     private _shapeLegendPosition: string;
     private _fsUIDirty: boolean = true;
     private _upAxis: string = "+y";
+    private _xRange: number[] = [0, 0];
+    private _yRange: number[] = [0, 0];
+    private _zRange: number[] = [0, 0];
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -1132,16 +1135,29 @@ export class Plots {
      * @param zRange The min and max coordinates of the z-axis
      */
     private _cameraFitPlot(xRange: number[], yRange: number[], zRange: number[]): void {
+        // if this was called from the first plot, just take the ranges given.
+        // for subsequent plots, take the union of the ranges
+        if (this.plots.length > 1) {
+            xRange = [Math.min(xRange[0], this._xRange[0]), Math.max(xRange[1], this._xRange[1])];
+            yRange = [Math.min(yRange[0], this._yRange[0]), Math.max(yRange[1], this._yRange[1])];
+            zRange = [Math.min(zRange[0], this._zRange[0]), Math.max(zRange[1], this._zRange[1])];
+        }
+        this._xRange = xRange;
+        this._yRange = yRange;
+        this._zRange = zRange;
+        // create a box that fits all plots
         let xSize = xRange[1] - xRange[0];
         let ySize = yRange[1] - yRange[0];
         let zSize = zRange[1] - zRange[0];
-        let box = BoxBuilder.CreateBox('bdbx', {
+        let box = CreateBox('bdbx', {
             width: xSize, height: ySize, depth: zSize
         }, this.scene);
+        // position the box in the center of the plot
         let xCenter = xRange[1] - xSize / 2;
         let yCenter = yRange[1] - ySize / 2;
         let zCenter = zRange[1] - zSize / 2;
         box.position = new Vector3(xCenter, yCenter, zCenter);
+        // position the camera so that the box fits into the field of view
         this.camera.position = new Vector3(xCenter, ySize, zCenter);
         this.camera.target = new Vector3(xCenter, yCenter, zCenter);
         let radius = box.getBoundingInfo().boundingSphere.radiusWorld;
@@ -1152,6 +1168,7 @@ export class Plots {
         }
         let viewRadius = Math.abs(radius / Math.sin(halfMinFov));
         this.camera.radius = viewRadius;
+        // We don't need the box anymore
         box.dispose();
         this.camera.alpha = 0;
         this.camera.beta = 1; // 0 is top view, Pi is bottom

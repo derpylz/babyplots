@@ -154,6 +154,9 @@ export declare class Plots {
     private _shapeLegendPosition;
     private _fsUIDirty;
     private _upAxis;
+    private _xRange;
+    private _yRange;
+    private _zRange;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
