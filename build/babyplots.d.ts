@@ -154,6 +154,9 @@ export declare class Plots {
     private _shapeLegendPosition;
     private _fsUIDirty;
     private _upAxis;
+    private _xRange;
+    private _yRange;
+    private _zRange;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -166,10 +169,11 @@ export declare class Plots {
     shapeLegendTitle: string;
     uiLayer: AdvancedDynamicTexture;
     animPaused: boolean;
+    workerPath: string;
     constructor(canvasElement: string, options?: {});
     private _updateCameraUpVector;
     fromJSON(plotData: {}): void;
-    createButtons(whichBtns?: string[]): void;
+    createButtons(whichBtns?: string[]): Plots;
     private _prepDownloadObj;
     private _downloadJson;
     private _createPublishForm;
@@ -177,10 +181,10 @@ export declare class Plots {
     private _tryPublish;
     private _cancelPublish;
     private _resetAnimation;
-    pauseAnimation(): void;
-    playAnimation(): void;
-    toggleTurntable(): void;
-    setAnimationFrame(): void;
+    pauseAnimation(): Plots;
+    playAnimation(): Plots;
+    toggleTurntable(): Plots;
+    setAnimationFrame(): Plots;
     private _toggleLoopAnimation;
     private _startRecording;
     private _prepRender;
@@ -188,7 +192,7 @@ export declare class Plots {
     private _cameraFitPlot;
     addImgStack(values: number[], indices: number[], attributes: {
         dim: number[];
-    }, options: {}): this;
+    }, options: {}): Plots;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     addMeshObject(meshString: string, options: {}): Plots;
     addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
@@ -198,8 +202,8 @@ export declare class Plots {
     private _createShapeLegend;
     doRender(): Plots;
     resize(width?: number, height?: number): Plots;
-    thumbnail(size: number, saveCallback: (data: string) => void): void;
+    thumbnail(size: number, saveCallback: (data: string) => void): Plots;
     dispose(): void;
     removePlot(index: number): Plots;
-    addLabels(labelList: [[number, number, number, string, string?, number?]]): void;
+    addLabels(labelList: [[number, number, number, string, string?, number?]]): Plots;
 }

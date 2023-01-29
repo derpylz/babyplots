@@ -82,7 +82,7 @@ var Label = (function () {
         if (size != null) {
             this.size = size;
         }
-        var plane = planeBuilder_1.PlaneBuilder.CreatePlane('label', {
+        var plane = (0, planeBuilder_1.CreatePlane)('label', {
             width: this.size * 0.05,
             height: this.size * 0.05
         }, scene);
@@ -168,7 +168,7 @@ var AnnotationManager = (function () {
         this._fgColor = "white";
         this._fullScreenUI = fullScreenUI;
         this._uniqID = uniqID;
-        if (chroma_js_1.default(backgroundColor).luminance() > 0.5) {
+        if ((0, chroma_js_1.default)(backgroundColor).luminance() > 0.5) {
             this._fgColor = "black";
         }
         this._createLabelForms();

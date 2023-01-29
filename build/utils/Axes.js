@@ -48,7 +48,7 @@ var Axes = (function () {
         var ymax = Math.ceil(this.axisData.range[1][1] / ytickBreaks) * ytickBreaks;
         var zmax = Math.ceil(this.axisData.range[2][1] / ztickBreaks) * ztickBreaks;
         if (this.axisData.showAxes[0]) {
-            var axisX = linesBuilder_1.LinesBuilder.CreateLines("axisX", {
+            var axisX = (0, linesBuilder_1.CreateLines)("axisX", {
                 points: [
                     new math_1.Vector3(xmin, ymin, zmin),
                     new math_1.Vector3(xmax, ymin, zmin)
@@ -77,7 +77,7 @@ var Axes = (function () {
                 if (heatmap) {
                     tickPos = tickPos - 0.5 * this.axisData.scale[0];
                 }
-                var tick = linesBuilder_1.LinesBuilder.CreateLines("xTicks", {
+                var tick = (0, linesBuilder_1.CreateLines)("xTicks", {
                     points: [
                         new math_1.Vector3(tickPos, ymin, zmin + 0.05 * xmax),
                         new math_1.Vector3(tickPos, ymin, zmin),
@@ -99,7 +99,7 @@ var Axes = (function () {
                 tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[0][0]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("xTickLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("xTickLines", {
                         points: [
                             new math_1.Vector3(tickPos, ymax, zmin),
                             new math_1.Vector3(tickPos, ymin, zmin)
@@ -110,7 +110,7 @@ var Axes = (function () {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[0][1]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("xTickLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("xTickLines", {
                         points: [
                             new math_1.Vector3(tickPos, ymin, zmax),
                             new math_1.Vector3(tickPos, ymin, zmin)
@@ -123,7 +123,7 @@ var Axes = (function () {
             }
         }
         if (this.axisData.showAxes[1]) {
-            var axisY = linesBuilder_1.LinesBuilder.CreateLines("axisY", {
+            var axisY = (0, linesBuilder_1.CreateLines)("axisY", {
                 points: [
                     new math_1.Vector3(xmin, ymin, zmin),
                     new math_1.Vector3(xmin, ymax, zmin)
@@ -145,7 +145,7 @@ var Axes = (function () {
             }
             for (var i = 0; i < yTicks.length; i++) {
                 var tickPos = yTicks[i];
-                var tick = linesBuilder_1.LinesBuilder.CreateLines("yTicks", {
+                var tick = (0, linesBuilder_1.CreateLines)("yTicks", {
                     points: [
                         new math_1.Vector3(xmin, tickPos, zmin + 0.05 * zmax),
                         new math_1.Vector3(xmin, tickPos, zmin),
@@ -161,7 +161,7 @@ var Axes = (function () {
                 tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[1][0]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("yTicksLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("yTicksLines", {
                         points: [
                             new math_1.Vector3(xmax, tickPos, zmin),
                             new math_1.Vector3(xmin, tickPos, zmin)
@@ -172,7 +172,7 @@ var Axes = (function () {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[1][1]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("yTickLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("yTickLines", {
                         points: [
                             new math_1.Vector3(xmin, tickPos, zmax),
                             new math_1.Vector3(xmin, tickPos, zmin)
@@ -185,7 +185,7 @@ var Axes = (function () {
             }
         }
         if (this.axisData.showAxes[2]) {
-            var axisZ = linesBuilder_1.LinesBuilder.CreateLines("axisZ", {
+            var axisZ = (0, linesBuilder_1.CreateLines)("axisZ", {
                 points: [
                     new math_1.Vector3(xmin, ymin, zmin),
                     new math_1.Vector3(xmin, ymin, zmax)
@@ -214,7 +214,7 @@ var Axes = (function () {
                 if (heatmap) {
                     tickPos = tickPos - 0.5 * this.axisData.scale[2];
                 }
-                var tick = linesBuilder_1.LinesBuilder.CreateLines("zTicks", {
+                var tick = (0, linesBuilder_1.CreateLines)("zTicks", {
                     points: [
                         new math_1.Vector3(xmin + 0.05 * xmax, ymin, tickPos),
                         new math_1.Vector3(xmin, ymin, tickPos),
@@ -236,7 +236,7 @@ var Axes = (function () {
                 tickChar.isPickable = false;
                 this._tickLabels.push(tickChar);
                 if (this.axisData.showTickLines[2][0]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("zTickLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("zTickLines", {
                         points: [
                             new math_1.Vector3(xmax, ymin, tickPos),
                             new math_1.Vector3(xmin, ymin, tickPos)
@@ -247,7 +247,7 @@ var Axes = (function () {
                     this._tickLines.push(tickLine);
                 }
                 if (this.axisData.showTickLines[2][1]) {
-                    var tickLine = linesBuilder_1.LinesBuilder.CreateLines("zTickLines", {
+                    var tickLine = (0, linesBuilder_1.CreateLines)("zTickLines", {
                         points: [
                             new math_1.Vector3(xmin, ymax, tickPos),
                             new math_1.Vector3(xmin, ymin, tickPos)

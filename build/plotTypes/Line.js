@@ -26,7 +26,6 @@ var Line = (function (_super) {
         if (yScale === void 0) { yScale = 1; }
         if (zScale === void 0) { zScale = 1; }
         if (name === void 0) { name = "line"; }
-        var _a, _b;
         var _this = _super.call(this, name, "line", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale) || this;
         _this._looping = false;
         _this._animDirection = 1;
@@ -35,8 +34,12 @@ var Line = (function (_super) {
         _this._animationDelay = 100;
         _this._segmentVectors = [];
         _this._hasAnimation = hasAnimation;
-        _this._animationDelay = (_a = _this._animationDelay) !== null && _a !== void 0 ? _a : animationDelay;
-        _this._animationFrames = (_b = _this._animationFrames) !== null && _b !== void 0 ? _b : animationDuration;
+        if (animationDelay) {
+            _this._animationDelay = animationDelay;
+        }
+        if (animationDuration) {
+            _this._animationFrames = animationDuration;
+        }
         if (labels && labels.length === coordinates.length && annotationManager) {
             _this.labels = labels;
             _this.labelSize = labelSize;
@@ -73,7 +76,7 @@ var Line = (function (_super) {
                 lineColors.push(math_1.Color4.FromHexString(pointColor));
             }
         }
-        var lines = linesBuilder_1.LinesBuilder.CreateLines("lines", { points: lineCoords, colors: lineColors });
+        var lines = (0, linesBuilder_1.CreateLines)("lines", { points: lineCoords, colors: lineColors });
         this.mesh = lines;
     };
     Line.prototype._addLabels = function (annotationManager) {
@@ -94,7 +97,7 @@ var Line = (function (_super) {
         lineCoords[0] = new math_1.Vector3(this._coords[0][0] * this.xScale, this._coords[0][1] * this.yScale, this._coords[0][2] * this.zScale);
         lineCoords[1] = lineCoords[0].add(this._segmentVectors[0]);
         lineColors.push(math_1.Color4.FromHexString(this._coordColors[0]), math_1.Color4.FromHexString(this._coordColors[1]));
-        var lines = linesBuilder_1.LinesBuilder.CreateLines("lines", { points: lineCoords, colors: lineColors });
+        var lines = (0, linesBuilder_1.CreateLines)("lines", { points: lineCoords, colors: lineColors });
         this.mesh = lines;
         this._animationCounter = 0;
     };
@@ -123,7 +126,7 @@ var Line = (function (_super) {
                 lineCoords.push(lineCoords[currSegment].add(this._segmentVectors[currSegment].multiplyByFloats(progressOnSegment, progressOnSegment, progressOnSegment)));
                 lineColors.push(math_1.Color4.FromHexString(this._coordColors[currSegment + 1]));
                 this.mesh.dispose();
-                var lines = linesBuilder_1.LinesBuilder.CreateLines("lines", { points: lineCoords, colors: lineColors });
+                var lines = (0, linesBuilder_1.CreateLines)("lines", { points: lineCoords, colors: lineColors });
                 this.mesh = lines;
                 this._animationCounter += 1;
             }
@@ -141,7 +144,7 @@ var Line = (function (_super) {
                         var pointColor = this._coordColors[i];
                         lineColors.push(math_1.Color4.FromHexString(pointColor));
                     }
-                    var lines = linesBuilder_1.LinesBuilder.CreateLines("lines", { points: lineCoords, colors: lineColors });
+                    var lines = (0, linesBuilder_1.CreateLines)("lines", { points: lineCoords, colors: lineColors });
                     this.mesh.dispose();
                     this.mesh = lines;
                 }

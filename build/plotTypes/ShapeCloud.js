@@ -55,25 +55,25 @@ var ShapeCloud = (function (_super) {
             colorData.set(col.asArray(), i * 4);
         }
         var origMesh;
-        var mid = "root:" + uuid_1.v4();
+        var mid = "root:" + (0, uuid_1.v4)();
         switch (this._shape) {
             case "box":
-                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: this._size });
+                origMesh = (0, boxBuilder_1.CreateBox)(mid, { size: this._size });
                 break;
             case "sphere":
-                origMesh = sphereBuilder_1.SphereBuilder.CreateSphere(mid, { diameter: this._size });
+                origMesh = (0, sphereBuilder_1.CreateSphere)(mid, { diameter: this._size });
                 break;
             case "cone":
-                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
+                origMesh = (0, cylinderBuilder_1.CreateCylinder)(mid, { height: this._size, diameterBottom: this._size, diameterTop: 0 }, this._scene);
                 break;
             case "torus":
-                origMesh = torusBuilder_1.TorusBuilder.CreateTorus(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
+                origMesh = (0, torusBuilder_1.CreateTorus)(mid, { diameter: this._size, thickness: this._size * 0.5 }, this._scene);
                 break;
             case "cylinder":
-                origMesh = cylinderBuilder_1.CylinderBuilder.CreateCylinder(mid, { height: this._size, diameter: this._size }, this._scene);
+                origMesh = (0, cylinderBuilder_1.CreateCylinder)(mid, { height: this._size, diameter: this._size }, this._scene);
                 break;
             default:
-                origMesh = boxBuilder_1.BoxBuilder.CreateBox(mid, { size: this._size });
+                origMesh = (0, boxBuilder_1.CreateBox)(mid, { size: this._size });
                 break;
         }
         origMesh.thinInstanceSetBuffer("matrix", matricesData, 16, true);

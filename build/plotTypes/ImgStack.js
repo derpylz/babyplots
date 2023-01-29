@@ -86,7 +86,7 @@ var ImgStack = (function (_super) {
             }
             var channelCoords = this._channelCoords[c];
             var channelColor = this._channelColors[c];
-            var channelColorRGB = chroma_js_1.default(channelColor).rgb();
+            var channelColorRGB = (0, chroma_js_1.default)(channelColor).rgb();
             channelColorRGB[0] = channelColorRGB[0] / 255;
             channelColorRGB[1] = channelColorRGB[1] / 255;
             channelColorRGB[2] = channelColorRGB[2] / 255;
@@ -115,13 +115,13 @@ var ImgStack = (function (_super) {
                     if (alphaColors[intensIdx].length <= 4) {
                         continue;
                     }
-                    var customMesh = new mesh_1.Mesh("custom-" + c + "_" + intensIdx, this._scene);
+                    var customMesh = new mesh_1.Mesh("custom-".concat(c, "_").concat(intensIdx), this._scene);
                     var intensity = alphaIntensities[intensIdx];
                     var vertexData = new mesh_vertexData_1.VertexData();
                     vertexData.positions = alphaPositions[intensIdx];
                     vertexData.colors = alphaColors[intensIdx];
                     vertexData.applyToMesh(customMesh, true);
-                    var mat = new standardMaterial_1.StandardMaterial("mat-" + c + "_" + intensIdx, this._scene);
+                    var mat = new standardMaterial_1.StandardMaterial("mat-".concat(c, "_").concat(intensIdx), this._scene);
                     mat.emissiveColor = new math_1.Color3(1, 1, 1);
                     mat.disableLighting = true;
                     mat.pointsCloud = true;
@@ -142,12 +142,12 @@ var ImgStack = (function (_super) {
                         colors.push(channelColorRGB[0], channelColorRGB[1], channelColorRGB[2], 1);
                     }
                 }
-                var customMesh = new mesh_1.Mesh("custom-" + c, this._scene);
+                var customMesh = new mesh_1.Mesh("custom-".concat(c), this._scene);
                 var vertexData = new mesh_vertexData_1.VertexData();
                 vertexData.positions = positions;
                 vertexData.colors = colors;
                 vertexData.applyToMesh(customMesh, true);
-                var mat = new standardMaterial_1.StandardMaterial("mat-" + c, this._scene);
+                var mat = new standardMaterial_1.StandardMaterial("mat-".concat(c), this._scene);
                 mat.emissiveColor = new math_1.Color3(1, 1, 1);
                 mat.disableLighting = true;
                 mat.pointsCloud = true;

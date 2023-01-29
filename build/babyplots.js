@@ -217,8 +217,8 @@ function isValidPlot(plotData) {
 exports.isValidPlot = isValidPlot;
 var Plots = (function () {
     function Plots(canvasElement, options) {
-        var _this = this;
         if (options === void 0) { options = {}; }
+        var _this = this;
         this._showLegend = true;
         this._hasAnim = false;
         this._loopingAnim = false;
@@ -232,27 +232,32 @@ var Plots = (function () {
         this._zScale = 1;
         this._fsUIDirty = true;
         this._upAxis = "+y";
+        this._xRange = [0, 0];
+        this._yRange = [0, 0];
+        this._zRange = [0, 0];
         this.plots = [];
         this.ymax = 0;
         this.R = false;
         this.Python = false;
         this.shapeLegendTitle = "";
         this.animPaused = false;
-        this._uniqID = uuid_1.v4();
+        this._uniqID = (0, uuid_1.v4)();
         var opts = {
             backgroundColor: "#ffffffff",
             xScale: 1,
             yScale: 1,
             zScale: 1,
             turntable: false,
-            rotationRate: 0.01,
+            rotationRate: 0.005,
             shapeLegendTitle: "",
             upAxis: "+y",
+            workerPath: "./",
         };
         Object.assign(opts, options);
         this.turntable = opts.turntable;
         this.rotationRate = opts.rotationRate;
         this.shapeLegendTitle = opts.shapeLegendTitle;
+        this.workerPath = opts.workerPath;
         this._backgroundColor = opts.backgroundColor;
         this.canvas = document.getElementById(canvasElement);
         this._engine = new engine_1.Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -540,6 +545,7 @@ var Plots = (function () {
             publishBtn.title = "Publish the plot to bp.bleb.li.";
             this._buttonBar.appendChild(publishBtn);
         }
+        return this;
     };
     Plots.prototype._prepDownloadObj = function () {
         this._downloadObj["turntable"] = this.turntable;
@@ -678,8 +684,7 @@ var Plots = (function () {
                     plotName: document.getElementById("publishTitle_" + this._uniqID).value,
                     thumb: thumb_data
                 },
-            })
-                .then((function (response) {
+            }).then((function (_response) {
                 var msg = document.getElementById("publishMessage_" + this._uniqID);
                 msg.innerText = "Successfully published plot!";
                 msg.className = "message success";
@@ -732,10 +737,12 @@ var Plots = (function () {
     Plots.prototype.pauseAnimation = function () {
         this.animPaused = true;
         this._streamControlBtn.className = "button streamctrl play";
+        return this;
     };
     Plots.prototype.playAnimation = function () {
         this.animPaused = false;
         this._streamControlBtn.className = "button streamctrl pause";
+        return this;
     };
     Plots.prototype.toggleTurntable = function () {
         this.turntable = !this.turntable;
@@ -745,6 +752,7 @@ var Plots = (function () {
         else {
             this._turntableBtn.className = "button";
         }
+        return this;
     };
     Plots.prototype.setAnimationFrame = function () {
         for (var idx = 0; idx < this.plots.length; idx++) {
@@ -753,6 +761,7 @@ var Plots = (function () {
                 animPlot.goToFrame(parseInt(this._animationSlider.value));
             }
         }
+        return this;
     };
     Plots.prototype._toggleLoopAnimation = function () {
         if (this._loopingAnim) {
@@ -831,7 +840,7 @@ var Plots = (function () {
     Plots.prototype._afterRender = function () {
         if (this._recording) {
             if (this._turned === 0) {
-                var worker = "./";
+                var worker = this.workerPath;
                 if (this.R) {
                     worker = "lib/babyplots-1/";
                 }
@@ -871,7 +880,7 @@ var Plots = (function () {
                 var loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
                 loadingText.innerText = "Saving GIF...";
                 this._capturer.save((function (blob) {
-                    downloadjs_1.default(blob, "babyplots.gif", 'image/gif');
+                    (0, downloadjs_1.default)(blob, "babyplots.gif", 'image/gif');
                     document.getElementById("GIFloadingText_" + this._uniqID).remove();
                     document.getElementById("GIFloadingOverlay_" + this._uniqID).remove();
                 }).bind(this));
@@ -885,10 +894,18 @@ var Plots = (function () {
         }
     };
     Plots.prototype._cameraFitPlot = function (xRange, yRange, zRange) {
+        if (this.plots.length > 1) {
+            xRange = [Math.min(xRange[0], this._xRange[0]), Math.max(xRange[1], this._xRange[1])];
+            yRange = [Math.min(yRange[0], this._yRange[0]), Math.max(yRange[1], this._yRange[1])];
+            zRange = [Math.min(zRange[0], this._zRange[0]), Math.max(zRange[1], this._zRange[1])];
+        }
+        this._xRange = xRange;
+        this._yRange = yRange;
+        this._zRange = zRange;
         var xSize = xRange[1] - xRange[0];
         var ySize = yRange[1] - yRange[0];
         var zSize = zRange[1] - zRange[0];
-        var box = boxBuilder_1.BoxBuilder.CreateBox('bdbx', {
+        var box = (0, boxBuilder_1.CreateBox)('bdbx', {
             width: xSize, height: ySize, depth: zSize
         }, this.scene);
         var xCenter = xRange[1] - xSize / 2;
@@ -1024,31 +1041,31 @@ var Plots = (function () {
         };
         Object.assign(opts, options);
         if (opts.folded) {
-            logging_1.deprecationWarning("folded", "hasAnimation");
+            (0, logging_1.deprecationWarning)("folded", "hasAnimation");
             if (!opts.hasAnimation) {
                 opts.hasAnimation = opts.folded;
             }
         }
         if (opts.foldedEmbedding) {
-            logging_1.deprecationWarning("foldedEmbedding", "animationTargets");
+            (0, logging_1.deprecationWarning)("foldedEmbedding", "animationTargets");
             if (!opts.animationTargets) {
                 opts.animationTargets = opts.foldedEmbedding;
             }
         }
         if (opts.foldAnimDelay) {
-            logging_1.deprecationWarning("foldAnimDelay", "animationDelay");
+            (0, logging_1.deprecationWarning)("foldAnimDelay", "animationDelay");
             if (!opts.animationDelay) {
                 opts.animationDelay = opts.foldAnimDelay;
             }
         }
         if (opts.foldAnimDuration) {
-            logging_1.deprecationWarning("foldAnimDuration", "animationDuration");
+            (0, logging_1.deprecationWarning)("foldAnimDuration", "animationDuration");
             if (!opts.animationDuration) {
                 opts.animationDuration = opts.foldAnimDuration;
             }
         }
         if (opts.foldAnimLoop) {
-            logging_1.deprecationWarning("foldAnimLoop", "animationLoop");
+            (0, logging_1.deprecationWarning)("foldAnimLoop", "animationLoop");
             if (!opts.animationLoop) {
                 opts.animationLoop = opts.foldAnimLoop;
             }
@@ -1219,7 +1236,7 @@ var Plots = (function () {
             case "direct":
                 for (var i = 0; i < colorVar.length; i++) {
                     var cl = colorVar[i];
-                    cl = chroma_js_1.default(cl).hex();
+                    cl = (0, chroma_js_1.default)(cl).hex();
                     if (cl.length == 7) {
                         cl += "ff";
                     }
@@ -1819,15 +1836,8 @@ var Plots = (function () {
     };
     Plots.prototype.resize = function (width, height) {
         if (width !== undefined && height !== undefined) {
-            if (this.R) {
-                var pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
-                this.canvas.width = width - 2 * pad;
-                this.canvas.height = height - 2 * pad;
-            }
-            else {
-                this.canvas.width = width;
-                this.canvas.height = height;
-            }
+            this.canvas.width = width;
+            this.canvas.height = height;
         }
         this._fsUIDirty = true;
         this._resizePublishOverlay();
@@ -1836,6 +1846,7 @@ var Plots = (function () {
     };
     Plots.prototype.thumbnail = function (size, saveCallback) {
         screenshotTools_1.ScreenshotTools.CreateScreenshot(this._engine, this.camera, size, saveCallback);
+        return this;
     };
     Plots.prototype.dispose = function () {
         this.scene.dispose();
@@ -1857,6 +1868,7 @@ var Plots = (function () {
     };
     Plots.prototype.addLabels = function (labelList) {
         this._annotationManager.addLabels(labelList);
+        return this;
     };
     return Plots;
 }());

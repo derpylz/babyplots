@@ -98,15 +98,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deprecationWarning = exports.warn = void 0;
 function warn(text) {
-    console.log("%c" + text, "color:orange;");
+    console.log("%c".concat(text), "color:orange;");
 }
 exports.warn = warn;
 function deprecationWarning(deprecated, alternative) {
     if (alternative) {
-        warn("The use of \"" + deprecated + "\" is deprecated and might be removed in a future version. Please use \"" + alternative + "\" instead.");
+        warn("The use of \"".concat(deprecated, "\" is deprecated and might be removed in a future version. Please use \"").concat(alternative, "\" instead."));
     }
     else {
-        warn("The use of \"" + deprecated + "\" is deprecated and might be removed in a future version.");
+        warn("The use of \"".concat(deprecated, "\" is deprecated and might be removed in a future version."));
     }
 }
 exports.deprecationWarning = deprecationWarning;

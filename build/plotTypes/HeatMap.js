@@ -41,7 +41,7 @@ var HeatMap = (function (_super) {
                 var coord = rowCoords[column];
                 if (coord > 0) {
                     var height = coord * this.yScale;
-                    var box = boxBuilder_1.BoxBuilder.CreateBox("box_" + row + "-" + column, {
+                    var box = (0, boxBuilder_1.CreateBox)("box_" + row + "-" + column, {
                         height: height,
                         width: this.xScale * this._size,
                         depth: this.zScale * this._size
@@ -54,7 +54,7 @@ var HeatMap = (function (_super) {
                     boxes.push(box);
                 }
                 else {
-                    var box = planeBuilder_1.PlaneBuilder.CreatePlane("box_" + row + "-" + column, {
+                    var box = (0, planeBuilder_1.CreatePlane)("box_" + row + "-" + column, {
                         width: this.xScale * this._size,
                         height: this.zScale * this._size
                     }, this._scene);

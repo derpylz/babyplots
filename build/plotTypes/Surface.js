@@ -53,7 +53,7 @@ var Surface = (function (_super) {
         var colors = [];
         for (var i = 0; i < this._coordColors.length; i++) {
             var hex = this._coordColors[i];
-            var rgba = chroma_js_1.default(hex).rgba();
+            var rgba = (0, chroma_js_1.default)(hex).rgba();
             colors.push(rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3]);
         }
         var normals = [];
