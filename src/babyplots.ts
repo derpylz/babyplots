@@ -2363,15 +2363,6 @@ export class Plots {
      */
     resize(width?: number, height?: number): Plots {
         if (width !== undefined && height !== undefined) {
-            // if (this.R) {
-            //     let pad = parseInt(document.body.style.padding.substring(0, document.body.style.padding.length - 2));
-            //     this.canvas.width = width - 2 * pad;
-            //     this.canvas.height = height - 2 * pad;
-            // } else {
-            //     this.canvas.width = width;
-            //     this.canvas.height = height;
-            // }
-            
             this.canvas.width = width;
             this.canvas.height = height;
         }
