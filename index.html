@@ -8,8 +8,8 @@
   <script src="dist/CCapture.all.min.js"></script>
   <!-- <script src="dist/examples/surface.js"></script> -->
   <!-- <script src="dist/examples/heatMap.js"></script> -->
-  <!-- <script src="dist/examples/pointCloud.js"></script> -->
-  <script src="dist/examples/semantleExample.js"></script>
+  <script src="dist/examples/pointCloud.js"></script>
+  <!-- <script src="dist/examples/semantleExample.js"></script> -->
   <!-- <script src="dist/examples/shapeCloud.js"></script> -->
   <!-- <script src="dist/examples/shapeCloudInfo.js"></script> -->
   <!-- <script src="dist/examples/imagestack.js"></script> -->
@@ -38,10 +38,10 @@
   <script>
 
     var vis = new Baby.Plots("renderCanvas", {});
-    vis.fromJSON(semantleExampleData);
+    vis.fromJSON(pointCloudData);
     vis.turntable = true;
     vis.doRender();
-    vis.createButtons(["turntable", "json", "label"]);
+    vis.createButtons(["turntable", "json", "label", "record"]);
     window.onresize = function () {
       vis.resize();
     }

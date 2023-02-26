@@ -143,6 +143,10 @@ export declare class Plots {
     private _annotationManager;
     private _backgroundColor;
     private _recording;
+    private _recordingQuality;
+    private _recordingFrameRate;
+    private _recordingFileName;
+    private _origRotationRate;
     private _turned;
     private _capturer;
     private _wasTurning;
@@ -150,6 +154,7 @@ export declare class Plots {
     private _yScale;
     private _zScale;
     private _publishFormOverlay;
+    private _recordingFormOverlay;
     private _uniqID;
     private _shapeLegendPosition;
     private _fsUIDirty;
@@ -186,6 +191,7 @@ export declare class Plots {
     toggleTurntable(): Plots;
     setAnimationFrame(): Plots;
     private _toggleLoopAnimation;
+    private _createRecordingForm;
     private _startRecording;
     private _prepRender;
     private _afterRender;

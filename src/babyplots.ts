@@ -250,6 +250,10 @@ export class Plots {
     private _annotationManager: AnnotationManager;
     private _backgroundColor: string;
     private _recording: boolean = false;
+    private _recordingQuality: number = 50;
+    private _recordingFrameRate: number = 30;
+    private _recordingFileName: string = "babyplots.gif";
+    private _origRotationRate: number;
     private _turned: number = 0;
     private _capturer: CCapture;
     private _wasTurning: boolean = false;
@@ -257,6 +261,7 @@ export class Plots {
     private _yScale: number = 1;
     private _zScale: number = 1;
     private _publishFormOverlay: HTMLDivElement;
+    private _recordingFormOverlay: HTMLDivElement;
     private _uniqID: string;
     private _shapeLegendPosition: string;
     private _fsUIDirty: boolean = true;
@@ -673,7 +678,7 @@ export class Plots {
         if (whichBtns.indexOf("record") !== -1) {
             let recordBtn = document.createElement("div");
             recordBtn.className = "button";
-            recordBtn.onclick = this._startRecording.bind(this);
+            recordBtn.onclick = () => this._createRecordingForm();
             recordBtn.innerHTML = buttonSVGs.record;
             recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
@@ -986,6 +991,97 @@ export class Plots {
 
     }
 
+    
+    private _createRecordingForm() {
+        // do not create a new form if one already exists
+        if (this._recordingFormOverlay !== undefined) {
+            return;
+        }
+
+        let formOverlay = document.createElement("div");
+        formOverlay.id = "recordingFormOverlay_" + this._uniqID;
+        formOverlay.style.position = "absolute";
+        let r = this.canvas.getBoundingClientRect();
+        if (this.Python) {
+            // correctly position the form if the canvas is embedded in a Jupyter notebook
+            formOverlay.style.top = "0px";
+            formOverlay.style.left = "0px";
+            formOverlay.style.width = "100%";
+            formOverlay.style.height = "100%";
+        } else {
+            formOverlay.style.top = r.y + "px";
+            formOverlay.style.left = r.x + "px";
+            formOverlay.style.width = r.width + "px";
+            formOverlay.style.height = r.height + "px";
+        }
+        formOverlay.style.backgroundColor = "#ffffff66";
+        let formBox = document.createElement("div");
+        formBox.style.width = "275px";
+        formBox.style.margin = "42px auto";
+        formBox.style.backgroundColor = "white";
+        formBox.style.padding = "15px 30px";
+        formBox.style.borderRadius = "10px";
+        formBox.style.boxShadow = "0 0 10px #0003";
+        formBox.className = "bbp record-form"
+        formOverlay.appendChild(formBox);
+        let formInfo = document.createElement("p");
+        formInfo.innerText = "Create and download a GIF of your plot";
+        formInfo.className = "form-info";
+        formBox.appendChild(formInfo);
+        // options for naming the file and setting the quality of the GIF
+        let nameLabel = document.createElement("label");
+        nameLabel.id = "recordNameLabel_" + this._uniqID;
+        nameLabel.innerText = "File name:";
+        let nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.id = "recordNameInput_" + this._uniqID;
+        nameInput.value = "babyplots.gif";
+        let qualityLabel = document.createElement("label");
+        qualityLabel.id = "recordQualityLabel_" + this._uniqID;
+        qualityLabel.innerText = "Quality:";
+        // description of the quality option
+        let qualityInfo = document.createElement("small");
+        qualityInfo.innerText = "Higher quality GIFs will take longer to generate but reduce the flickering.";
+        let qualityInput = document.createElement("input");
+        qualityInput.id = "recordQualityInput_" + this._uniqID;
+        qualityInput.type = "range";
+        qualityInput.min = "1";
+        qualityInput.max = "100";
+        qualityInput.value = "50";
+        // buttons to start the recording or dismiss the form
+        let startBtn = document.createElement("button");
+        startBtn.id = "recordStartBtn_" + this._uniqID;
+        startBtn.innerText = "Start recording";
+        startBtn.className = "publish-btn";
+        startBtn.onclick = () => {
+            // set options for the recording
+            this._recordingFileName = nameInput.value;
+            this._recordingQuality = parseInt(qualityInput.value);
+            this._startRecording();
+            this._recordingFormOverlay.remove();
+            this._recordingFormOverlay = undefined;
+        }
+        let cancelBtn = document.createElement("button");
+        cancelBtn.id = "recordCancelBtn_" + this._uniqID;
+        cancelBtn.innerText = "Cancel";
+        cancelBtn.className = "close-btn";
+        cancelBtn.onclick = () => {
+            this._recordingFormOverlay.remove();
+            this._recordingFormOverlay = undefined;
+        }
+
+        // add all the elements to the form
+        formBox.appendChild(nameLabel);
+        formBox.appendChild(nameInput);
+        formBox.appendChild(qualityLabel);
+        formBox.appendChild(qualityInput);
+        formBox.appendChild(qualityInfo);
+        formBox.appendChild(startBtn);
+        formBox.appendChild(cancelBtn);
+        this._recordingFormOverlay = formOverlay;
+        this.canvas.parentNode.appendChild(formOverlay);
+    }
+
     /**
      * Start the gif recording.
      */
@@ -1077,14 +1173,19 @@ export class Plots {
                 }
                 this._capturer = new CCapture({
                     format: "gif",
-                    framerate: 30,
+                    framerate: this._recordingFrameRate,
+                    onProgress: (pct) => {
+                        let loadingProgress = document.getElementById("GIFloadingProgress_" + this._uniqID);
+                        loadingProgress.style.width = (pct * 100).toString() + "%";
+                    },
                     verbose: false,
                     display: false,
-                    quality: 50,
+                    quality: this._recordingQuality,
                     workersPath: worker
                 });
                 // create capturer, enable turning
                 this._capturer.start();
+                this._origRotationRate = this.rotationRate;
                 this.rotationRate = 0.02;
                 // to return turntable option to its initial state after recording
                 if (this.turntable) {
@@ -1095,11 +1196,22 @@ export class Plots {
                 let loadingOverlay = document.createElement("div");
                 loadingOverlay.className = "bbp overlay";
                 loadingOverlay.id = "GIFloadingOverlay_" + this._uniqID;
+                let loadingBox = document.createElement("div");
+                loadingBox.className = "bbp loading-box";
                 let loadingText = document.createElement("h5");
-                loadingText.className = ".loading-message";
+                loadingText.className = "loading-message";
                 loadingText.innerText = "Recording GIF...";
                 loadingText.id = "GIFloadingText_" + this._uniqID;
-                loadingOverlay.appendChild(loadingText);
+                let loadingProgressContainer = document.createElement("div");
+                loadingProgressContainer.className = "loading-progress-container";
+                let loadingProgress = document.createElement("div");
+                loadingProgress.className = "loading-progress";
+                loadingProgress.style.width = "0%";
+                loadingProgress.id = "GIFloadingProgress_" + this._uniqID;
+                loadingProgressContainer.appendChild(loadingProgress);
+                loadingBox.appendChild(loadingText);
+                loadingBox.appendChild(loadingProgressContainer);
+                loadingOverlay.appendChild(loadingBox);
                 this.canvas.parentNode.appendChild(loadingOverlay);
             }
             // recording in progress:
@@ -1107,19 +1219,22 @@ export class Plots {
                 // while recording, count rotation and capture screenshots
                 this._turned += this.rotationRate;
                 this._capturer.capture(this.canvas);
+                let loadingProgress = document.getElementById("GIFloadingProgress_" + this._uniqID);
+                loadingProgress.style.width = (this._turned / (2 * Math.PI) * 100).toString() + "%";
             } else {
                 // after capturing 360°, stop capturing and save gif
                 this._recording = false;
                 this._capturer.stop();
+                let loadingProgress = document.getElementById("GIFloadingProgress_" + this._uniqID);
+                loadingProgress.style.width = "0%";
                 let loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
                 loadingText.innerText = "Saving GIF...";
-                this._capturer.save((function (blob) {
-                    download(blob, "babyplots.gif", 'image/gif');
-                    document.getElementById("GIFloadingText_" + this._uniqID).remove();
+                this._capturer.save((blob) => {
+                    download(blob, this._recordingFileName, 'image/gif');
                     document.getElementById("GIFloadingOverlay_" + this._uniqID).remove();
-                }).bind(this));
+                });
                 this._turned = 0;
-                this.rotationRate = 0.01;
+                this.rotationRate = this._origRotationRate;
                 this._hl2.diffuse = new Color3(0.8, 0.8, 0.8);
                 if (!this._wasTurning) {
                     this.turntable = false;
