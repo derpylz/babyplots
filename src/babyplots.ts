@@ -129,6 +129,10 @@ export class CustomLoadingScreen implements ILoadingScreen {
     }
 }
 
+interface CustomCCaptureSettings extends CCapture.Settings {
+  onProgress: (pct: any) => void;
+}
+
 declare global {
     interface Array<T> {
         min(): number;
@@ -1182,7 +1186,7 @@ export class Plots {
                     display: false,
                     quality: this._recordingQuality,
                     workersPath: worker
-                });
+                } as CustomCCaptureSettings);
                 // create capturer, enable turning
                 this._capturer.start();
                 this._origRotationRate = this.rotationRate;
