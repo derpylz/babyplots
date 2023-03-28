@@ -133,14 +133,7 @@ interface CustomCCaptureSettings extends CCapture.Settings {
   onProgress: (pct: any) => void;
 }
 
-declare global {
-    interface Array<T> {
-        min(): number;
-        max(): number;
-    }
-}
-
-Array.prototype.min = function (): number {
+export function getArrayMin(arr: Array<number | string>): number {
     if (this.length > 65536) {
         let r = this[0];
         this.forEach(function (v: number, _i: any, _a: any) { if (v < r) r = v; });
@@ -148,9 +141,10 @@ Array.prototype.min = function (): number {
     } else {
         return Math.min.apply(null, this);
     }
+
 }
 
-Array.prototype.max = function (): number {
+export function getArrayMax(arr: Array<number | string>): number {
     if (this.length > 65536) {
         let r = this[0];
         this.forEach(function (v: number, _i: any, _a: any) { if (v > r) r = v; });
@@ -161,14 +155,14 @@ Array.prototype.max = function (): number {
 }
 
 export function matrixMax(matrix: number[][]): number {
-    let maxRow = matrix.map(function (row) { return row.max(); });
-    let max = maxRow.max();
+    let maxRow = matrix.map(function (row) { return getArrayMax(row); });
+    let max = getArrayMax(maxRow);
     return max
 }
 
 export function matrixMin(matrix: number[][]): number {
-    let minRow = matrix.map(function (row) { return row.min(); });
-    let min = minRow.min();
+    let minRow = matrix.map(function (row) { return getArrayMin(row); });
+    let min = getArrayMin(minRow);
     return min
 }
 
@@ -1624,8 +1618,8 @@ export class Plots {
                 break;
             case "values":
                 // color by a continuous variable
-                let min = colorVar.min();
-                let max = colorVar.max();
+                let min = getArrayMin(colorVar);
+                let max = getArrayMax(colorVar);
                 // Oranges is default color scale for continuous variable coloring
                 let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
                 // check if color scale should be custom
