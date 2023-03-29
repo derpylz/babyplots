@@ -134,23 +134,23 @@ interface CustomCCaptureSettings extends CCapture.Settings {
 }
 
 export function getArrayMin(arr: Array<number | string>): number {
-    if (this.length > 65536) {
+    if (arr.length > 65536) {
         let r = this[0];
-        this.forEach(function (v: number, _i: any, _a: any) { if (v < r) r = v; });
+        arr.forEach(function (v: number, _i: any, _a: any) { if (v < r) r = v; });
         return r;
     } else {
-        return Math.min.apply(null, this);
+        return Math.min.apply(null, arr);
     }
 
 }
 
 export function getArrayMax(arr: Array<number | string>): number {
-    if (this.length > 65536) {
+    if (arr.length > 65536) {
         let r = this[0];
-        this.forEach(function (v: number, _i: any, _a: any) { if (v > r) r = v; });
+        arr.forEach(function (v: number, _i: any, _a: any) { if (v > r) r = v; });
         return r;
     } else {
-        return Math.max.apply(null, this);
+        return Math.max.apply(null, arr);
     }
 }
 
