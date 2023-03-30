@@ -36,7 +36,7 @@ export class Surface extends CoordinatePlot {
         xScale: number = 1,
         yScale: number = 1,
         zScale: number = 1,
-        name: string = "surface"
+        name: string = "surface",
     ) {
         super(name, "surface", scene, coordinates, colorVar, size, legendData, xScale, yScale, zScale);
         this._createSurface();
@@ -86,10 +86,23 @@ export class Surface extends CoordinatePlot {
         mat.alpha = 1;
         surface.material = mat;
         this.mesh = surface;
-        Object.defineProperty(this, "alpha", {
-            set(newAlpha) {
-                this.mesh.material.alpha = newAlpha;
-            }
-        });
+
+        var propertyDescriptor = Object.getOwnPropertyDescriptor(this, "alpha");
+         if (!propertyDescriptor) {
+            Object.defineProperty(this, "alpha", {
+                set(newAlpha) {
+                    this.mesh.material.alpha = newAlpha;
+                }
+            });
+        }
+    }
+
+    updateProperties(coordinates: number[][], colors: string[], legendData: LegendData): void {
+       this.mesh.dispose();
+
+       this._coords = coordinates;
+       this._coordColors = colors;
+       this.legendData = legendData;
+       this._createSurface();
     }
 }

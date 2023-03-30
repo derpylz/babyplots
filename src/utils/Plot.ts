@@ -67,6 +67,7 @@ export abstract class Plot {
 
     goToFrame(n: number): void { }
     update(): boolean { return false }
+    updateProperties(coordinates: number[][], colors: string[], legendData: LegendData): void { }
     resetAnimation(): void { }
     setLooping(looping: boolean): void { }
     dispose(): void {
