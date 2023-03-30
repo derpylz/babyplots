@@ -101,10 +101,13 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
-import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 import chroma from "chroma-js";
 import download from "downloadjs";
 import { v4 as uuidv4 } from "uuid";
@@ -267,6 +270,7 @@ export class Plots {
     private _xRange: number[] = [0, 0];
     private _yRange: number[] = [0, 0];
     private _zRange: number[] = [0, 0];
+    private _highlightSphere: Mesh
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -415,6 +419,17 @@ export class Plots {
         this._animationSlider = animRange;
         this._buttonBar.appendChild(animRange);
 
+        // setup point selection
+        this._highlightSphere = CreateSphere(
+            "highlightSphere",
+            { diameter: 0.0001 * (this.canvas.height + this.canvas.width) }
+        );
+        this._highlightSphere.isVisible = false;
+        var material = new StandardMaterial("highlightSphereMat", this.scene);
+        material.alpha = 1;
+        material.diffuseColor = new Color3(1, 0, 0);
+        this._highlightSphere.material = material;
+
         this._streamControlBtn = streamCtrlBtn;
 
         // prepare download object
@@ -422,19 +437,39 @@ export class Plots {
             plots: []
         };
 
-        this.scene.onPointerPick = (function (_evt: any, pickResult: PickingInfo) {
-            // (this as Plots)._annotationManager.clearInfo();
-            for (let i = 0; i < (this as Plots).plots.length; i++) {
-                let plot = (this as Plots).plots[i];
-                if (!plot.pickable) {
-                    continue;
-                }
-                if (pickResult.pickedMesh === plot.mesh && (plot as CoordinatePlot).dpInfo) {
-                    let pick = (plot as CoordinatePlot).getPick(pickResult);
-                    (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
-                }
+        this.scene.onPointerObservable.add((pointerInfo: PointerInfo) => {
+            switch (pointerInfo.type) {
+                case PointerEventTypes.POINTERPICK:
+                    let pickInfo = pointerInfo.pickInfo;
+                    for (let i = 0; i < this.plots.length; i++) {
+                        let plot = this.plots[i];
+                        if (!plot.pickable) {
+                            continue;
+                        }
+
+                        if (pointerInfo.event.button == 0) { // Left mouse button
+                            if (pickInfo.pickedMesh === plot.mesh) {
+                                this._highlightSphere.isVisible = true;
+                                let pick = (plot as CoordinatePlot).getPick(pickInfo);
+                                this._highlightSphere.position = new Vector3(
+                                    pickInfo.pickedPoint.x,
+                                    pickInfo.pickedPoint.y,
+                                    pickInfo.pickedPoint.z
+                                );
+                            }
+                        }
+
+                        if (pickInfo.pickedMesh === plot.mesh && (plot as CoordinatePlot).dpInfo) {
+                            let pick = (plot as CoordinatePlot).getPick(pickInfo);
+                            (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
+                        }
+                    }
+                case PointerEventTypes.POINTERDOWN:
+                    if (pointerInfo.event.button == 2) { // Right mouse button
+                        this._highlightSphere.isVisible = false;
+                    }
             }
-        }).bind(this);
+        });
     }
 
     /**

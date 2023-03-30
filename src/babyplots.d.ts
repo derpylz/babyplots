@@ -158,6 +158,7 @@ export declare class Plots {
     private _xRange;
     private _yRange;
     private _zRange;
+    private _highlightSphere;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
