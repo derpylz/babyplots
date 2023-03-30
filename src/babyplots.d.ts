@@ -195,8 +195,6 @@ export declare class Plots {
     addImgStack(values: number[], indices: number[], attributes: {
         dim: number[];
     }, options: {}): Plots;
-    private _parseOptions;
-    private _getColorsAndLegend;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     addMeshObject(meshString: string, options: {}): Plots;
     addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
@@ -204,12 +202,10 @@ export declare class Plots {
     private _drawStandaloneShapeLegend;
     private _createPlotLegend;
     private _createShapeLegend;
-    private: any;
     doRender(): Plots;
     resize(width?: number, height?: number): Plots;
     thumbnail(size: number, saveCallback: (data: string) => void): Plots;
     dispose(): void;
     removePlot(index: number): Plots;
     addLabels(labelList: [[number, number, number, string, string?, number?]]): Plots;
-    update(index: number, coordinates: number[][], colorBy: string, colorVar: string[] | number[], options?: {}): void;
 }
