@@ -2086,11 +2086,16 @@ export class Plots {
      */
     private _updateLegend(uiLayer: AdvancedDynamicTexture): void {
         if (this._legend) {
-            let descendants = uiLayer.getDescendants();
-
-            for (var i = 0; i < descendants.length; i++) {
-                var control = descendants[i];
+            let descendantsUiLayer = uiLayer.getDescendants();
+            for (var i = 0; i < descendantsUiLayer.length; i++) {
+                var control = descendantsUiLayer[i];
                 uiLayer.removeControl(control);
+            }
+
+            let descendantsLegend = this._legend.getDescendants();
+            for (var i = 0; i < descendantsLegend.length; i++) {
+                var control = descendantsLegend[i];
+                this._legend.removeControl(control);
             }
         }
 
