@@ -2085,7 +2085,14 @@ export class Plots {
      * Creates a color legend for the plots
      */
     private _updateLegend(uiLayer: AdvancedDynamicTexture): void {
-        if (this._legend) { this._legend.dispose(); }
+        if (this._legend) {
+            let descendants = uiLayer.getDescendants();
+
+            for (var i = 0; i < descendants.length; i++) {
+                var control = descendants[i];
+                uiLayer.removeControl(control);
+            }
+        }
 
         let rightFree = true;
         let leftFree = true;
