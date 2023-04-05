@@ -99,12 +99,16 @@ import { Scene } from "@babylonjs/core/scene";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Vector3, Color4, Color3 } from "@babylonjs/core/Maths/math";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Rectangle, TextBlock, Grid, Control, Image } from "@babylonjs/gui/2D/controls";
 import { ScreenshotTools } from "@babylonjs/core/Misc/screenshotTools";
 import { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 import chroma from "chroma-js";
 import download from "downloadjs";
 import { v4 as uuidv4 } from "uuid";
@@ -129,42 +133,40 @@ export class CustomLoadingScreen implements ILoadingScreen {
     }
 }
 
-declare global {
-    interface Array<T> {
-        min(): number;
-        max(): number;
-    }
+interface CustomCCaptureSettings extends CCapture.Settings {
+  onProgress: (pct: any) => void;
 }
 
-Array.prototype.min = function (): number {
-    if (this.length > 65536) {
+export function getArrayMin(arr: Array<number | string>): number {
+    if (arr.length > 65536) {
         let r = this[0];
-        this.forEach(function (v: number, _i: any, _a: any) { if (v < r) r = v; });
+        arr.forEach(function (v: number, _i: any, _a: any) { if (v < r) r = v; });
         return r;
     } else {
-        return Math.min.apply(null, this);
+        return Math.min.apply(null, arr);
     }
+
 }
 
-Array.prototype.max = function (): number {
-    if (this.length > 65536) {
+export function getArrayMax(arr: Array<number | string>): number {
+    if (arr.length > 65536) {
         let r = this[0];
-        this.forEach(function (v: number, _i: any, _a: any) { if (v > r) r = v; });
+        arr.forEach(function (v: number, _i: any, _a: any) { if (v > r) r = v; });
         return r;
     } else {
-        return Math.max.apply(null, this);
+        return Math.max.apply(null, arr);
     }
 }
 
 export function matrixMax(matrix: number[][]): number {
-    let maxRow = matrix.map(function (row) { return row.max(); });
-    let max = maxRow.max();
+    let maxRow = matrix.map(function (row) { return getArrayMax(row); });
+    let max = getArrayMax(maxRow);
     return max
 }
 
 export function matrixMin(matrix: number[][]): number {
-    let minRow = matrix.map(function (row) { return row.min(); });
-    let min = minRow.min();
+    let minRow = matrix.map(function (row) { return getArrayMin(row); });
+    let min = getArrayMin(minRow);
     return min
 }
 
@@ -269,6 +271,7 @@ export class Plots {
     private _xRange: number[] = [0, 0];
     private _yRange: number[] = [0, 0];
     private _zRange: number[] = [0, 0];
+    private _highlightSphere: Mesh;
 
     /** HTML canvas element for this babyplots visualization. */
     canvas: HTMLCanvasElement;
@@ -417,6 +420,17 @@ export class Plots {
         this._animationSlider = animRange;
         this._buttonBar.appendChild(animRange);
 
+        // setup point selection sphere
+        this._highlightSphere = CreateSphere(
+            "highlightSphere",
+            { diameter: 0.0001 * (this.canvas.height + this.canvas.width) }
+        );
+        this._highlightSphere.isVisible = false;
+        var material = new StandardMaterial("highlightSphereMat", this.scene);
+        material.alpha = 1;
+        material.diffuseColor = new Color3(1, 0, 0);
+        this._highlightSphere.material = material;
+
         this._streamControlBtn = streamCtrlBtn;
 
         // prepare download object
@@ -424,19 +438,39 @@ export class Plots {
             plots: []
         };
 
-        this.scene.onPointerPick = (function (_evt: any, pickResult: PickingInfo) {
-            // (this as Plots)._annotationManager.clearInfo();
-            for (let i = 0; i < (this as Plots).plots.length; i++) {
-                let plot = (this as Plots).plots[i];
-                if (!plot.pickable) {
-                    continue;
-                }
-                if (pickResult.pickedMesh === plot.mesh && (plot as CoordinatePlot).dpInfo) {
-                    let pick = (plot as CoordinatePlot).getPick(pickResult);
-                    (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
-                }
+        this.scene.onPointerObservable.add((pointerInfo: PointerInfo) => {
+            switch (pointerInfo.type) {
+                case PointerEventTypes.POINTERPICK:
+                    let pickInfo = pointerInfo.pickInfo;
+                    for (let i = 0; i < this.plots.length; i++) {
+                        let plot = this.plots[i];
+                        if (!plot.pickable) {
+                            continue;
+                        }
+
+                        if (pointerInfo.event.button == 0) { // Left mouse button
+                            if (pickInfo.pickedMesh === plot.mesh) {
+                                this._highlightSphere.isVisible = true;
+                                let pick = (plot as CoordinatePlot).getPick(pickInfo);
+                                this._highlightSphere.position = new Vector3(
+                                    pickInfo.pickedPoint.x,
+                                    pickInfo.pickedPoint.y,
+                                    pickInfo.pickedPoint.z
+                                );
+                            }
+                        }
+
+                        if (pickInfo.pickedMesh === plot.mesh && (plot as CoordinatePlot).dpInfo) {
+                            let pick = (plot as CoordinatePlot).getPick(pickInfo);
+                            (this as Plots)._annotationManager.displayInfo(pick.info, pick.target);
+                        }
+                    }
+                case PointerEventTypes.POINTERDOWN:
+                    if (pointerInfo.event.button == 2) { // Right mouse button
+                        this._highlightSphere.isVisible = false;
+                    }
             }
-        }).bind(this);
+        });
     }
 
     /**
@@ -1182,7 +1216,7 @@ export class Plots {
                     display: false,
                     quality: this._recordingQuality,
                     workersPath: worker
-                });
+                } as CustomCCaptureSettings);
                 // create capturer, enable turning
                 this._capturer.start();
                 this._origRotationRate = this.rotationRate;
@@ -1390,24 +1424,7 @@ export class Plots {
         return this;
     }
 
-    /**
-     * Creates a plot and adds it to the Plots object to visualize it in a canvas. The plot types section below enumerates the different kinds of visualizations that can be created using this method.
-     * 
-     * @param coordinates An array of arrays with coordinates of data points.
-     * @param plotType The name of one of the plot types. Either "pointCloud", "heatMap", or "surface".
-     * @param colorBy How to interpret the colorVar parameter, either "direct", "categories", or "values". If colorVar is an array of hex strings, colorBy should be "direct". If colorVar is an array of discrete values (e.g. category names), colorBy should be "categories". If colorVar is an array of continuous values, colorBy should be "values".
-     * @param colorVar an array of hex strings, category names, or values, corresponding to the data points in the coordinates parameter.
-     * @param options An object with general and plot type specific options.
-     * 
-     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addPlot).
-     */
-    addPlot(
-        coordinates: number[][],
-        plotType: string,
-        colorBy: string,
-        colorVar: string[] | number[],
-        options = {}
-    ): Plots {
+    private _parseOptions(options: {}) {
         // default options
         let opts = {
             name: null,
@@ -1456,6 +1473,178 @@ export class Plots {
         }
         // apply user options
         Object.assign(opts, options);
+
+        return opts;
+    }
+
+    private _getColorsAndLegend(options, colorBy: string,  colorVar: string[] | number[]): [string[], LegendData] {
+        let coordColors: string[] = [];
+        let legendData: LegendData;
+
+        switch (colorBy) {
+            case "categories":
+                // color plot by discrete categories
+                let groups = colorVar as string[];
+                let uniqueGroups = getUniqueVals(groups);
+                // sortedCategories can contain an array of category names to order the groups for coloring.
+                // sortedCategories must be of same length as unique groups in colorVar.
+                // if no custom ordering is performed through sortedCategories, groups will be sorted alphabetically.
+                uniqueGroups.sort();
+                if (options.sortedCategories) {
+                    if (uniqueGroups.length === options.sortedCategories.length) {
+                        // sortedCategories must contain the same category names as those present in colorVar.
+                        if (JSON.stringify(uniqueGroups) === JSON.stringify(options.sortedCategories.slice(0).sort())) {
+                            uniqueGroups = options.sortedCategories;
+                        }
+                    }
+                }
+                let nColors = uniqueGroups.length;
+                // Paired is default color scale for discrete variable coloring
+                let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);
+                // check if color scale should be custom
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
+                        } else {
+                            colors = chroma.scale(options.customColorScale).mode('lch').colors(nColors);
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if custom color scale is invalid
+                        options.colorScale = "Paired";
+                    }
+                } else {
+                    // check if user selected color scale is a valid chromajs color brewer name
+                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                        } else {
+                            colors = chroma.scale(chroma.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if user selected is not valid
+                        options.colorScale = "Paired";
+                    }
+                }
+                for (let i = 0; i < nColors; i++) {
+                    colors[i] += "ff";
+                }
+                // apply colors to plot points
+                for (let i = 0; i < colorVar.length; i++) {
+                    let colorIndex = uniqueGroups.indexOf(groups[i]);
+                    coordColors.push(colors[colorIndex]);
+                }
+                // prepare object for legend drawing
+                legendData = {
+                    showLegend: options.showLegend,
+                    discrete: true,
+                    breaks: uniqueGroups,
+                    colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
+                    inverted: false,
+                    position: options.legendPosition
+                }
+                break;
+            case "values":
+                // color by a continuous variable
+                let min = getArrayMin(colorVar);
+                let max = getArrayMax(colorVar);
+                // Oranges is default color scale for continuous variable coloring
+                let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
+                // check if color scale should be custom
+                if (options.colorScale === "custom") {
+                    // check if custom color scale is valid
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colorfunc = chroma.scale(options.customColorScale).domain([1, 0]).mode('lch');
+                        } else {
+                            colorfunc = chroma.scale(options.customColorScale).mode('lch');
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if custom color scale is invalid
+                        options.colorScale = "Oranges";
+                    }
+                } else {
+                    // check if user selected color scale is a valid chromajs color brewer name
+                    if (options.colorScale && chroma.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                        } else {
+                            colorfunc = chroma.scale(chroma.brewer[options.colorScale]).mode('lch');
+                        }
+                    } else {
+                        // set colorScale variable to default for legend if user selected is not valid
+                        options.colorScale = "Oranges";
+                    }
+                }
+                // normalize the values to 0-1 range
+                let norm = (colorVar as number[]).slice().map(v => (v - min) / (max - min));
+                // apply colors to plot points
+                coordColors = norm.map(v => colorfunc(v).alpha(1).hex("rgba"));
+                // prepare object for legend drawing
+                legendData = {
+                    showLegend: options.showLegend,
+                    discrete: false,
+                    breaks: [min.toString(), max.toString()],
+                    colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
+                    inverted: options.colorScaleInverted,
+                    position: options.legendPosition
+                }
+                break;
+            case "direct":
+                // color by color hex strings in colorVar
+                for (let i = 0; i < colorVar.length; i++) {
+                    let cl = colorVar[i];
+                    cl = chroma(cl).hex();
+                    if (cl.length == 7) {
+                        cl += "ff";
+                    }
+                    coordColors.push(cl);
+                }
+                // prepare object for legend drawing
+                legendData = {
+                    showLegend: false,
+                    discrete: false,
+                    breaks: [],
+                    colorScale: "",
+                    customColorScale: options.customColorScale,
+                    inverted: false,
+                    position: options.legendPosition
+                }
+                break;
+        }
+        // add remaining properties to legend object
+        legendData.fontSize = options.fontSize;
+        legendData.fontColor = options.fontColor;
+        legendData.legendTitle = options.legendTitle;
+        legendData.legendTitleFontSize = options.legendTitleFontSize;
+        legendData.legendTitleFontColor = options.legendTitleFontColor;
+        legendData.showShape = options.legendShowShape;
+
+        return [coordColors, legendData]
+    }
+
+    /**
+     * Creates a plot and adds it to the Plots object to visualize it in a canvas. The plot types section below enumerates the different kinds of visualizations that can be created using this method.
+     *
+     * @param coordinates An array of arrays with coordinates of data points.
+     * @param plotType The name of one of the plot types. Either "pointCloud", "heatMap", or "surface".
+     * @param colorBy How to interpret the colorVar parameter, either "direct", "categories", or "values". If colorVar is an array of hex strings, colorBy should be "direct". If colorVar is an array of discrete values (e.g. category names), colorBy should be "categories". If colorVar is an array of continuous values, colorBy should be "values".
+     * @param colorVar an array of hex strings, category names, or values, corresponding to the data points in the coordinates parameter.
+     * @param options An object with general and plot type specific options.
+     *
+     * Find a list of possible options [here](https://bp.bleb.li/documentation/js#addPlot).
+     */
+    addPlot(
+        coordinates: number[][],
+        plotType: string,
+        colorBy: string,
+        colorVar: string[] | number[],
+        options = {}
+    ): Plots {
+        var opts = this._parseOptions(options);
+
         // warnings for deprecated animation option names
         // keeping these for a while to not break compatibility, but suggest using the new option names
         if (opts.folded) {
@@ -1530,12 +1719,8 @@ export class Plots {
             labelColor: opts.labelColor
         })
 
-        let coordColors: string[] = [];
-        var legendData: LegendData;
-        let rangeX: number[];
-        let rangeY: number[];
-        let rangeZ: number[];
         this._hasAnim = this._hasAnim || opts.hasAnimation;
+
         if (opts.hasAnimation) {
             let replayBtn = document.createElement("div");
             replayBtn.className = "button"
@@ -1554,150 +1739,16 @@ export class Plots {
             this._loopBtn = loopBtn;
         }
 
-        switch (colorBy) {
-            case "categories":
-                // color plot by discrete categories
-                let groups = colorVar as string[];
-                let uniqueGroups = getUniqueVals(groups);
-                // sortedCategories can contain an array of category names to order the groups for coloring.
-                // sortedCategories must be of same length as unique groups in colorVar.
-                // if no custom ordering is performed through sortedCategories, groups will be sorted alphabetically.
-                uniqueGroups.sort();
-                if (opts.sortedCategories) {
-                    if (uniqueGroups.length === opts.sortedCategories.length) {
-                        // sortedCategories must contain the same category names as those present in colorVar.
-                        if (JSON.stringify(uniqueGroups) === JSON.stringify(opts.sortedCategories.slice(0).sort())) {
-                            uniqueGroups = opts.sortedCategories;
-                        }
-                    }
-                }
-                let nColors = uniqueGroups.length;
-                // Paired is default color scale for discrete variable coloring
-                let colors = chroma.scale(chroma.brewer.Paired).mode('lch').colors(nColors);
-                // check if color scale should be custom
-                if (opts.colorScale === "custom") {
-                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
-                        if (opts.colorScaleInverted) {
-                            colors = chroma.scale(opts.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
-                        } else {
-                            colors = chroma.scale(opts.customColorScale).mode('lch').colors(nColors);
-                        }
-                    } else {
-                        // set colorScale variable to default for legend if custom color scale is invalid
-                        opts.colorScale = "Paired";
-                    }
-                } else {
-                    // check if user selected color scale is a valid chromajs color brewer name
-                    if (opts.colorScale && chroma.brewer.hasOwnProperty(opts.colorScale)) {
-                        if (opts.colorScaleInverted) {
-                            colors = chroma.scale(chroma.brewer[opts.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
-                        } else {
-                            colors = chroma.scale(chroma.brewer[opts.colorScale]).mode('lch').colors(nColors);
-                        }
-                    } else {
-                        // set colorScale variable to default for legend if user selected is not valid
-                        opts.colorScale = "Paired";
-                    }
-                }
-                for (let i = 0; i < nColors; i++) {
-                    colors[i] += "ff";
-                }
-                // apply colors to plot points
-                for (let i = 0; i < colorVar.length; i++) {
-                    let colorIndex = uniqueGroups.indexOf(groups[i]);
-                    coordColors.push(colors[colorIndex]);
-                }
-                // prepare object for legend drawing
-                legendData = {
-                    showLegend: opts.showLegend,
-                    discrete: true,
-                    breaks: uniqueGroups,
-                    colorScale: opts.colorScale,
-                    customColorScale: opts.customColorScale,
-                    inverted: false,
-                    position: opts.legendPosition
-                }
-                break;
-            case "values":
-                // color by a continuous variable
-                let min = colorVar.min();
-                let max = colorVar.max();
-                // Oranges is default color scale for continuous variable coloring
-                let colorfunc = chroma.scale(chroma.brewer.Oranges).mode('lch');
-                // check if color scale should be custom
-                if (opts.colorScale === "custom") {
-                    // check if custom color scale is valid
-                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
-                        if (opts.colorScaleInverted) {
-                            colorfunc = chroma.scale(opts.customColorScale).domain([1, 0]).mode('lch');
-                        } else {
-                            colorfunc = chroma.scale(opts.customColorScale).mode('lch');
-                        }
-                    } else {
-                        // set colorScale variable to default for legend if custom color scale is invalid
-                        opts.colorScale = "Oranges";
-                    }
-                } else {
-                    // check if user selected color scale is a valid chromajs color brewer name
-                    if (opts.colorScale && chroma.brewer.hasOwnProperty(opts.colorScale)) {
-                        if (opts.colorScaleInverted) {
-                            colorfunc = chroma.scale(chroma.brewer[opts.colorScale]).domain([1, 0]).mode('lch');
-                        } else {
-                            colorfunc = chroma.scale(chroma.brewer[opts.colorScale]).mode('lch');
-                        }
-                    } else {
-                        // set colorScale variable to default for legend if user selected is not valid
-                        opts.colorScale = "Oranges";
-                    }
-                }
-                // normalize the values to 0-1 range
-                let norm = (colorVar as number[]).slice().map(v => (v - min) / (max - min));
-                // apply colors to plot points
-                coordColors = norm.map(v => colorfunc(v).alpha(1).hex("rgba"));
-                // prepare object for legend drawing
-                legendData = {
-                    showLegend: opts.showLegend,
-                    discrete: false,
-                    breaks: [min.toString(), max.toString()],
-                    colorScale: opts.colorScale,
-                    customColorScale: opts.customColorScale,
-                    inverted: opts.colorScaleInverted,
-                    position: opts.legendPosition
-                }
-                break;
-            case "direct":
-                // color by color hex strings in colorVar
-                for (let i = 0; i < colorVar.length; i++) {
-                    let cl = colorVar[i];
-                    cl = chroma(cl).hex();
-                    if (cl.length == 7) {
-                        cl += "ff";
-                    }
-                    coordColors.push(cl);
-                }
-                // prepare object for legend drawing
-                legendData = {
-                    showLegend: false,
-                    discrete: false,
-                    breaks: [],
-                    colorScale: "",
-                    customColorScale: opts.customColorScale,
-                    inverted: false,
-                    position: opts.legendPosition
-                }
-                break;
-        }
-        // add remaining properties to legend object
-        legendData.fontSize = opts.fontSize;
-        legendData.fontColor = opts.fontColor;
-        legendData.legendTitle = opts.legendTitle;
-        legendData.legendTitleFontSize = opts.legendTitleFontSize;
-        legendData.legendTitleFontColor = opts.legendTitleFontColor;
-        legendData.showShape = opts.legendShowShape;
+        let [coordColors, legendData] = this._getColorsAndLegend(opts, colorBy, colorVar);
 
         let plot: Plot;
         let scale: number[];
+        let rangeX: number[];
+        let rangeY: number[];
+        let rangeZ: number[];
+
         let boundingBox: BoundingBox;
+
         switch (plotType) {
             case "pointCloud":
                 plot = new PointCloud(
@@ -2034,7 +2085,19 @@ export class Plots {
      * Creates a color legend for the plots
      */
     private _updateLegend(uiLayer: AdvancedDynamicTexture): void {
-        if (this._legend) { this._legend.dispose(); }
+        if (this._legend) {
+            let descendantsUiLayer = uiLayer.getDescendants();
+            for (var i = 0; i < descendantsUiLayer.length; i++) {
+                var control = descendantsUiLayer[i];
+                uiLayer.removeControl(control);
+            }
+
+            let descendantsLegend = this._legend.getDescendants();
+            for (var i = 0; i < descendantsLegend.length; i++) {
+                var control = descendantsLegend[i];
+                this._legend.removeControl(control);
+            }
+        }
 
         let rightFree = true;
         let leftFree = true;
@@ -2531,4 +2594,33 @@ export class Plots {
         return this;
     }
 
+    update(index: number, coordinates: number[][], colorBy: string, colorVar: string[] | number[], options = {}): void {
+        let plot = this.plots[index];
+        if (plot === undefined) return;
+
+        let opts = this._parseOptions(options);
+
+        let [coordColors, legendData] = this._getColorsAndLegend(opts, colorBy, colorVar);
+
+        plot.updateProperties(coordinates, coordColors, legendData);
+
+        let boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+        let rangeX = [
+            boundingBox.minimumWorld.x,
+            boundingBox.maximumWorld.x
+        ]
+        let rangeY = [
+            boundingBox.minimumWorld.y,
+            boundingBox.maximumWorld.y
+        ]
+        let rangeZ = [
+            boundingBox.minimumWorld.z,
+            boundingBox.maximumWorld.z
+        ]
+
+        this._annotationManager.update();
+        this._axes[0].axisData.range = [rangeX, rangeY, rangeZ]
+        this._axes[0].update(this.camera, true);
+        this._updateLegend(this.uiLayer);
+    }
 }

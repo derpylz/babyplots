@@ -104,12 +104,8 @@ export declare class CustomLoadingScreen implements ILoadingScreen {
     displayLoadingUI(): void;
     hideLoadingUI(): void;
 }
-declare global {
-    interface Array<T> {
-        min(): number;
-        max(): number;
-    }
-}
+export declare function getArrayMin(arr: Array<number | string>): number;
+export declare function getArrayMax(arr: Array<number | string>): number;
 export declare function matrixMax(matrix: number[][]): number;
 export declare function matrixMin(matrix: number[][]): number;
 export declare function getUniqueVals(source: string[]): string[];
@@ -162,6 +158,7 @@ export declare class Plots {
     private _xRange;
     private _yRange;
     private _zRange;
+    private _highlightSphere;
     canvas: HTMLCanvasElement;
     scene: Scene;
     camera: ArcRotateCamera;
@@ -199,6 +196,8 @@ export declare class Plots {
     addImgStack(values: number[], indices: number[], attributes: {
         dim: number[];
     }, options: {}): Plots;
+    private _parseOptions;
+    private _getColorsAndLegend;
     addPlot(coordinates: number[][], plotType: string, colorBy: string, colorVar: string[] | number[], options?: {}): Plots;
     addMeshObject(meshString: string, options: {}): Plots;
     addMeshStream(rootUrl: string, filePrefix: string, fileSuffix: string, fileIteratorStart: number, fileIteratorEnd: number, frameDelay: number, options: {}): Plots;
@@ -212,4 +211,5 @@ export declare class Plots {
     dispose(): void;
     removePlot(index: number): Plots;
     addLabels(labelList: [[number, number, number, string, string?, number?]]): Plots;
+    update(index: number, coordinates: number[][], colorBy: string, colorVar: string[] | number[], options?: {}): void;
 }

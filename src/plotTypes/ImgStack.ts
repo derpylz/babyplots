@@ -22,6 +22,7 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Color3 } from "@babylonjs/core/Maths/math";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { getArrayMin } from "../babyplots";
 import { LegendData } from "../utils/LegendData";
 import { Plot } from "../utils/Plot";
 import chroma from "chroma-js";
@@ -111,7 +112,7 @@ export class ImgStack extends Plot {
             channelColorRGB[2] = channelColorRGB[2] / 255;
             if (this._intensityMode === "alpha") {
                 let alphaLevels = 10;
-                let minIntensity = channelIntensities.min();
+                let minIntensity = getArrayMin(channelIntensities);
                 let alphaPositions: number[][] = [];
                 let alphaColors: number[][] = [];
                 let alphaIntensities: number[] = [];

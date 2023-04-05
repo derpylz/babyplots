@@ -69,11 +69,21 @@ var Surface = (function (_super) {
         mat.alpha = 1;
         surface.material = mat;
         this.mesh = surface;
-        Object.defineProperty(this, "alpha", {
-            set: function (newAlpha) {
-                this.mesh.material.alpha = newAlpha;
-            }
-        });
+        var propertyDescriptor = Object.getOwnPropertyDescriptor(this, "alpha");
+        if (!propertyDescriptor) {
+            Object.defineProperty(this, "alpha", {
+                set: function (newAlpha) {
+                    this.mesh.material.alpha = newAlpha;
+                }
+            });
+        }
+    };
+    Surface.prototype.updateProperties = function (coordinates, colors, legendData) {
+        this.mesh.dispose();
+        this._coords = coordinates;
+        this._coordColors = colors;
+        this.legendData = legendData;
+        this._createSurface();
     };
     return Surface;
 }(Plot_1.CoordinatePlot));

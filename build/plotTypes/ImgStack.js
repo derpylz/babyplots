@@ -23,6 +23,7 @@ var mesh_1 = require("@babylonjs/core/Meshes/mesh");
 var math_1 = require("@babylonjs/core/Maths/math");
 var mesh_vertexData_1 = require("@babylonjs/core/Meshes/mesh.vertexData");
 var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
+var babyplots_1 = require("../babyplots");
 var Plot_1 = require("../utils/Plot");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var ImgStack = (function (_super) {
@@ -92,7 +93,7 @@ var ImgStack = (function (_super) {
             channelColorRGB[2] = channelColorRGB[2] / 255;
             if (this._intensityMode === "alpha") {
                 var alphaLevels = 10;
-                var minIntensity = channelIntensities.min();
+                var minIntensity = (0, babyplots_1.getArrayMin)(channelIntensities);
                 var alphaPositions = [];
                 var alphaColors = [];
                 var alphaIntensities = [];
