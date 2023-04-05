@@ -33,6 +33,7 @@ var Plot = (function () {
     }
     Plot.prototype.goToFrame = function (n) { };
     Plot.prototype.update = function () { return false; };
+    Plot.prototype.updateProperties = function (coordinates, colors, legendData) { };
     Plot.prototype.resetAnimation = function () { };
     Plot.prototype.setLooping = function (looping) { };
     Plot.prototype.dispose = function () {

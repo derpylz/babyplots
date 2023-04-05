@@ -18,6 +18,7 @@ export declare abstract class Plot {
     constructor(name: string, shape: string, scene: Scene, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number);
     goToFrame(n: number): void;
     update(): boolean;
+    updateProperties(coordinates: number[][], colors: string[], legendData: LegendData): void;
     resetAnimation(): void;
     setLooping(looping: boolean): void;
     dispose(): void;

@@ -4,4 +4,5 @@ import { CoordinatePlot } from "../utils/Plot";
 export declare class Surface extends CoordinatePlot {
     constructor(scene: Scene, coordinates: number[][], colorVar: string[], size: number, legendData: LegendData, xScale?: number, yScale?: number, zScale?: number, name?: string);
     private _createSurface;
+    updateProperties(coordinates: number[][], colors: string[], legendData: LegendData): void;
 }

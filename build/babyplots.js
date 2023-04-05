@@ -99,16 +99,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.CustomLoadingScreen = void 0;
+exports.Plots = exports.isValidPlot = exports.PLOTTYPES = exports.getUniqueVals = exports.matrixMin = exports.matrixMax = exports.getArrayMax = exports.getArrayMin = exports.CustomLoadingScreen = void 0;
 var scene_1 = require("@babylonjs/core/scene");
 var engine_1 = require("@babylonjs/core/Engines/engine");
 var arcRotateCamera_1 = require("@babylonjs/core/Cameras/arcRotateCamera");
 var hemisphericLight_1 = require("@babylonjs/core/Lights/hemisphericLight");
 var math_1 = require("@babylonjs/core/Maths/math");
 var boxBuilder_1 = require("@babylonjs/core/Meshes/Builders/boxBuilder");
+var sphereBuilder_1 = require("@babylonjs/core/Meshes/Builders/sphereBuilder");
+var standardMaterial_1 = require("@babylonjs/core/Materials/standardMaterial");
 var advancedDynamicTexture_1 = require("@babylonjs/gui/2D/advancedDynamicTexture");
 var controls_1 = require("@babylonjs/gui/2D/controls");
 var screenshotTools_1 = require("@babylonjs/core/Misc/screenshotTools");
+var pointerEvents_1 = require("@babylonjs/core/Events/pointerEvents");
 var chroma_js_1 = __importDefault(require("chroma-js"));
 var downloadjs_1 = __importDefault(require("downloadjs"));
 var uuid_1 = require("uuid");
@@ -127,37 +130,39 @@ var CustomLoadingScreen = (function () {
     return CustomLoadingScreen;
 }());
 exports.CustomLoadingScreen = CustomLoadingScreen;
-Array.prototype.min = function () {
-    if (this.length > 65536) {
+function getArrayMin(arr) {
+    if (arr.length > 65536) {
         var r_1 = this[0];
-        this.forEach(function (v, _i, _a) { if (v < r_1)
+        arr.forEach(function (v, _i, _a) { if (v < r_1)
             r_1 = v; });
         return r_1;
     }
     else {
-        return Math.min.apply(null, this);
+        return Math.min.apply(null, arr);
     }
-};
-Array.prototype.max = function () {
-    if (this.length > 65536) {
+}
+exports.getArrayMin = getArrayMin;
+function getArrayMax(arr) {
+    if (arr.length > 65536) {
         var r_2 = this[0];
-        this.forEach(function (v, _i, _a) { if (v > r_2)
+        arr.forEach(function (v, _i, _a) { if (v > r_2)
             r_2 = v; });
         return r_2;
     }
     else {
-        return Math.max.apply(null, this);
+        return Math.max.apply(null, arr);
     }
-};
+}
+exports.getArrayMax = getArrayMax;
 function matrixMax(matrix) {
-    var maxRow = matrix.map(function (row) { return row.max(); });
-    var max = maxRow.max();
+    var maxRow = matrix.map(function (row) { return getArrayMax(row); });
+    var max = getArrayMax(maxRow);
     return max;
 }
 exports.matrixMax = matrixMax;
 function matrixMin(matrix) {
-    var minRow = matrix.map(function (row) { return row.min(); });
-    var min = minRow.min();
+    var minRow = matrix.map(function (row) { return getArrayMin(row); });
+    var min = getArrayMin(minRow);
     return min;
 }
 exports.matrixMin = matrixMin;
@@ -225,6 +230,9 @@ var Plots = (function () {
         this._axes = [];
         this._downloadObj = {};
         this._recording = false;
+        this._recordingQuality = 50;
+        this._recordingFrameRate = 30;
+        this._recordingFileName = "babyplots.gif";
         this._turned = 0;
         this._wasTurning = false;
         this._xScale = 1;
@@ -322,22 +330,43 @@ var Plots = (function () {
         animRange.onchange = function () { return _this.setAnimationFrame(); };
         this._animationSlider = animRange;
         this._buttonBar.appendChild(animRange);
+        this._highlightSphere = (0, sphereBuilder_1.CreateSphere)("highlightSphere", { diameter: 0.0001 * (this.canvas.height + this.canvas.width) });
+        this._highlightSphere.isVisible = false;
+        var material = new standardMaterial_1.StandardMaterial("highlightSphereMat", this.scene);
+        material.alpha = 1;
+        material.diffuseColor = new math_1.Color3(1, 0, 0);
+        this._highlightSphere.material = material;
         this._streamControlBtn = streamCtrlBtn;
         this._downloadObj = {
             plots: []
         };
-        this.scene.onPointerPick = (function (_evt, pickResult) {
-            for (var i = 0; i < this.plots.length; i++) {
-                var plot = this.plots[i];
-                if (!plot.pickable) {
-                    continue;
-                }
-                if (pickResult.pickedMesh === plot.mesh && plot.dpInfo) {
-                    var pick = plot.getPick(pickResult);
-                    this._annotationManager.displayInfo(pick.info, pick.target);
-                }
+        this.scene.onPointerObservable.add(function (pointerInfo) {
+            switch (pointerInfo.type) {
+                case pointerEvents_1.PointerEventTypes.POINTERPICK:
+                    var pickInfo = pointerInfo.pickInfo;
+                    for (var i = 0; i < _this.plots.length; i++) {
+                        var plot = _this.plots[i];
+                        if (!plot.pickable) {
+                            continue;
+                        }
+                        if (pointerInfo.event.button == 0) {
+                            if (pickInfo.pickedMesh === plot.mesh) {
+                                _this._highlightSphere.isVisible = true;
+                                var pick = plot.getPick(pickInfo);
+                                _this._highlightSphere.position = new math_1.Vector3(pickInfo.pickedPoint.x, pickInfo.pickedPoint.y, pickInfo.pickedPoint.z);
+                            }
+                        }
+                        if (pickInfo.pickedMesh === plot.mesh && plot.dpInfo) {
+                            var pick = plot.getPick(pickInfo);
+                            _this._annotationManager.displayInfo(pick.info, pick.target);
+                        }
+                    }
+                case pointerEvents_1.PointerEventTypes.POINTERDOWN:
+                    if (pointerInfo.event.button == 2) {
+                        _this._highlightSphere.isVisible = false;
+                    }
             }
-        }).bind(this);
+        });
     }
     Plots.prototype._updateCameraUpVector = function () {
         switch (this._upAxis) {
@@ -532,7 +561,7 @@ var Plots = (function () {
         if (whichBtns.indexOf("record") !== -1) {
             var recordBtn = document.createElement("div");
             recordBtn.className = "button";
-            recordBtn.onclick = this._startRecording.bind(this);
+            recordBtn.onclick = function () { return _this._createRecordingForm(); };
             recordBtn.innerHTML = SVGs_1.buttonSVGs.record;
             recordBtn.title = "Record the plot as a gif.";
             this._buttonBar.appendChild(recordBtn);
@@ -782,6 +811,88 @@ var Plots = (function () {
             this._resetAnimation();
         }
     };
+    Plots.prototype._createRecordingForm = function () {
+        var _this = this;
+        if (this._recordingFormOverlay !== undefined) {
+            return;
+        }
+        var formOverlay = document.createElement("div");
+        formOverlay.id = "recordingFormOverlay_" + this._uniqID;
+        formOverlay.style.position = "absolute";
+        var r = this.canvas.getBoundingClientRect();
+        if (this.Python) {
+            formOverlay.style.top = "0px";
+            formOverlay.style.left = "0px";
+            formOverlay.style.width = "100%";
+            formOverlay.style.height = "100%";
+        }
+        else {
+            formOverlay.style.top = r.y + "px";
+            formOverlay.style.left = r.x + "px";
+            formOverlay.style.width = r.width + "px";
+            formOverlay.style.height = r.height + "px";
+        }
+        formOverlay.style.backgroundColor = "#ffffff66";
+        var formBox = document.createElement("div");
+        formBox.style.width = "275px";
+        formBox.style.margin = "42px auto";
+        formBox.style.backgroundColor = "white";
+        formBox.style.padding = "15px 30px";
+        formBox.style.borderRadius = "10px";
+        formBox.style.boxShadow = "0 0 10px #0003";
+        formBox.className = "bbp record-form";
+        formOverlay.appendChild(formBox);
+        var formInfo = document.createElement("p");
+        formInfo.innerText = "Create and download a GIF of your plot";
+        formInfo.className = "form-info";
+        formBox.appendChild(formInfo);
+        var nameLabel = document.createElement("label");
+        nameLabel.id = "recordNameLabel_" + this._uniqID;
+        nameLabel.innerText = "File name:";
+        var nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.id = "recordNameInput_" + this._uniqID;
+        nameInput.value = "babyplots.gif";
+        var qualityLabel = document.createElement("label");
+        qualityLabel.id = "recordQualityLabel_" + this._uniqID;
+        qualityLabel.innerText = "Quality:";
+        var qualityInfo = document.createElement("small");
+        qualityInfo.innerText = "Higher quality GIFs will take longer to generate but reduce the flickering.";
+        var qualityInput = document.createElement("input");
+        qualityInput.id = "recordQualityInput_" + this._uniqID;
+        qualityInput.type = "range";
+        qualityInput.min = "1";
+        qualityInput.max = "100";
+        qualityInput.value = "50";
+        var startBtn = document.createElement("button");
+        startBtn.id = "recordStartBtn_" + this._uniqID;
+        startBtn.innerText = "Start recording";
+        startBtn.className = "publish-btn";
+        startBtn.onclick = function () {
+            _this._recordingFileName = nameInput.value;
+            _this._recordingQuality = parseInt(qualityInput.value);
+            _this._startRecording();
+            _this._recordingFormOverlay.remove();
+            _this._recordingFormOverlay = undefined;
+        };
+        var cancelBtn = document.createElement("button");
+        cancelBtn.id = "recordCancelBtn_" + this._uniqID;
+        cancelBtn.innerText = "Cancel";
+        cancelBtn.className = "close-btn";
+        cancelBtn.onclick = function () {
+            _this._recordingFormOverlay.remove();
+            _this._recordingFormOverlay = undefined;
+        };
+        formBox.appendChild(nameLabel);
+        formBox.appendChild(nameInput);
+        formBox.appendChild(qualityLabel);
+        formBox.appendChild(qualityInput);
+        formBox.appendChild(qualityInfo);
+        formBox.appendChild(startBtn);
+        formBox.appendChild(cancelBtn);
+        this._recordingFormOverlay = formOverlay;
+        this.canvas.parentNode.appendChild(formOverlay);
+    };
     Plots.prototype._startRecording = function () {
         this._recording = true;
     };
@@ -838,6 +949,7 @@ var Plots = (function () {
         this._annotationManager.update();
     };
     Plots.prototype._afterRender = function () {
+        var _this = this;
         if (this._recording) {
             if (this._turned === 0) {
                 var worker = this.workerPath;
@@ -846,13 +958,18 @@ var Plots = (function () {
                 }
                 this._capturer = new CCapture({
                     format: "gif",
-                    framerate: 30,
+                    framerate: this._recordingFrameRate,
+                    onProgress: function (pct) {
+                        var loadingProgress = document.getElementById("GIFloadingProgress_" + _this._uniqID);
+                        loadingProgress.style.width = (pct * 100).toString() + "%";
+                    },
                     verbose: false,
                     display: false,
-                    quality: 50,
+                    quality: this._recordingQuality,
                     workersPath: worker
                 });
                 this._capturer.start();
+                this._origRotationRate = this.rotationRate;
                 this.rotationRate = 0.02;
                 if (this.turntable) {
                     this._wasTurning = true;
@@ -863,29 +980,43 @@ var Plots = (function () {
                 var loadingOverlay = document.createElement("div");
                 loadingOverlay.className = "bbp overlay";
                 loadingOverlay.id = "GIFloadingOverlay_" + this._uniqID;
+                var loadingBox = document.createElement("div");
+                loadingBox.className = "bbp loading-box";
                 var loadingText = document.createElement("h5");
-                loadingText.className = ".loading-message";
+                loadingText.className = "loading-message";
                 loadingText.innerText = "Recording GIF...";
                 loadingText.id = "GIFloadingText_" + this._uniqID;
-                loadingOverlay.appendChild(loadingText);
+                var loadingProgressContainer = document.createElement("div");
+                loadingProgressContainer.className = "loading-progress-container";
+                var loadingProgress = document.createElement("div");
+                loadingProgress.className = "loading-progress";
+                loadingProgress.style.width = "0%";
+                loadingProgress.id = "GIFloadingProgress_" + this._uniqID;
+                loadingProgressContainer.appendChild(loadingProgress);
+                loadingBox.appendChild(loadingText);
+                loadingBox.appendChild(loadingProgressContainer);
+                loadingOverlay.appendChild(loadingBox);
                 this.canvas.parentNode.appendChild(loadingOverlay);
             }
             if (this._turned < 2 * Math.PI) {
                 this._turned += this.rotationRate;
                 this._capturer.capture(this.canvas);
+                var loadingProgress = document.getElementById("GIFloadingProgress_" + this._uniqID);
+                loadingProgress.style.width = (this._turned / (2 * Math.PI) * 100).toString() + "%";
             }
             else {
                 this._recording = false;
                 this._capturer.stop();
+                var loadingProgress = document.getElementById("GIFloadingProgress_" + this._uniqID);
+                loadingProgress.style.width = "0%";
                 var loadingText = document.getElementById("GIFloadingText_" + this._uniqID);
                 loadingText.innerText = "Saving GIF...";
-                this._capturer.save((function (blob) {
-                    (0, downloadjs_1.default)(blob, "babyplots.gif", 'image/gif');
-                    document.getElementById("GIFloadingText_" + this._uniqID).remove();
-                    document.getElementById("GIFloadingOverlay_" + this._uniqID).remove();
-                }).bind(this));
+                this._capturer.save(function (blob) {
+                    (0, downloadjs_1.default)(blob, _this._recordingFileName, 'image/gif');
+                    document.getElementById("GIFloadingOverlay_" + _this._uniqID).remove();
+                });
                 this._turned = 0;
-                this.rotationRate = 0.01;
+                this.rotationRate = this._origRotationRate;
                 this._hl2.diffuse = new math_1.Color3(0.8, 0.8, 0.8);
                 if (!this._wasTurning) {
                     this.turntable = false;
@@ -993,8 +1124,7 @@ var Plots = (function () {
         this.camera.wheelPrecision = 1;
         return this;
     };
-    Plots.prototype.addPlot = function (coordinates, plotType, colorBy, colorVar, options) {
-        if (options === void 0) { options = {}; }
+    Plots.prototype._parseOptions = function (options) {
         var opts = {
             name: null,
             size: 1,
@@ -1040,6 +1170,141 @@ var Plots = (function () {
             foldAnimDuration: null,
         };
         Object.assign(opts, options);
+        return opts;
+    };
+    Plots.prototype._getColorsAndLegend = function (options, colorBy, colorVar) {
+        var coordColors = [];
+        var legendData;
+        switch (colorBy) {
+            case "categories":
+                var groups = colorVar;
+                var uniqueGroups = getUniqueVals(groups);
+                uniqueGroups.sort();
+                if (options.sortedCategories) {
+                    if (uniqueGroups.length === options.sortedCategories.length) {
+                        if (JSON.stringify(uniqueGroups) === JSON.stringify(options.sortedCategories.slice(0).sort())) {
+                            uniqueGroups = options.sortedCategories;
+                        }
+                    }
+                }
+                var nColors = uniqueGroups.length;
+                var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma_js_1.default.scale(options.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
+                        }
+                        else {
+                            colors = chroma_js_1.default.scale(options.customColorScale).mode('lch').colors(nColors);
+                        }
+                    }
+                    else {
+                        options.colorScale = "Paired";
+                    }
+                }
+                else {
+                    if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
+                        }
+                        else {
+                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch').colors(nColors);
+                        }
+                    }
+                    else {
+                        options.colorScale = "Paired";
+                    }
+                }
+                for (var i = 0; i < nColors; i++) {
+                    colors[i] += "ff";
+                }
+                for (var i = 0; i < colorVar.length; i++) {
+                    var colorIndex = uniqueGroups.indexOf(groups[i]);
+                    coordColors.push(colors[colorIndex]);
+                }
+                legendData = {
+                    showLegend: options.showLegend,
+                    discrete: true,
+                    breaks: uniqueGroups,
+                    colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
+                    inverted: false,
+                    position: options.legendPosition
+                };
+                break;
+            case "values":
+                var min_1 = getArrayMin(colorVar);
+                var max_1 = getArrayMax(colorVar);
+                var colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer.Oranges).mode('lch');
+                if (options.colorScale === "custom") {
+                    if (options.customColorScale !== undefined && options.customColorScale.length !== 0) {
+                        if (options.colorScaleInverted) {
+                            colorfunc_1 = chroma_js_1.default.scale(options.customColorScale).domain([1, 0]).mode('lch');
+                        }
+                        else {
+                            colorfunc_1 = chroma_js_1.default.scale(options.customColorScale).mode('lch');
+                        }
+                    }
+                    else {
+                        options.colorScale = "Oranges";
+                    }
+                }
+                else {
+                    if (options.colorScale && chroma_js_1.default.brewer.hasOwnProperty(options.colorScale)) {
+                        if (options.colorScaleInverted) {
+                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).domain([1, 0]).mode('lch');
+                        }
+                        else {
+                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[options.colorScale]).mode('lch');
+                        }
+                    }
+                    else {
+                        options.colorScale = "Oranges";
+                    }
+                }
+                var norm = colorVar.slice().map(function (v) { return (v - min_1) / (max_1 - min_1); });
+                coordColors = norm.map(function (v) { return colorfunc_1(v).alpha(1).hex("rgba"); });
+                legendData = {
+                    showLegend: options.showLegend,
+                    discrete: false,
+                    breaks: [min_1.toString(), max_1.toString()],
+                    colorScale: options.colorScale,
+                    customColorScale: options.customColorScale,
+                    inverted: options.colorScaleInverted,
+                    position: options.legendPosition
+                };
+                break;
+            case "direct":
+                for (var i = 0; i < colorVar.length; i++) {
+                    var cl = colorVar[i];
+                    cl = (0, chroma_js_1.default)(cl).hex();
+                    if (cl.length == 7) {
+                        cl += "ff";
+                    }
+                    coordColors.push(cl);
+                }
+                legendData = {
+                    showLegend: false,
+                    discrete: false,
+                    breaks: [],
+                    colorScale: "",
+                    customColorScale: options.customColorScale,
+                    inverted: false,
+                    position: options.legendPosition
+                };
+                break;
+        }
+        legendData.fontSize = options.fontSize;
+        legendData.fontColor = options.fontColor;
+        legendData.legendTitle = options.legendTitle;
+        legendData.legendTitleFontSize = options.legendTitleFontSize;
+        legendData.legendTitleFontColor = options.legendTitleFontColor;
+        legendData.showShape = options.legendShowShape;
+        return [coordColors, legendData];
+    };
+    Plots.prototype.addPlot = function (coordinates, plotType, colorBy, colorVar, options) {
+        if (options === void 0) { options = {}; }
+        var opts = this._parseOptions(options);
         if (opts.folded) {
             (0, logging_1.deprecationWarning)("folded", "hasAnimation");
             if (!opts.hasAnimation) {
@@ -1110,11 +1375,6 @@ var Plots = (function () {
             labelSize: opts.labelSize,
             labelColor: opts.labelColor
         });
-        var coordColors = [];
-        var legendData;
-        var rangeX;
-        var rangeY;
-        var rangeZ;
         this._hasAnim = this._hasAnim || opts.hasAnimation;
         if (opts.hasAnimation) {
             var replayBtn = document.createElement("div");
@@ -1134,133 +1394,12 @@ var Plots = (function () {
             this._buttonBar.appendChild(loopBtn);
             this._loopBtn = loopBtn;
         }
-        switch (colorBy) {
-            case "categories":
-                var groups = colorVar;
-                var uniqueGroups = getUniqueVals(groups);
-                uniqueGroups.sort();
-                if (opts.sortedCategories) {
-                    if (uniqueGroups.length === opts.sortedCategories.length) {
-                        if (JSON.stringify(uniqueGroups) === JSON.stringify(opts.sortedCategories.slice(0).sort())) {
-                            uniqueGroups = opts.sortedCategories;
-                        }
-                    }
-                }
-                var nColors = uniqueGroups.length;
-                var colors = chroma_js_1.default.scale(chroma_js_1.default.brewer.Paired).mode('lch').colors(nColors);
-                if (opts.colorScale === "custom") {
-                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
-                        if (opts.colorScaleInverted) {
-                            colors = chroma_js_1.default.scale(opts.customColorScale).domain([1, 0]).mode('lch').colors(nColors);
-                        }
-                        else {
-                            colors = chroma_js_1.default.scale(opts.customColorScale).mode('lch').colors(nColors);
-                        }
-                    }
-                    else {
-                        opts.colorScale = "Paired";
-                    }
-                }
-                else {
-                    if (opts.colorScale && chroma_js_1.default.brewer.hasOwnProperty(opts.colorScale)) {
-                        if (opts.colorScaleInverted) {
-                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).domain([1, 0]).mode('lch').colors(nColors);
-                        }
-                        else {
-                            colors = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).mode('lch').colors(nColors);
-                        }
-                    }
-                    else {
-                        opts.colorScale = "Paired";
-                    }
-                }
-                for (var i = 0; i < nColors; i++) {
-                    colors[i] += "ff";
-                }
-                for (var i = 0; i < colorVar.length; i++) {
-                    var colorIndex = uniqueGroups.indexOf(groups[i]);
-                    coordColors.push(colors[colorIndex]);
-                }
-                legendData = {
-                    showLegend: opts.showLegend,
-                    discrete: true,
-                    breaks: uniqueGroups,
-                    colorScale: opts.colorScale,
-                    customColorScale: opts.customColorScale,
-                    inverted: false,
-                    position: opts.legendPosition
-                };
-                break;
-            case "values":
-                var min_1 = colorVar.min();
-                var max_1 = colorVar.max();
-                var colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer.Oranges).mode('lch');
-                if (opts.colorScale === "custom") {
-                    if (opts.customColorScale !== undefined && opts.customColorScale.length !== 0) {
-                        if (opts.colorScaleInverted) {
-                            colorfunc_1 = chroma_js_1.default.scale(opts.customColorScale).domain([1, 0]).mode('lch');
-                        }
-                        else {
-                            colorfunc_1 = chroma_js_1.default.scale(opts.customColorScale).mode('lch');
-                        }
-                    }
-                    else {
-                        opts.colorScale = "Oranges";
-                    }
-                }
-                else {
-                    if (opts.colorScale && chroma_js_1.default.brewer.hasOwnProperty(opts.colorScale)) {
-                        if (opts.colorScaleInverted) {
-                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).domain([1, 0]).mode('lch');
-                        }
-                        else {
-                            colorfunc_1 = chroma_js_1.default.scale(chroma_js_1.default.brewer[opts.colorScale]).mode('lch');
-                        }
-                    }
-                    else {
-                        opts.colorScale = "Oranges";
-                    }
-                }
-                var norm = colorVar.slice().map(function (v) { return (v - min_1) / (max_1 - min_1); });
-                coordColors = norm.map(function (v) { return colorfunc_1(v).alpha(1).hex("rgba"); });
-                legendData = {
-                    showLegend: opts.showLegend,
-                    discrete: false,
-                    breaks: [min_1.toString(), max_1.toString()],
-                    colorScale: opts.colorScale,
-                    customColorScale: opts.customColorScale,
-                    inverted: opts.colorScaleInverted,
-                    position: opts.legendPosition
-                };
-                break;
-            case "direct":
-                for (var i = 0; i < colorVar.length; i++) {
-                    var cl = colorVar[i];
-                    cl = (0, chroma_js_1.default)(cl).hex();
-                    if (cl.length == 7) {
-                        cl += "ff";
-                    }
-                    coordColors.push(cl);
-                }
-                legendData = {
-                    showLegend: false,
-                    discrete: false,
-                    breaks: [],
-                    colorScale: "",
-                    customColorScale: opts.customColorScale,
-                    inverted: false,
-                    position: opts.legendPosition
-                };
-                break;
-        }
-        legendData.fontSize = opts.fontSize;
-        legendData.fontColor = opts.fontColor;
-        legendData.legendTitle = opts.legendTitle;
-        legendData.legendTitleFontSize = opts.legendTitleFontSize;
-        legendData.legendTitleFontColor = opts.legendTitleFontColor;
-        legendData.showShape = opts.legendShowShape;
+        var _b = this._getColorsAndLegend(opts, colorBy, colorVar), coordColors = _b[0], legendData = _b[1];
         var plot;
         var scale;
+        var rangeX;
+        var rangeY;
+        var rangeZ;
         var boundingBox;
         switch (plotType) {
             case "pointCloud":
@@ -1447,7 +1586,16 @@ var Plots = (function () {
     };
     Plots.prototype._updateLegend = function (uiLayer) {
         if (this._legend) {
-            this._legend.dispose();
+            var descendantsUiLayer = uiLayer.getDescendants();
+            for (var i = 0; i < descendantsUiLayer.length; i++) {
+                var control = descendantsUiLayer[i];
+                uiLayer.removeControl(control);
+            }
+            var descendantsLegend = this._legend.getDescendants();
+            for (var i = 0; i < descendantsLegend.length; i++) {
+                var control = descendantsLegend[i];
+                this._legend.removeControl(control);
+            }
         }
         var rightFree = true;
         var leftFree = true;
@@ -1455,8 +1603,8 @@ var Plots = (function () {
         var spaceRight;
         var shapeSpace = 0;
         var shapes = [];
-        for (var i = 0; i < this.plots.length; i++) {
-            var plot = this.plots[i];
+        for (var i_1 = 0; i_1 < this.plots.length; i_1++) {
+            var plot = this.plots[i_1];
             var legendData = plot.legendData;
             if (!legendData.legendTitleFontSize) {
                 legendData.legendTitleFontSize = 16;
@@ -1544,8 +1692,8 @@ var Plots = (function () {
             shapes: shapes
         };
         var shapeLegendDrawn = false;
-        for (var i = 0; i < this.plots.length; i++) {
-            var lgndData = this.plots[i].legendData;
+        for (var i_2 = 0; i_2 < this.plots.length; i_2++) {
+            var lgndData = this.plots[i_2].legendData;
             if (lgndData.showLegend) {
                 if (lgndData.position === this._shapeLegendPosition) {
                     uiLayer = this._createPlotLegend(lgndData, uiLayer, shapeLegendData);
@@ -1869,6 +2017,32 @@ var Plots = (function () {
     Plots.prototype.addLabels = function (labelList) {
         this._annotationManager.addLabels(labelList);
         return this;
+    };
+    Plots.prototype.update = function (index, coordinates, colorBy, colorVar, options) {
+        if (options === void 0) { options = {}; }
+        var plot = this.plots[index];
+        if (plot === undefined)
+            return;
+        var opts = this._parseOptions(options);
+        var _b = this._getColorsAndLegend(opts, colorBy, colorVar), coordColors = _b[0], legendData = _b[1];
+        plot.updateProperties(coordinates, coordColors, legendData);
+        var boundingBox = plot.mesh.getBoundingInfo().boundingBox;
+        var rangeX = [
+            boundingBox.minimumWorld.x,
+            boundingBox.maximumWorld.x
+        ];
+        var rangeY = [
+            boundingBox.minimumWorld.y,
+            boundingBox.maximumWorld.y
+        ];
+        var rangeZ = [
+            boundingBox.minimumWorld.z,
+            boundingBox.maximumWorld.z
+        ];
+        this._annotationManager.update();
+        this._axes[0].axisData.range = [rangeX, rangeY, rangeZ];
+        this._axes[0].update(this.camera, true);
+        this._updateLegend(this.uiLayer);
     };
     return Plots;
 }());
