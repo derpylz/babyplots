@@ -18,7 +18,7 @@
     "@types/chroma-js": "^2.1.1",
     "@types/downloadjs": "^1.4.2",
     "@types/uuid": "^8.3.0",
-    "axios": "^1.7.4",
+    "axios": "^1.8.2",
     "ccapture.js": "^1.1.0",
     "chroma-js": "^2.1.0",
     "downloadjs": "^1.4.7",
