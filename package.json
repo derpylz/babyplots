@@ -22,7 +22,7 @@
     "ccapture.js": "^1.1.0",
     "chroma-js": "^2.1.0",
     "downloadjs": "^1.4.7",
-    "uuid": "^8.3.1"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "babylonjs-gltf2interface": "^5.44.0",
